@@ -1,0 +1,6 @@
+legacy/
+dist/
+build/
+package-lock.json
+apps/server/drizzle/
+packages/content/src/registry.generated.ts

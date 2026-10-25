@@ -1,0 +1,16 @@
+{
+  "name": "@app/content",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Catalogue (matières, domaines, notions) et plugins d'exercices.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@app/core": "*"
+  }
+}

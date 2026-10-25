@@ -1,0 +1,27 @@
+# Variante sans Docker : /etc/systemd/system/webappmaths.service
+# Le runner GitHub et l'app tournent sous le même utilisateur dédié « webappmaths ».
+[Unit]
+Description=Cartable magique (WebAppMaths)
+After=network.target
+
+[Service]
+Type=simple
+User=webappmaths
+Group=webappmaths
+WorkingDirectory=/opt/webappmaths/current
+EnvironmentFile=/opt/webappmaths/app.env
+Environment=NODE_ENV=production
+Environment=DATA_DIR=/opt/webappmaths/data
+ExecStart=/usr/bin/node apps/server/dist/index.js
+Restart=on-failure
+RestartSec=3
+
+# Durcissement
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/webappmaths/data
+
+[Install]
+WantedBy=multi-user.target

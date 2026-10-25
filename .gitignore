@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+data/
+*.db
+*.db-wal
+*.db-shm
+.env
+app.env
+test-results/
+playwright-report/
+.vite/
+coverage/
