@@ -1,0 +1,20 @@
+# Utilisé par deploy.sh (mode Docker), qui fournit APP_VERSION_TAG, APP_HOME, APP_UID et APP_GID.
+# Lancement manuel : APP_VERSION_TAG=<version> APP_UID=$(id -u) APP_GID=$(id -g) \
+#   docker compose -p webappmaths -f deploy/docker-compose.yml up -d
+services:
+  app:
+    image: webappmaths:${APP_VERSION_TAG:?version à déployer}
+    container_name: webappmaths
+    restart: unless-stopped
+    user: '${APP_UID:-1000}:${APP_GID:-1000}'
+    env_file: ${APP_HOME:-/opt/webappmaths}/app.env
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: '3000'
+      DATA_DIR: /data
+    ports:
+      # 127.0.0.1 si le reverse proxy est sur la même machine ; sinon l'adresse du réseau interne.
+      - '${BIND_ADDRESS:-127.0.0.1}:${HOST_PORT:-3000}:3000'
+    volumes:
+      - ${APP_HOME:-/opt/webappmaths}/data:/data

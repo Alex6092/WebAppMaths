@@ -1,0 +1,45 @@
+name: Déploiement
+
+# Après une CI verte sur main, le runner auto-hébergé du lycée installe le paquet testé.
+# workflow_run utilise toujours la version de ce fichier présente sur main : une pull request
+# (même venue d'un fork) ne peut pas faire exécuter de code sur le serveur.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: [self-hosted, lycee]
+    environment: production
+    timeout-minutes: 15
+    env:
+      APP_HOME: ${{ vars.APP_HOME || '/opt/webappmaths' }}
+      DEPLOY_MODE: ${{ vars.DEPLOY_MODE || 'docker' }}
+      HEALTH_URL: ${{ vars.HEALTH_URL || 'http://127.0.0.1:3000/api/health' }}
+    steps:
+      - name: Récupérer le paquet testé par la CI
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/release
+
+      - name: Installer, vérifier, revenir en arrière si besoin
+        run: |
+          mkdir -p "$RUNNER_TEMP/unpack"
+          tar -xzf "$RUNNER_TEMP/release/release.tar.gz" -C "$RUNNER_TEMP/unpack" ./deploy
+          bash "$RUNNER_TEMP/unpack/deploy/deploy.sh" \
+            "$RUNNER_TEMP/release/release.tar.gz" \
+            "${{ github.event.workflow_run.head_sha }}"

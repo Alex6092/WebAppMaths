@@ -1,0 +1,13 @@
+{
+  "name": "@app/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Contrat des plugins d'exercices, RNG à graine, widgets (logique), progression.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

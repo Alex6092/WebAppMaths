@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint et format
+        run: |
+          npm run lint
+          npm run format:check
+
+      - name: Typage
+        run: npm run typecheck
+
+      - name: Tests (unitaires, contrat des plugins, API)
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Tests de bout en bout (PC et tablette)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
+      - name: Rapport Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+      # Sur main, on fabrique le paquet qui sera déployé tel quel au lycée.
+      - name: Paquet de livraison
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: bash deploy/package.sh "${{ github.sha }}"
+
+      - name: Publier le paquet
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: build/release.tar.gz
+          retention-days: 30
