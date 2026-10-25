@@ -37,7 +37,7 @@ if [ "$MODE" != docker ] && [ "$MODE" != systemd ]; then
 fi
 
 mkdir -p "$RELEASES" "$DATA/backups"
-PREV="$(readlink -f "$CURRENT" 2>/dev/null || true)"
+PREV="$( [ -L "$CURRENT" ] && readlink -f "$CURRENT" || true )"
 PREV_SHORT="$( [ -n "$PREV" ] && basename "$PREV" || echo "" )"
 log "Version $SHORT (précédente : ${PREV_SHORT:-aucune}), mode $MODE"
 

@@ -122,7 +122,7 @@
       answer = widget.retryAnswer(question as never, given as never, result);
       feedback = {
         kind: 'error',
-        text: 'Oups ! Ce qui est en rouge n’est pas juste. Réessaie ! 💪',
+        text: result.feedback ?? 'Oups ! Ce qui est en rouge n’est pas juste. Réessaie ! 💪',
       };
       return;
     } else {

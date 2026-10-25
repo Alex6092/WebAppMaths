@@ -9,4 +9,5 @@ export * from './question';
 export * from './registry';
 export * from './rng';
 export * from './speech';
+export * from './text';
 export * from './widgets';

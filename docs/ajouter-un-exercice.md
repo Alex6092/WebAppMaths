@@ -93,17 +93,32 @@ export default definePlugin('number-input', {
 
 ## Les widgets disponibles
 
-| Widget         | Réponse               | Pour quoi faire                                        |
-| -------------- | --------------------- | ------------------------------------------------------ |
-| `number-input` | `{ value }`           | réponse numérique ; `{?}` marque la case dans l'énoncé |
-| `mcq`          | `{ selected: [...] }` | choix unique ou multiple, VRAI/FAUX, signes <, >, =    |
-| `column-op`    | `{ digits, carries }` | opération posée avec retenues                          |
+| Widget         | Réponse               | Pour quoi faire                                         |
+| -------------- | --------------------- | ------------------------------------------------------- |
+| `number-input` | `{ value }`           | réponse numérique ; `{?}` marque la case dans l'énoncé  |
+| `mcq`          | `{ selected: [...] }` | choix unique ou multiple, VRAI/FAUX, signes <, >, =     |
+| `column-op`    | `{ digits, carries }` | opération posée avec retenues                           |
+| `word-select`  | `{ picks: [...] }`    | COLORIE, SOULIGNE, ENTOURE des mots (grille ou phrase)  |
+| `classify`     | `{ placed: [...] }`   | ranger des étiquettes en colonnes, ou COCHE en tableau  |
+| `fill-blank`   | `{ values: [...] }`   | trous à étiquettes ou à taper (clavier AZERTY accentué) |
 
-Les widgets prévus ensuite : `word-select` (souligner, entourer, colorier des mots), `text-input`
-(clavier avec accents), `classify` (glisser-déposer), `fill-blank`, `order`, `geometry`,
-`number-line`, `clock`, `money`. Un nouveau widget se crée en deux temps : sa logique dans
-`packages/core/src/widgets/` (réponse vide, validation, correction), son affichage dans
-`apps/web/src/widgets/`.
+Pour `fill-blank`, une réponse tapée est comptée fausse s'il manque un accent, mais l'enfant voit
+« Attention aux accents » et garde ce qu'il a tapé pour le deuxième essai. Quand plusieurs réponses
+conviennent, écris un `check` avec `compareBlanks(q, [[...réponses admises du trou 0], ...], answer)`.
+
+Les phrases de français se fabriquent avec `francais/lib/` : moteur de conjugaison (présent,
+imparfait, futur), banques de verbes, de sujets, d'indicateurs de temps, et `buildSentence`.
+
+Les widgets prévus ensuite : `order`, `geometry`, `number-line`, `clock`, `money`. Un nouveau
+widget se crée en deux temps : sa logique dans `packages/core/src/widgets/` (réponse vide,
+validation, correction), son affichage dans `apps/web/src/widgets/`.
+
+## Un nouvel emoji ?
+
+Les emoji sont embarqués dans l'app (police `apps/web/src/emoji/`) pour s'afficher pareil sur
+toutes les tablettes, même anciennes. Après avoir utilisé un nouvel emoji, lance
+`npm run gen:emoji` (il faut Python avec `pip install fonttools brotli`) et commite le résultat.
+Le test `scripts/emoji.test.ts` le rappelle si on l'oublie.
 
 ## Quand incrémenter `version`
 

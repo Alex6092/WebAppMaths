@@ -52,13 +52,81 @@ export interface McqAnswer {
   selected: string[];
 }
 
-export type Question = ColumnOpQuestion | NumberInputQuestion | McqQuestion;
+export interface WordToken {
+  text: string;
+  /** Peut être touché (vrai par défaut ; faux pour la ponctuation). */
+  selectable?: boolean;
+  /** Collé au mot précédent, sans espace (« J' » + « aime », ponctuation). */
+  glue?: boolean;
+}
+export interface PickColor {
+  id: string;
+  /** « le PASSÉ en bleu » */
+  label: string;
+  /** Couleur CSS. */
+  color: string;
+}
+/** Mots à toucher dans une grille ou une phrase : COLORIE, ENTOURE, SOULIGNE. */
+export interface WordSelectQuestion extends QuestionBase {
+  widget: 'word-select';
+  layout: 'grid' | 'sentence';
+  mark: 'color' | 'circle' | 'underline';
+  tokens: WordToken[];
+  /** Une seule couleur : on touche pour marquer ou démarquer ; plusieurs : une palette. */
+  colors: PickColor[];
+}
+export interface WordSelectAnswer {
+  /** Couleur choisie pour chaque mot (null = non marqué). */
+  picks: (string | null)[];
+}
+
+export interface ClassifyCategory {
+  id: string;
+  label: string;
+  color?: string;
+}
+/** Ranger des étiquettes dans des colonnes, ou cocher une colonne par ligne d'un tableau. */
+export interface ClassifyQuestion extends QuestionBase {
+  widget: 'classify';
+  layout: 'columns' | 'table';
+  items: { text: string; icon?: string }[];
+  categories: ClassifyCategory[];
+}
+export interface ClassifyAnswer {
+  /** Catégorie de chaque étiquette (null = pas encore rangée). */
+  placed: (string | null)[];
+}
+
+export type Blank = { kind: 'choice'; options: string[] } | { kind: 'text'; size?: number };
+/** Texte à trous : étiquettes à choisir ou mots à taper (clavier à l'écran). */
+export interface FillBlankQuestion extends QuestionBase {
+  widget: 'fill-blank';
+  /** Texte avec les trous {0}, {1}… ; « \n » passe à la ligne. */
+  prompt: string;
+  blanks: Blank[];
+  /** Les majuscules comptent (faux par défaut). Les accents comptent toujours. */
+  caseSensitive?: boolean;
+}
+export interface FillBlankAnswer {
+  values: string[];
+}
+
+export type Question =
+  | ColumnOpQuestion
+  | NumberInputQuestion
+  | McqQuestion
+  | WordSelectQuestion
+  | ClassifyQuestion
+  | FillBlankQuestion;
 export type WidgetId = Question['widget'];
 
 export interface AnswerMap {
   'column-op': ColumnOpAnswer;
   'number-input': NumberInputAnswer;
   mcq: McqAnswer;
+  'word-select': WordSelectAnswer;
+  classify: ClassifyAnswer;
+  'fill-blank': FillBlankAnswer;
 }
 
 export type QuestionOf<W extends WidgetId> = Extract<Question, { widget: W }>;
@@ -69,7 +137,8 @@ export type PluginQuestion<W extends WidgetId = WidgetId, D = unknown> = Questio
   data: D;
 };
 
-export type Mark = 'ok' | 'wrong' | 'missing';
+/** near : faux, mais juste à un accent près. */
+export type Mark = 'ok' | 'near' | 'wrong' | 'missing';
 
 export interface CheckResult {
   correct: boolean;

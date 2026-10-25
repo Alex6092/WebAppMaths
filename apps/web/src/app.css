@@ -18,7 +18,8 @@
   --radius: 18px;
   --shadow: 0 6px 18px rgba(40, 20, 80, 0.12);
 
-  font-family: 'Andika', 'Comic Sans MS', system-ui, sans-serif;
+  /* Cartable Emoji : les emoji de l'app, identiques sur tous les appareils (voir scripts/gen-emoji.ts). */
+  font-family: 'Andika', 'Cartable Emoji', 'Comic Sans MS', system-ui, sans-serif;
   color: var(--text);
   -webkit-text-size-adjust: 100%;
 }
