@@ -1,9 +1,12 @@
 <script lang="ts">
   import type { Mark, PluginQuestion } from '@app/core';
+  import Classify from './Classify.svelte';
   import ColumnOp from './ColumnOp.svelte';
+  import FillBlank from './FillBlank.svelte';
   import Mcq from './Mcq.svelte';
   import NumberInput from './NumberInput.svelte';
   import type { Phase } from './types';
+  import WordSelect from './WordSelect.svelte';
 
   /** Choisit le composant d'affichage selon le widget de la question. */
   interface Props {
@@ -23,4 +26,10 @@
   <NumberInput {question} bind:answer {phase} {marks} {solution} {onvalidate} />
 {:else if question.widget === 'mcq'}
   <Mcq {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'word-select'}
+  <WordSelect {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'classify'}
+  <Classify {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'fill-blank'}
+  <FillBlank {question} bind:answer {phase} {marks} {solution} />
 {/if}

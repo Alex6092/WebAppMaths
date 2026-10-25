@@ -5,6 +5,9 @@ export const HAS_OWN_SUBMIT: Record<WidgetId, boolean> = {
   'column-op': true,
   'number-input': true,
   mcq: false,
+  'word-select': false,
+  classify: false,
+  'fill-blank': false,
 };
 
 export { default as Widget } from './Widget.svelte';

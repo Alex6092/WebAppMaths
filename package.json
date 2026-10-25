@@ -12,6 +12,7 @@
   },
   "scripts": {
     "gen:registry": "tsx scripts/gen-registry.ts",
+    "gen:emoji": "tsx scripts/gen-emoji.ts",
     "new:exercise": "tsx scripts/new-exercise.ts",
     "predev": "npm run gen:registry",
     "dev": "concurrently -k -n server,web -c blue,magenta \"npm run dev -w @app/server\" \"npm run dev -w @app/web\"",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
+    "@fontsource/noto-color-emoji": "^5.3.2",
     "@playwright/test": "^1.64.1",
     "@types/node": "^22.20.0",
     "concurrently": "^9.2.0",
