@@ -1,5 +1,6 @@
 import type { Catalog, Domain, Notion, Subject } from './catalog';
 import type { GradeId } from './grades';
+import { lessonErrors } from './lesson';
 import type { AnyPlugin } from './plugin';
 
 /** Catalogue (matières, domaines, notions) et plugins, avec les liens entre eux. */
@@ -95,6 +96,7 @@ export class Registry {
     for (const n of this.notions) {
       if (!this.domainById.has(n.domain))
         errors.push(`notion ${n.id} : domaine inconnu ${n.domain}`);
+      for (const e of lessonErrors(n.lesson ?? [])) errors.push(`leçon ${n.id} : ${e}`);
     }
     for (const p of this.plugins) {
       for (const n of p.notions) {

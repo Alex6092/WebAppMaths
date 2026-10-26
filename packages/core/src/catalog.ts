@@ -1,4 +1,5 @@
 import type { GradeId } from './grades';
+import type { LessonBlock } from './lesson';
 
 /** Matière : maths, français… */
 export interface Subject {
@@ -30,8 +31,8 @@ export interface Notion {
   grades: GradeId[];
   /** Libellé de compétence, tel qu'il apparaît sur les évaluations. */
   competence?: string;
-  /** Mini-leçon (Markdown). */
-  lesson?: string;
+  /** Fiche de leçon : textes et illustrations. */
+  lesson?: LessonBlock[];
 }
 
 export interface Catalog {
