@@ -15,6 +15,7 @@ export function toChildDto(row: ChildRow): ChildDto {
     grade: isGrade(row.grade) ? row.grade : 'CP',
     themeId: row.themeId,
     coins: row.coins,
+    sound: row.settings.sound !== false,
   };
 }
 

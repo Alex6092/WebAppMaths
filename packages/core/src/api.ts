@@ -1,6 +1,7 @@
 /**
  * Contrat d'API partagé entre le serveur (apps/server) et l'interface (apps/web).
  */
+import type { Streak } from './daily';
 import type { GradeId } from './grades';
 import type { NotionMastery } from './mastery';
 import type { LevelChange } from './progression';
@@ -15,6 +16,8 @@ export interface ChildDto {
   grade: GradeId;
   themeId: string;
   coins: number;
+  /** Les petits sons de l'app (bonne réponse, pièces…). */
+  sound: boolean;
 }
 
 export interface MeResponse {
@@ -40,14 +43,43 @@ export interface ChildStateResponse {
   /** Acquisition de chaque notion du catalogue. */
   notions: Record<string, NotionMastery>;
   owned: { themeId: string; rewardId: string }[];
+  /** Ambiances débloquées (celles qui sont gratuites comprises). */
+  themes: string[];
+  badges: EarnedBadge[];
+  daily: DailyState;
 }
 
-/** training : un seul exercice ; mix : un mélange des exercices de plusieurs notions. */
-export type PracticeMode = 'training' | 'mix';
+export interface EarnedBadge {
+  id: string;
+  earnedAt: number;
+}
+
+/** Le défi du jour de l'enfant. */
+export interface DailyState {
+  day: string;
+  /** Questions déjà faites dans le défi d'aujourd'hui. */
+  answered: number;
+  streak: Streak;
+  /** Défis réussis depuis le début. */
+  total: number;
+}
+
+/**
+ * training : un seul exercice ; mix : un mélange des exercices de plusieurs notions ;
+ * daily : le défi du jour, un mélange de toutes les notions de la classe.
+ */
+export type PracticeMode = 'training' | 'mix' | 'daily';
 
 export type StartSessionRequest =
   | { mode: 'training'; selection: { pluginId: string } }
-  | { mode: 'mix'; selection: { notions: string[] } };
+  | { mode: 'mix'; selection: { notions: string[] } }
+  | { mode: 'daily'; selection: Record<string, never> };
+
+export interface StartSessionResponse {
+  id: number;
+  /** Questions déjà faites : on reprend le défi du jour là où il s'était arrêté. */
+  answered: number;
+}
 
 export interface AttemptRequest {
   sessionId: number;
@@ -72,6 +104,23 @@ export interface AttemptResponse {
   results: CheckResult[];
   /** Acquisition mise à jour des notions de l'exercice. */
   notions: Record<string, NotionMastery>;
+  /** Badges gagnés avec cette réponse. */
+  badges: string[];
+  /** Le défi du jour, pour une question du défi. */
+  daily: DailyState | null;
+  /** Pièces du défi du jour, si cette réponse le termine. */
+  dailyBonus: number;
+}
+
+export interface RewardResponse {
+  coins: number;
+  badges: string[];
+}
+
+export interface ThemeResponse {
+  coins: number;
+  themeId: string;
+  themes: string[];
 }
 
 export interface SessionSummary {

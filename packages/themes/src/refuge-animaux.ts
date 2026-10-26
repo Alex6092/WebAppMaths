@@ -1,0 +1,42 @@
+import type { Theme } from './types';
+
+/** Un refuge où l'on recueille des animaux. */
+export const refugeAnimaux: Theme = {
+  id: 'refuge-animaux',
+  name: 'Refuge des animaux',
+  description: 'Chatons, chiots et animaux de la forêt à recueillir.',
+  appTitle: '🐾 Le Refuge des animaux 🐾',
+  mascot: '🐶',
+  banner: '🐰🐱🦊',
+  shopName: 'Le refuge',
+  suggestedGrades: ['CP', 'CE1', 'CE2'],
+  unlockCost: 150,
+  currency: { singular: 'carotte', plural: 'carottes', icon: '🥕' },
+  colors: {
+    primary: '#2e7d32',
+    primaryDark: '#1b5e20',
+    primarySoft: '#a5d6a7',
+    accent: '#ef6c00',
+    accentDark: '#e65100',
+    accentLight: '#ffcc80',
+    accentInk: '#4a1f00',
+    background: 'linear-gradient(135deg, #f1f8e9 0%, #fff8e1 50%, #e8f5e9 100%)',
+    surface: '#ffffff',
+    text: '#1b4d20',
+    textSoft: '#5d7a5f',
+  },
+  rewards: [
+    { id: 'a1', name: 'Lapin', icon: '🐰', cost: 10 },
+    { id: 'a2', name: 'Chaton', icon: '🐱', cost: 15 },
+    { id: 'a3', name: 'Chiot', icon: '🐶', cost: 25 },
+    { id: 'a4', name: 'Hamster', icon: '🐹', cost: 35 },
+    { id: 'a5', name: 'Tortue', icon: '🐢', cost: 50 },
+    { id: 'a6', name: 'Renard', icon: '🦊', cost: 70 },
+    { id: 'a7', name: 'Panda', icon: '🐼', cost: 90 },
+    { id: 'a8', name: 'Hibou', icon: '🦉', cost: 120 },
+    { id: 'a9', name: 'Hérisson', icon: '🦔', cost: 160 },
+    { id: 'a10', name: 'Poney', icon: '🐴', cost: 200 },
+    { id: 'a11', name: 'Dauphin', icon: '🐬', cost: 250 },
+    { id: 'a12', name: 'Girafe', icon: '🦒', cost: 350 },
+  ],
+};

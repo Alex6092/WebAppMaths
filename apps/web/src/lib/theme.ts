@@ -9,6 +9,8 @@ export function applyTheme(themeId: string | null | undefined): Theme {
     '--primary-soft': theme.colors.primarySoft,
     '--accent': theme.colors.accent,
     '--accent-dark': theme.colors.accentDark,
+    '--accent-light': theme.colors.accentLight,
+    '--accent-ink': theme.colors.accentInk,
     '--bg': theme.colors.background,
     '--surface': theme.colors.surface,
     '--text': theme.colors.text,

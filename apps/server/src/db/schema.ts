@@ -157,3 +157,29 @@ export const rewardsOwned = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.childId, t.themeId, t.rewardId] })],
 );
+
+/** Ambiances débloquées avec des pièces (les ambiances gratuites n'y sont pas). */
+export const themesOwned = sqliteTable(
+  'theme_owned',
+  {
+    childId: integer('child_id')
+      .notNull()
+      .references(() => children.id, { onDelete: 'cascade' }),
+    themeId: text('theme_id').notNull(),
+    unlockedAt: integer('unlocked_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.childId, t.themeId] })],
+);
+
+/** Badges gagnés : ils restent, même si une notion redevient « en cours ». */
+export const badges = sqliteTable(
+  'badge',
+  {
+    childId: integer('child_id')
+      .notNull()
+      .references(() => children.id, { onDelete: 'cascade' }),
+    badgeId: text('badge_id').notNull(),
+    earnedAt: integer('earned_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.childId, t.badgeId] })],
+);

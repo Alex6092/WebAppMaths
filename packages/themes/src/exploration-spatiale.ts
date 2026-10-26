@@ -1,0 +1,42 @@
+import type { Theme } from './types';
+
+/** Fusées, planètes et étoiles filantes. */
+export const explorationSpatiale: Theme = {
+  id: 'exploration-spatiale',
+  name: 'Exploration spatiale',
+  description: 'Fusées, planètes et étoiles filantes.',
+  appTitle: '🚀 L’Exploration spatiale 🚀',
+  mascot: '👽',
+  banner: '🌙🪐🛸',
+  shopName: 'Boutique de la station',
+  suggestedGrades: ['CE1', 'CE2', 'CM1'],
+  unlockCost: 150,
+  currency: { singular: 'étoile', plural: 'étoiles', icon: '⭐' },
+  colors: {
+    primary: '#283593',
+    primaryDark: '#1a237e',
+    primarySoft: '#9fa8da',
+    accent: '#00897b',
+    accentDark: '#00695c',
+    accentLight: '#80deea',
+    accentInk: '#003d36',
+    background: 'linear-gradient(135deg, #e8eaf6 0%, #e1f5fe 50%, #ede7f6 100%)',
+    surface: '#ffffff',
+    text: '#1a237e',
+    textSoft: '#5c6494',
+  },
+  rewards: [
+    { id: 's1', name: 'Fusée', icon: '🚀', cost: 10 },
+    { id: 's2', name: 'Croissant de lune', icon: '🌙', cost: 15 },
+    { id: 's3', name: 'Étoile filante', icon: '🌠', cost: 25 },
+    { id: 's4', name: 'Planète à anneaux', icon: '🪐', cost: 35 },
+    { id: 's5', name: 'Satellite', icon: '🛰️', cost: 50 },
+    { id: 's6', name: 'Petit extraterrestre', icon: '👽', cost: 70 },
+    { id: 's7', name: 'Comète', icon: '☄️', cost: 90 },
+    { id: 's8', name: 'Télescope', icon: '🔭', cost: 120 },
+    { id: 's9', name: 'Voie lactée', icon: '🌌', cost: 160 },
+    { id: 's10', name: 'Soucoupe volante', icon: '🛸', cost: 200 },
+    { id: 's11', name: 'Planète Terre', icon: '🌍', cost: 250 },
+    { id: 's12', name: 'Soleil', icon: '☀️', cost: 350 },
+  ],
+};

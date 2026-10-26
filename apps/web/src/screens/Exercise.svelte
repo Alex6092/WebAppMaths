@@ -3,6 +3,7 @@
   import {
     checkAnswer,
     createRng,
+    DAILY_LENGTH,
     generateQuestion,
     getWidget,
     initialLevel,
@@ -13,10 +14,12 @@
     randomSeed,
     type AnyPlugin,
     type AttemptResponse,
+    type DailyState,
     type Mark,
     type Notion,
     type PluginQuestion,
     type SessionSummary,
+    type StartSessionResponse,
   } from '@app/core';
   import { getTheme } from '@app/themes';
   import { onMount, untrack } from 'svelte';
@@ -25,18 +28,27 @@
   import NotionBadge from '../components/NotionBadge.svelte';
   import SpeakButton from '../components/SpeakButton.svelte';
   import { api, errorMessage } from '../lib/api';
+  import { celebrateBadges } from '../lib/badges';
   import { masteryOf } from '../lib/notions';
   import { confetti, praise, toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, session, setCoins } from '../lib/session.svelte';
+  import { playSound } from '../lib/sounds';
   import { stopSpeaking } from '../lib/tts';
   import { HAS_OWN_SUBMIT, Widget, type Phase } from '../widgets';
 
-  /** Un exercice (pluginId), ou un mélange des exercices de plusieurs notions (mix). */
-  let { pluginId, mix }: { pluginId?: string; mix?: string[] } = $props();
+  /**
+   * Un exercice (pluginId), ou un mélange des exercices de plusieurs notions (mix).
+   * Le défi du jour (daily) est un mélange de toutes les notions de la classe.
+   */
+  let {
+    pluginId,
+    mix,
+    daily = false,
+  }: { pluginId?: string; mix?: string[]; daily?: boolean } = $props();
 
   /** Nombre de questions d'un mélange. */
-  const MIX_LENGTH = 10;
+  const MIX_LENGTH = $derived(daily ? DAILY_LENGTH : 10);
   const mixPlugins = $derived(mix ? registry.pluginsOfNotions(mix) : []);
   // Dans un mélange, l'exercice change à chaque question.
   let plugin = $state.raw<AnyPlugin | undefined>(
@@ -76,6 +88,8 @@
   let explanation = $state<string | null>(null);
   let saving = $state(false);
   let summary = $state<SessionSummary | null>(null);
+  /** Le défi du jour, une fois réussi pendant cette séance. */
+  let dailyDone = $state<DailyState | null>(null);
   let loadError = $state<string | null>(null);
   let answers: unknown[] = [];
   let startedAt = 0;
@@ -99,14 +113,17 @@
       const state = session.childState ?? (await loadChildState());
       if (plugin && !mix)
         level = state.levels[plugin.id]?.level ?? initialLevel(plugin, state.child.grade);
-      sessionId = (
-        await api.post<{ id: number }>(
-          'child/sessions',
-          mix
+      const started = await api.post<StartSessionResponse>(
+        'child/sessions',
+        daily
+          ? { mode: 'daily', selection: {} }
+          : mix
             ? { mode: 'mix', selection: { notions: mix } }
             : { mode: 'training', selection: { pluginId: plugin!.id } },
-        )
-      ).id;
+      );
+      sessionId = started.id;
+      // Le défi du jour reprend là où il s'était arrêté.
+      questionNumber = started.answered;
       nextQuestion();
     } catch (error) {
       loadError = errorMessage(error);
@@ -167,8 +184,10 @@
       phase = 'success';
       feedback = { kind: 'success', text: `🎉 ${praise()}` };
       confetti();
+      playSound('correct');
     } else if (answers.length < maxTries(plugin)) {
       phase = 'retry';
+      playSound('wrong');
       answer = widget.retryAnswer(question as never, given as never, result);
       feedback = {
         kind: 'error',
@@ -177,6 +196,7 @@
       return;
     } else {
       phase = 'revealed';
+      playSound('wrong');
       explanation = plugin.explain?.(question, given) ?? null;
       feedback = { kind: 'error', text: 'Pas grave ! Regarde la bonne réponse. 👀' };
     }
@@ -206,9 +226,18 @@
       if (res.levelChange === 'up') {
         toast(`⬆️ Niveau supérieur : ${plugin.levels[res.level - 1]?.label}`);
         confetti();
+        playSound('levelUp');
       } else if (res.levelChange === 'down') {
         toast(`Pas de souci, on s’entraîne au niveau ${res.level} 💪`);
       }
+      if (res.daily && session.childState) session.childState.daily = res.daily;
+      if (res.dailyBonus > 0 && res.daily) {
+        dailyDone = res.daily;
+        toast(`🎯 Défi du jour réussi ! +${res.dailyBonus} ${theme.currency.icon}`, 3500);
+        confetti();
+        playSound('daily');
+      }
+      celebrateBadges(res.badges);
       level = res.level;
       practiced = [...new Set([...practiced, ...Object.keys(res.notions)])];
       if (session.childState) {
@@ -250,7 +279,9 @@
 <div class="screen">
   <ChildBar back={{ label: 'J’ai fini', onclick: finish }}>
     {#if mix}
-      <span class="badge">🎲 {Math.min(questionNumber, MIX_LENGTH)}/{MIX_LENGTH}</span>
+      <span class="badge"
+        >{daily ? '🎯' : '🎲'} {Math.min(questionNumber, MIX_LENGTH)}/{MIX_LENGTH}</span
+      >
     {/if}
     <span class="badge" title={levelLabel}>Niveau {level}</span>
   </ChildBar>
@@ -314,6 +345,14 @@
           : ''} du premier coup sur <strong>{summary.nQuestions}</strong>
       </p>
       <p>{theme.currency.icon} +{summary.coinsEarned} {theme.currency.plural}</p>
+      {#if dailyDone}
+        <p class="daily-done">
+          🎯 Défi du jour réussi !<br />🔥 {dailyDone.streak.current} jour{dailyDone.streak
+            .current > 1
+            ? 's'
+            : ''} de suite
+        </p>
+      {/if}
       {#if practiced.length}
         <ul class="practiced">
           {#each practiced as id (id)}
@@ -434,5 +473,9 @@
   }
   .big {
     font-size: 3.5rem;
+  }
+  .daily-done {
+    font-weight: 700;
+    color: var(--accent-dark);
   }
 </style>

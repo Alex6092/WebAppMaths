@@ -1,11 +1,19 @@
 <script lang="ts">
   import { registry } from '@app/content';
+  import { DAILY_BONUS, DAILY_LENGTH } from '@app/core';
   import { getTheme } from '@app/themes';
   import ChildBar from '../components/ChildBar.svelte';
   import { navigate } from '../lib/router.svelte';
-  import { activeChild, selectChild } from '../lib/session.svelte';
+  import { activeChild, loadChildState, selectChild, session } from '../lib/session.svelte';
 
   const theme = $derived(getTheme(activeChild()?.themeId));
+  const daily = $derived(session.childState?.daily);
+  const dailyDone = $derived(daily?.streak.doneToday ?? false);
+
+  // Le défi du jour et la série viennent de l'état de l'enfant.
+  $effect(() => {
+    if (!session.childState) void loadChildState();
+  });
   const subjects = registry.subjects.map((subject) => ({
     subject,
     count: registry.pluginsOfSubject(subject.id).length,
@@ -38,11 +46,40 @@
     {/each}
   </div>
 
-  <button class="btn success" onclick={() => navigate('/mix/all')}>🎲 Tout mélanger</button>
+  <div class="daily" class:done={dailyDone}>
+    <div class="daily-text">
+      <strong>🎯 Défi du jour</strong>
+      {#if dailyDone}
+        <span>Réussi ! Reviens demain pour un nouveau défi.</span>
+      {:else if daily && daily.answered > 0}
+        <span>{daily.answered}/{DAILY_LENGTH} questions : continue !</span>
+      {:else}
+        <span
+          >{DAILY_LENGTH} questions mélangées, +{DAILY_BONUS} {theme.currency.icon} à la fin</span
+        >
+      {/if}
+      {#if daily}
+        <span class="streak" class:off={daily.streak.current === 0}
+          >🔥 {daily.streak.current} jour{daily.streak.current > 1 ? 's' : ''} de suite</span
+        >
+      {/if}
+    </div>
+    {#if dailyDone}
+      <span class="check">✅</span>
+    {:else}
+      <button class="btn success" onclick={() => navigate('/daily')}
+        >{daily && daily.answered > 0 ? 'Continuer' : 'C’est parti !'}</button
+      >
+    {/if}
+  </div>
+
+  <button class="btn" onclick={() => navigate('/mix/all')}>🎲 Tout mélanger</button>
 
   <div class="actions">
-    <button class="btn accent" onclick={() => navigate('/shop')}>🛍️ Boutique</button>
+    <button class="btn accent" onclick={() => navigate('/shop')}>🛍️ {theme.shopName}</button>
     <button class="btn" onclick={() => navigate('/collection')}>⭐ Ma collection</button>
+    <button class="btn" onclick={() => navigate('/badges')}>🏅 Mes badges</button>
+    <button class="btn" onclick={() => navigate('/themes')}>🎨 Ambiances</button>
   </div>
   <button class="btn ghost small" onclick={switchProfile}>Changer de profil</button>
 </div>
@@ -104,6 +141,42 @@
   .count {
     color: var(--text-soft);
     font-size: 0.95rem;
+  }
+  .daily {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 24px;
+    background: var(--surface);
+    border: 3px solid var(--accent);
+    box-shadow: var(--shadow);
+  }
+  .daily.done {
+    border-color: #66bb6a;
+  }
+  .daily-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .daily-text strong {
+    font-size: 1.3rem;
+    color: var(--primary-dark);
+  }
+  .streak {
+    font-weight: 700;
+    color: var(--accent-dark);
+  }
+  .streak.off {
+    color: var(--text-soft);
+    font-weight: 400;
+  }
+  .check {
+    font-size: 2.4rem;
   }
   .actions {
     display: flex;
