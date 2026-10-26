@@ -6,6 +6,7 @@
   import Geometry from './Geometry.svelte';
   import Mcq from './Mcq.svelte';
   import NumberInput from './NumberInput.svelte';
+  import Order from './Order.svelte';
   import type { Phase } from './types';
   import WordSelect from './WordSelect.svelte';
 
@@ -35,4 +36,6 @@
   <FillBlank {question} bind:answer {phase} {marks} {solution} />
 {:else if question.widget === 'geometry'}
   <Geometry {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'order'}
+  <Order {question} bind:answer {phase} {marks} {solution} />
 {/if}

@@ -17,6 +17,7 @@ export const SHEET_ITEMS: Record<WidgetId, number> = {
   classify: 1,
   'fill-blank': 4,
   geometry: 1,
+  order: 3,
 };
 
 export type SheetLevel = 'current' | 'expected';

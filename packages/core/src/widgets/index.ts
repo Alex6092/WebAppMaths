@@ -5,6 +5,7 @@ import { fillBlankWidget } from './fill-blank';
 import { geometryWidget } from './geometry';
 import { mcqWidget } from './mcq';
 import { numberInputWidget } from './number-input';
+import { orderWidget } from './order';
 import type { WidgetDef } from './types';
 import { wordSelectWidget } from './word-select';
 
@@ -16,6 +17,7 @@ export const WIDGETS: { [W in WidgetId]: WidgetDef<W> } = {
   classify: classifyWidget,
   'fill-blank': fillBlankWidget,
   geometry: geometryWidget,
+  order: orderWidget,
 };
 
 export function getWidget<W extends WidgetId>(id: W): WidgetDef<W> {
@@ -29,5 +31,6 @@ export { compareAssignments } from './assign';
 export { ACCENT_HINT, blankParts, compareBlanks } from './fill-blank';
 export { checkGeometry, DEFAULT_TOLERANCE, sameDrawing, type GeometryRules } from './geometry';
 export { normalizeNumber } from './number-input';
+export { compareOrder, orderText } from './order';
 export type { WidgetDef } from './types';
 export { isSelectable, tokensText } from './word-select';

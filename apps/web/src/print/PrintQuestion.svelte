@@ -6,6 +6,7 @@
   import PrintFillBlank from './PrintFillBlank.svelte';
   import PrintMcq from './PrintMcq.svelte';
   import PrintNumber from './PrintNumber.svelte';
+  import PrintOrder from './PrintOrder.svelte';
   import PrintWords from './PrintWords.svelte';
 
   /** Une question sur papier ; avec solution, son corrigé (en rouge). */
@@ -29,4 +30,6 @@
   <PrintFillBlank {question} solution={key(question)} />
 {:else if question.widget === 'geometry'}
   <PaperFigure figure={question.figure} tools={question.tools} solution={key(question)} />
+{:else if question.widget === 'order'}
+  <PrintOrder {question} solution={key(question)} />
 {/if}
