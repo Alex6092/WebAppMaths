@@ -1,4 +1,5 @@
 import { figurePoint } from './geometry';
+import { DENOMINATIONS } from './money';
 import type { Figure } from './question';
 
 /**
@@ -37,7 +38,11 @@ export type LessonBlock =
   /** Opération posée et calculée, avec ses retenues. */
   | { kind: 'operation'; op: '+' | '-'; operands: number[] }
   /** Quadrillage de rows × cols ronds, pour voir une multiplication. */
-  | { kind: 'array'; rows: number; cols: number; caption?: string };
+  | { kind: 'array'; rows: number; cols: number; caption?: string }
+  /** Des horloges côte à côte, chacune avec sa légende (« 3 h 30 »). */
+  | { kind: 'clocks'; items: { minutes: number; caption: string }[]; minuteLabels?: boolean }
+  /** Des pièces et des billets (en centimes), avec une légende. */
+  | { kind: 'money'; values: number[]; caption?: string };
 
 export interface LessonColumn {
   title: string;
@@ -101,7 +106,10 @@ export function lessonSpeech(blocks: readonly LessonBlock[]): string {
         return block.steps.map((s) => `${s.title} : ${s.text}`);
       case 'figure':
       case 'array':
+      case 'money':
         return block.caption ? [block.caption] : [];
+      case 'clocks':
+        return block.items.map((c) => c.caption);
       case 'base-ten':
         return [
           [...String(block.value)]
@@ -149,6 +157,15 @@ export function lessonErrors(blocks: readonly LessonBlock[]): string[] {
       if (block.from >= block.to || block.step <= 0 || outside.length)
         errors.push(`droite graduée ${block.from}…${block.to} incorrecte`);
     }
+    if (
+      block.kind === 'clocks' &&
+      block.items.some((c) => !Number.isInteger(c.minutes) || c.minutes < 0 || c.minutes >= 720)
+    )
+      errors.push('horloge : l’heure doit être entre 0 et 719 minutes');
+    if (block.kind === 'money' && block.values.some((v) => !DENOMINATIONS.includes(v)))
+      errors.push(
+        `monnaie : ${block.values.join(', ')} n’est pas une suite de pièces et de billets`,
+      );
     if (block.kind === 'base-ten' && (block.value < 1 || block.value > 999))
       errors.push(`matériel de numération : ${block.value} n’est pas entre 1 et 999`);
   }

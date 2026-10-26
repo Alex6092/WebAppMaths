@@ -1,6 +1,7 @@
 export * from './api';
 export * from './badges';
 export * from './catalog';
+export * from './clock';
 export * from './contract';
 export * from './daily';
 export * from './engine';
@@ -9,6 +10,7 @@ export * from './geometry';
 export * from './grades';
 export * from './lesson';
 export * from './mastery';
+export * from './money';
 export * from './plugin';
 export * from './progression';
 export * from './question';

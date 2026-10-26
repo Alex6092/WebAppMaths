@@ -406,4 +406,114 @@ export const notions: Notion[] = [
       measuredSegment(5, 'Le 0 est sur A. En face de B, je lis 5 : [AB] mesure **5 cm**.'),
     ],
   },
+  {
+    id: 'maths.mesures.lire-heure',
+    domain: 'maths.mesures',
+    title: 'Lire l’heure',
+    grades: ['CE1'],
+    competence: 'Lire et indiquer l’heure sur une horloge à aiguilles.',
+    lesson: [
+      'Une horloge a **deux aiguilles** :',
+      {
+        kind: 'list',
+        items: [
+          'la **petite aiguille** (rouge) montre les **heures** ;',
+          'la **grande aiguille** (bleue) montre les **minutes**.',
+        ],
+      },
+      'Quand la grande aiguille est sur le **12**, c’est l’heure **pile** : je lis le nombre de la petite aiguille.',
+      {
+        kind: 'clocks',
+        items: [
+          { minutes: 180, caption: '3 h' },
+          { minutes: 540, caption: '9 h' },
+        ],
+      },
+      'En une heure, la grande aiguille fait **un tour** et la petite avance d’un nombre. De 1 à 2, de 2 à 3… sur le cadran, la grande aiguille avance de **5 minutes**.',
+      {
+        kind: 'clocks',
+        minuteLabels: true,
+        items: [
+          { minutes: 195, caption: '3 h 15 : trois heures et quart' },
+          { minutes: 210, caption: '3 h 30 : trois heures et demie' },
+          { minutes: 225, caption: '3 h 45 : quatre heures moins le quart' },
+        ],
+      },
+      'Quand la grande aiguille a avancé, la petite est **entre deux nombres** : je lis le plus petit (à 3 h 30, elle est entre le 3 et le 4).',
+      'L’après-midi, on compte les heures après 12 : 3 h de l’après-midi, c’est **15 h**.',
+      { kind: 'example', lines: ['2 h de l’après-midi → **14 h**', '6 h du soir → **18 h**'] },
+    ],
+  },
+  {
+    id: 'maths.mesures.durees',
+    domain: 'maths.mesures',
+    title: 'Les durées',
+    grades: ['CE1'],
+    competence:
+      'Connaître les unités de durée (jour, heure, minute) et trouver une heure après une durée.',
+    lesson: [
+      {
+        kind: 'example',
+        lines: [
+          '1 jour = **24 heures**',
+          '1 heure = **60 minutes**',
+          'une demi-heure = **30 minutes**',
+          'un quart d’heure = **15 minutes**',
+        ],
+      },
+      'Pour savoir quelle heure il sera **dans** une heure, je fais faire un tour à la grande aiguille.',
+      {
+        kind: 'clocks',
+        items: [
+          { minutes: 195, caption: 'Il est 3 h 15.' },
+          { minutes: 255, caption: 'Dans 1 heure : 4 h 15.' },
+          { minutes: 225, caption: 'Dans une demi-heure : 3 h 45.' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'maths.mesures.monnaie',
+    domain: 'maths.mesures',
+    title: 'Les pièces et les billets',
+    grades: ['CE1'],
+    competence: 'Connaître les pièces et les billets en euros, et calculer une somme.',
+    lesson: [
+      'Pour payer, on utilise des **pièces** et des **billets** en **euros** (€).',
+      { kind: 'money', values: [100, 200], caption: 'Les pièces de 1 € et de 2 €.' },
+      {
+        kind: 'money',
+        values: [500, 1000, 2000, 5000],
+        caption: 'Les billets de 5 €, 10 €, 20 € et 50 €.',
+      },
+      'Pour compter une somme, je commence par les billets les **plus grands**, puis j’ajoute les pièces.',
+      { kind: 'money', values: [1000, 500, 200, 100], caption: '10 + 5 + 2 + 1 = **18 €**' },
+      'Il y a aussi des pièces en **centimes** (c). 100 centimes font **1 euro** : 1 € = 100 c.',
+      {
+        kind: 'money',
+        values: [50, 20, 10, 5, 2, 1],
+        caption: 'Les pièces de 50 c, 20 c, 10 c, 5 c, 2 c et 1 c.',
+      },
+    ],
+  },
+  {
+    id: 'maths.mesures.payer',
+    domain: 'maths.mesures',
+    title: 'Payer et rendre la monnaie',
+    grades: ['CE1'],
+    competence: 'Payer une somme avec des pièces et des billets, et calculer la monnaie rendue.',
+    lesson: [
+      'Pour payer **17 €**, je peux donner un billet de 10 €, un billet de 5 € et une pièce de 2 € : 10 + 5 + 2 = 17.',
+      { kind: 'money', values: [1000, 500, 200] },
+      'Je peux aussi payer autrement : 5 + 5 + 5 + 2 = 17. Le plus pratique, c’est de donner le **moins** de pièces et de billets possible.',
+      'Si je donne **plus** que le prix, on me **rend la monnaie** : je calcule la différence.',
+      {
+        kind: 'example',
+        lines: [
+          'Le livre coûte **7 €**. Je donne un billet de **10 €**.',
+          'On me rend 10 − 7 = **3 €**.',
+        ],
+      },
+    ],
+  },
 ];

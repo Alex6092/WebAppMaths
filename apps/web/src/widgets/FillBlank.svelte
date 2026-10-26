@@ -4,6 +4,7 @@
   import Keyboard from '../components/Keyboard.svelte';
   import Numpad from '../components/Numpad.svelte';
   import FigureView from '../geometry/FigureView.svelte';
+  import PictureView from '../pictures/PictureView.svelte';
   import { isLocked, type WidgetProps } from './types';
 
   let {
@@ -111,6 +112,9 @@
 
 {#if question.figure}
   <FigureView figure={question.figure} />
+{/if}
+{#if question.picture}
+  <PictureView picture={question.picture} />
 {/if}
 
 <!-- Sur une ligne : un retour à la ligne dans le gabarit ajouterait un espace avant « , » ou « . ». -->

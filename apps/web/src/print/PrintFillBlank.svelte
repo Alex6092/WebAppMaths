@@ -1,5 +1,6 @@
 <script lang="ts">
   import { blankParts, type FillBlankAnswer, type FillBlankQuestion } from '@app/core';
+  import PictureView from '../pictures/PictureView.svelte';
   import PaperFigure from './PaperFigure.svelte';
 
   /**
@@ -24,6 +25,7 @@
 </script>
 
 {#if question.figure}<PaperFigure figure={question.figure} />{/if}
+{#if question.picture}<PictureView picture={question.picture} paper />{/if}
 {#if shared}
   <p class="shared">
     {#each shared as option (option)}<span>{option}</span>{/each}

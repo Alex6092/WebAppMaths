@@ -1,5 +1,6 @@
 <script lang="ts">
   import FigureView from '../geometry/FigureView.svelte';
+  import PictureView from '../pictures/PictureView.svelte';
   import { isLocked, type WidgetProps } from './types';
 
   let { question, answer = $bindable(), phase, marks, solution }: WidgetProps<'mcq'> = $props();
@@ -63,6 +64,9 @@
 {#if question.figure}
   <FigureView figure={question.figure} />
 {/if}
+{#if question.picture}
+  <PictureView picture={question.picture} />
+{/if}
 
 {#if slotted}
   <!-- Sur une ligne : l'énoncé garde ses espaces (pre-wrap). -->
@@ -76,12 +80,14 @@
   {#each question.choices as choice (choice.id)}
     <button
       class="choice {choiceState(choice.id)}"
+      class:pictured={choice.picture !== undefined}
       role={question.multiple ? 'checkbox' : 'radio'}
       aria-checked={answer.selected.includes(choice.id)}
       disabled={locked}
       onclick={() => toggle(choice.id)}
     >
       {#if choice.icon}<span class="icon">{choice.icon}</span>{/if}
+      {#if choice.picture}<PictureView picture={choice.picture} small />{/if}
       <span>{choice.label}</span>
     </button>
   {/each}
@@ -196,5 +202,9 @@
   }
   .icon {
     font-size: 1.6em;
+  }
+  /* Une horloge ou des pièces à choisir : l'image au-dessus de sa lettre. */
+  .choice.pictured {
+    flex-direction: column;
   }
 </style>

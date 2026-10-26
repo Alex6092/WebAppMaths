@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { Mark, PluginQuestion } from '@app/core';
   import Classify from './Classify.svelte';
+  import Clock from './Clock.svelte';
   import ColumnOp from './ColumnOp.svelte';
   import FillBlank from './FillBlank.svelte';
   import Geometry from './Geometry.svelte';
   import Mcq from './Mcq.svelte';
+  import Money from './Money.svelte';
   import NumberInput from './NumberInput.svelte';
   import Order from './Order.svelte';
   import type { Phase } from './types';
@@ -38,4 +40,8 @@
   <Geometry {question} bind:answer {phase} {marks} {solution} />
 {:else if question.widget === 'order'}
   <Order {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'clock'}
+  <Clock {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'money'}
+  <Money {question} bind:answer {phase} {marks} {solution} />
 {/if}

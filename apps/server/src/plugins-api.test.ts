@@ -13,12 +13,16 @@ it('chaque exercice, chaque niveau : le serveur enregistre les tentatives', asyn
     logger: false,
   });
   let cookie = '';
+  // Une adresse par exercice : le test envoie plus de tentatives que la limite par minute
+  // d'une seule adresse (600), ce qu'aucun enfant ne fait.
+  let address = '127.0.0.1';
   const send = async (method: 'GET' | 'POST', url: string, body?: unknown) => {
     const res = await app.inject({
       method,
       url: `/api${url}`,
       payload: body as never,
       headers: cookie ? { cookie } : {},
+      remoteAddress: address,
     });
     const s = res.cookies.find((c) => c.name === 'wam_sid');
     if (s) cookie = `wam_sid=${s.value}`;
@@ -37,7 +41,8 @@ it('chaque exercice, chaque niveau : le serveur enregistre les tentatives', asyn
 
   const failures: string[] = [];
   let seed = 1;
-  for (const plugin of registry.plugins) {
+  for (const [i, plugin] of registry.plugins.entries()) {
+    address = `10.0.${Math.floor(i / 250)}.${(i % 250) + 1}`;
     const session = (
       await send('POST', '/child/sessions', {
         mode: 'training',

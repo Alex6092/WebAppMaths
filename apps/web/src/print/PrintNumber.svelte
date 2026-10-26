@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { NumberInputAnswer, NumberInputQuestion } from '@app/core';
+  import PictureView from '../pictures/PictureView.svelte';
   import PaperFigure from './PaperFigure.svelte';
 
   /** Une réponse en nombre : une case à remplir dans l'énoncé (« 4 × 3 = ▢ »). */
@@ -12,6 +13,7 @@
 </script>
 
 {#if question.figure}<PaperFigure figure={question.figure} />{/if}
+{#if question.picture}<PictureView picture={question.picture} paper />{/if}
 <p class="prompt">
   {#if before.trim()}<span>{before.trim()}</span>{/if}
   <span class="box"
