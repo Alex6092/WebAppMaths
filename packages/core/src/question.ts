@@ -58,6 +58,18 @@ export interface Figure {
   ruler?: boolean;
 }
 
+/** Une image à regarder avec l'énoncé : une horloge à aiguilles, des pièces et des billets. */
+export type Picture =
+  | {
+      kind: 'clock';
+      /** L'heure montrée, en minutes depuis 12 h (0 à 719). */
+      minutes: number;
+      /** Les minutes écrites autour du cadran (5, 10, 15…). */
+      minuteLabels?: boolean;
+    }
+  /** Valeurs en centimes : 50 pour la pièce de 50 c, 1000 pour le billet de 10 €. */
+  | { kind: 'money'; values: number[] };
+
 /** Opération posée en colonnes, avec cases de retenue. */
 export interface ColumnOpQuestion extends QuestionBase {
   widget: 'column-op';
@@ -79,6 +91,7 @@ export interface NumberInputQuestion extends QuestionBase {
   unit?: string;
   maxLength?: number;
   figure?: Figure;
+  picture?: Picture;
 }
 export interface NumberInputAnswer {
   value: string;
@@ -88,6 +101,8 @@ export interface McqChoice {
   id: string;
   label: string;
   icon?: string;
+  /** Une horloge ou un porte-monnaie à choisir (« Quelle horloge indique 3 h ? »). */
+  picture?: Picture;
 }
 /** Choix unique ou multiple (VRAI/FAUX, COCHE, signe <, >, =…). */
 export interface McqQuestion extends QuestionBase {
@@ -98,6 +113,7 @@ export interface McqQuestion extends QuestionBase {
   multiple: boolean;
   layout?: 'row' | 'grid' | 'list';
   figure?: Figure;
+  picture?: Picture;
 }
 export interface McqAnswer {
   selected: string[];
@@ -164,6 +180,7 @@ export interface FillBlankQuestion extends QuestionBase {
   /** Les majuscules comptent (faux par défaut). Les accents comptent toujours. */
   caseSensitive?: boolean;
   figure?: Figure;
+  picture?: Picture;
 }
 
 /**
@@ -214,6 +231,37 @@ export interface OrderAnswer {
   order: number[];
 }
 
+/** Régler une horloge : l'enfant tourne les aiguilles jusqu'à l'heure demandée. */
+export interface ClockQuestion extends QuestionBase {
+  widget: 'clock';
+  /** L'heure à montrer, écrite au-dessus de l'horloge (« 3 h 30 », « 15 h »). */
+  prompt: string;
+  /** La grande aiguille avance de step minutes (60, 30, 15, 5 ou 1). */
+  step: number;
+  /** Les aiguilles au départ, en minutes depuis 12 h (0 à 719). */
+  start: number;
+  minuteLabels?: boolean;
+}
+export interface ClockAnswer {
+  /** L'heure montrée par les aiguilles, en minutes depuis 12 h (0 à 719). */
+  minutes: number;
+}
+
+/** Payer : parmi les pièces et les billets étalés, l'enfant entoure ceux qu'il donne. */
+export interface MoneyQuestion extends QuestionBase {
+  widget: 'money';
+  /** Ce qu'il faut payer (« La glace coûte 7 € »). */
+  prompt: string;
+  /** L'objet acheté. */
+  icon?: string;
+  /** Les pièces et les billets, en centimes, dans l'ordre où ils sont étalés. */
+  purse: number[];
+}
+export interface MoneyAnswer {
+  /** Numéros des pièces et des billets entourés. */
+  picked: number[];
+}
+
 export type Question =
   | ColumnOpQuestion
   | NumberInputQuestion
@@ -222,7 +270,9 @@ export type Question =
   | ClassifyQuestion
   | FillBlankQuestion
   | GeometryQuestion
-  | OrderQuestion;
+  | OrderQuestion
+  | ClockQuestion
+  | MoneyQuestion;
 export type WidgetId = Question['widget'];
 
 export interface AnswerMap {
@@ -234,6 +284,8 @@ export interface AnswerMap {
   'fill-blank': FillBlankAnswer;
   geometry: GeometryAnswer;
   order: OrderAnswer;
+  clock: ClockAnswer;
+  money: MoneyAnswer;
 }
 
 export type QuestionOf<W extends WidgetId> = Extract<Question, { widget: W }>;

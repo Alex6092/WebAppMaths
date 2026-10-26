@@ -2,6 +2,7 @@
   import type { LessonBlock } from '@app/core';
   import FigureView from '../../geometry/FigureView.svelte';
   import BaseTen from './BaseTen.svelte';
+  import PictureView from '../../pictures/PictureView.svelte';
   import DotArray from './DotArray.svelte';
   import NumberLine from './NumberLine.svelte';
   import Operation from './Operation.svelte';
@@ -60,6 +61,23 @@
   {:else if block.kind === 'array'}
     <figure>
       <DotArray rows={block.rows} cols={block.cols} />
+      {#if block.caption}<figcaption><RichText text={block.caption} /></figcaption>{/if}
+    </figure>
+  {:else if block.kind === 'clocks'}
+    <div class="clocks">
+      {#each block.items as item, i (i)}
+        <figure>
+          <PictureView
+            picture={{ kind: 'clock', minutes: item.minutes, minuteLabels: block.minuteLabels }}
+            small
+          />
+          <figcaption><RichText text={item.caption} /></figcaption>
+        </figure>
+      {/each}
+    </div>
+  {:else if block.kind === 'money'}
+    <figure>
+      <PictureView picture={{ kind: 'money', values: block.values }} />
       {#if block.caption}<figcaption><RichText text={block.caption} /></figcaption>{/if}
     </figure>
   {/if}
@@ -165,6 +183,19 @@
     font-size: 1rem;
     color: var(--text-soft);
     text-align: center;
+  }
+  .clocks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 20px;
+  }
+  .clocks figure {
+    align-self: auto;
+  }
+  .clocks figcaption {
+    font-weight: 700;
+    color: var(--text);
   }
   @media (max-width: 520px) {
     .timeline {

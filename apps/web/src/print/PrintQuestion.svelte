@@ -2,9 +2,11 @@
   import type { AnswerOf, PluginQuestion, Question } from '@app/core';
   import PaperFigure from './PaperFigure.svelte';
   import PrintClassify from './PrintClassify.svelte';
+  import PrintClock from './PrintClock.svelte';
   import PrintColumnOp from './PrintColumnOp.svelte';
   import PrintFillBlank from './PrintFillBlank.svelte';
   import PrintMcq from './PrintMcq.svelte';
+  import PrintMoney from './PrintMoney.svelte';
   import PrintNumber from './PrintNumber.svelte';
   import PrintOrder from './PrintOrder.svelte';
   import PrintWords from './PrintWords.svelte';
@@ -32,4 +34,8 @@
   <PaperFigure figure={question.figure} tools={question.tools} solution={key(question)} />
 {:else if question.widget === 'order'}
   <PrintOrder {question} solution={key(question)} />
+{:else if question.widget === 'clock'}
+  <PrintClock {question} solution={key(question)} />
+{:else if question.widget === 'money'}
+  <PrintMoney {question} solution={key(question)} />
 {/if}

@@ -36,19 +36,30 @@ import plugin31 from './maths/geometrie/relie-alignes/plugin';
 import plugin32 from './maths/geometrie/trace-alignes/plugin';
 import plugin33 from './maths/geometrie/trace-segment-milieu/plugin';
 import plugin34 from './maths/geometrie/vocabulaire-segment/plugin';
-import plugin35 from './maths/mesures/mesure-segment/plugin';
-import plugin36 from './maths/nombres/comparer-signe/plugin';
-import plugin37 from './maths/nombres/decomposer/plugin';
-import plugin38 from './maths/nombres/ecrire-chiffres/plugin';
-import plugin39 from './maths/nombres/ecrire-lettres/plugin';
-import plugin40 from './maths/nombres/encadrer/plugin';
-import plugin41 from './maths/nombres/lire-nombre/plugin';
-import plugin42 from './maths/nombres/ranger/plugin';
-import plugin43 from './qlm/vivant/aliments-transformes/plugin';
-import plugin44 from './qlm/vivant/classe-familles-aliments/plugin';
-import plugin45 from './qlm/vivant/famille-aliment/plugin';
-import plugin46 from './qlm/vivant/origine-aliments/plugin';
-import plugin47 from './qlm/vivant/provenance-aliments/plugin';
+import plugin35 from './maths/mesures/compte-argent/plugin';
+import plugin36 from './maths/mesures/dans-combien/plugin';
+import plugin37 from './maths/mesures/heure-en-mots/plugin';
+import plugin38 from './maths/mesures/lis-heure/plugin';
+import plugin39 from './maths/mesures/mesure-segment/plugin';
+import plugin40 from './maths/mesures/moins-de-pieces/plugin';
+import plugin41 from './maths/mesures/paie/plugin';
+import plugin42 from './maths/mesures/quelle-horloge/plugin';
+import plugin43 from './maths/mesures/qui-a-le-plus/plugin';
+import plugin44 from './maths/mesures/regle-horloge/plugin';
+import plugin45 from './maths/mesures/rendre-monnaie/plugin';
+import plugin46 from './maths/mesures/unites-duree/plugin';
+import plugin47 from './maths/nombres/comparer-signe/plugin';
+import plugin48 from './maths/nombres/decomposer/plugin';
+import plugin49 from './maths/nombres/ecrire-chiffres/plugin';
+import plugin50 from './maths/nombres/ecrire-lettres/plugin';
+import plugin51 from './maths/nombres/encadrer/plugin';
+import plugin52 from './maths/nombres/lire-nombre/plugin';
+import plugin53 from './maths/nombres/ranger/plugin';
+import plugin54 from './qlm/vivant/aliments-transformes/plugin';
+import plugin55 from './qlm/vivant/classe-familles-aliments/plugin';
+import plugin56 from './qlm/vivant/famille-aliment/plugin';
+import plugin57 from './qlm/vivant/origine-aliments/plugin';
+import plugin58 from './qlm/vivant/provenance-aliments/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
@@ -103,6 +114,17 @@ export const plugins: AnyPlugin[] = [
   plugin45,
   plugin46,
   plugin47,
+  plugin48,
+  plugin49,
+  plugin50,
+  plugin51,
+  plugin52,
+  plugin53,
+  plugin54,
+  plugin55,
+  plugin56,
+  plugin57,
+  plugin58,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -142,7 +164,18 @@ export const pluginPathIds: string[] = [
   'maths.geometrie.trace-alignes',
   'maths.geometrie.trace-segment-milieu',
   'maths.geometrie.vocabulaire-segment',
+  'maths.mesures.compte-argent',
+  'maths.mesures.dans-combien',
+  'maths.mesures.heure-en-mots',
+  'maths.mesures.lis-heure',
   'maths.mesures.mesure-segment',
+  'maths.mesures.moins-de-pieces',
+  'maths.mesures.paie',
+  'maths.mesures.quelle-horloge',
+  'maths.mesures.qui-a-le-plus',
+  'maths.mesures.regle-horloge',
+  'maths.mesures.rendre-monnaie',
+  'maths.mesures.unites-duree',
   'maths.nombres.comparer-signe',
   'maths.nombres.decomposer',
   'maths.nombres.ecrire-chiffres',

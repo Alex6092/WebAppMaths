@@ -10,6 +10,8 @@ export const HAS_OWN_SUBMIT: Record<WidgetId, boolean> = {
   'fill-blank': false,
   geometry: false,
   order: false,
+  clock: false,
+  money: false,
 };
 
 export { default as Widget } from './Widget.svelte';

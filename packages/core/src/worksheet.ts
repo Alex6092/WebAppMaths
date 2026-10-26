@@ -18,6 +18,8 @@ export const SHEET_ITEMS: Record<WidgetId, number> = {
   'fill-blank': 4,
   geometry: 1,
   order: 3,
+  clock: 4,
+  money: 2,
 };
 
 export type SheetLevel = 'current' | 'expected';

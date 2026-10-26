@@ -37,10 +37,15 @@
     'number-input': '5.6cm',
     mcq: '7.5cm',
     'fill-blank': '8cm',
+    clock: '4.2cm',
   };
   function columnWidth(e: SheetExercise): string {
     const first = e.items[0]?.question;
     if (!first || withFigure(first)) return '100%';
+    // Une horloge à lire tient dans une colonne ; des pièces ou des horloges à choisir, non.
+    if (first.widget === 'mcq' && first.choices.some((c) => c.picture)) return '100%';
+    if ('picture' in first && first.picture)
+      return first.picture.kind === 'clock' ? '5.6cm' : '100%';
     return COLUMN[first.widget] ?? '100%';
   }
   const solutionOf = (e: SheetExercise, i: number) =>

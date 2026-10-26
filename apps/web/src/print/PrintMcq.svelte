@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { McqAnswer, McqQuestion } from '@app/core';
+  import PictureView from '../pictures/PictureView.svelte';
   import PaperFigure from './PaperFigure.svelte';
 
   /**
@@ -18,6 +19,7 @@
 </script>
 
 {#if question.figure}<PaperFigure figure={question.figure} />{/if}
+{#if question.picture}<PictureView picture={question.picture} paper />{/if}
 {#if slotted}
   <p class="prompt">
     <span>{before.trim()}</span>
@@ -34,6 +36,7 @@
       <li>
         <span class="check" class:key-box={chosen(choice.id)}>{chosen(choice.id) ? '✗' : ''}</span>
         {#if choice.icon}<span class="icon">{choice.icon}</span>{/if}
+        {#if choice.picture}<PictureView picture={choice.picture} paper small />{/if}
         <span>{choice.label}</span>
       </li>
     {/each}
