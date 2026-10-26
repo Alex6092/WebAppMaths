@@ -4,6 +4,7 @@ export * from './catalog';
 export * from './contract';
 export * from './daily';
 export * from './engine';
+export * from './evaluation';
 export * from './geometry';
 export * from './grades';
 export * from './lesson';

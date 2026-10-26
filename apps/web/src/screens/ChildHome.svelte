@@ -2,6 +2,7 @@
   import { registry } from '@app/content';
   import { addDays, DAILY_BONUS, DAILY_LENGTH, HOMEWORK_BONUS } from '@app/core';
   import { getTheme } from '@app/themes';
+  import { onMount } from 'svelte';
   import ChildBar from '../components/ChildBar.svelte';
   import { dueNotions } from '../lib/notions';
   import { navigate } from '../lib/router.svelte';
@@ -11,6 +12,7 @@
   const daily = $derived(session.childState?.daily);
   const dailyDone = $derived(daily?.streak.doneToday ?? false);
   const assignments = $derived(session.childState?.assignments ?? []);
+  const evaluations = $derived(session.childState?.evaluations ?? []);
   const due = $derived(session.childState ? dueNotions() : []);
 
   /** « pour demain », « pour lundi 3 novembre », « en retard ». */
@@ -23,9 +25,10 @@
     return `pour ${date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}`;
   }
 
-  // Le défi du jour, les devoirs et la série viennent de l'état de l'enfant.
-  $effect(() => {
-    if (!session.childState) void loadChildState();
+  // Le défi du jour, les devoirs, les évaluations et la série viennent de l'état de l'enfant :
+  // on le recharge à chaque retour à l'accueil (un parent a pu donner un devoir entre-temps).
+  onMount(() => {
+    loadChildState().catch(() => {});
   });
 
   const subjects = registry.subjects.map((subject) => ({
@@ -59,6 +62,34 @@
       </button>
     {/each}
   </div>
+
+  {#if evaluations.length}
+    <section class="homework">
+      <h2>📋 Mon évaluation</h2>
+      {#each evaluations as e (e.id)}
+        <div class="assignment" class:done={e.completedAt !== null}>
+          <div class="assignment-text">
+            <strong>{e.title}</strong>
+            <span class="due"
+              >{e.completedAt !== null
+                ? 'Finie, bravo !'
+                : 'Une seule réponse par question, sans aide : comme en classe.'}</span
+            >
+            <span class="progress"><span style:width="{(e.answered / e.total) * 100}%"></span></span
+            >
+            <span class="count">{e.answered}/{e.total} questions</span>
+          </div>
+          {#if e.completedAt !== null}
+            <span class="check">✅</span>
+          {:else}
+            <button class="btn success" onclick={() => navigate(`/evaluation/${e.id}`)}
+              >{e.answered > 0 ? 'Continuer' : 'Commencer'}</button
+            >
+          {/if}
+        </div>
+      {/each}
+    </section>
+  {/if}
 
   {#if assignments.length}
     <section class="homework">

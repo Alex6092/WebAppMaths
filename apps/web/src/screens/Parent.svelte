@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    dayKey,
     GRADE_IDS,
     type ChildDto,
     type CreatedInvitation,
@@ -8,6 +9,7 @@
     type MeResponse,
   } from '@app/core';
   import ChildReport from '../components/parent/ChildReport.svelte';
+  import Evaluations from '../components/parent/Evaluations.svelte';
   import Homework from '../components/parent/Homework.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
   import { toast } from '../lib/effects.svelte';
@@ -151,6 +153,51 @@
     }
   }
 
+  let exporting = $state(false);
+  let deleteOpen = $state(false);
+  let deletePassword = $state('');
+
+  /** Télécharge toutes les données de la famille (JSON). */
+  async function exportData() {
+    exporting = true;
+    try {
+      const data = await api.get<unknown>('family/export');
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }),
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `cartable-magique-${dayKey(new Date())}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      handle(e);
+    } finally {
+      exporting = false;
+    }
+  }
+
+  async function deleteFamily(event: SubmitEvent) {
+    event.preventDefault();
+    if (
+      !confirm(
+        'Supprimer définitivement la famille, les comptes parents et toute la progression des enfants ?',
+      )
+    )
+      return;
+    error = null;
+    try {
+      await api.del('family', { password: deletePassword });
+      setMe(null);
+      navigate('/login');
+      toast('Les données de la famille ont été supprimées.');
+    } catch (e) {
+      handle(e);
+    } finally {
+      deletePassword = '';
+    }
+  }
+
   async function lock() {
     await api.post('auth/lock');
     await refreshMe();
@@ -211,6 +258,8 @@
         {/if}
         <h3>📝 Devoirs</h3>
         <Homework child={followed} onerror={handle} />
+        <h3>📋 Évaluations blanches</h3>
+        <Evaluations child={followed} onerror={handle} />
         <ChildReport childId={followed.id} onerror={handle} />
       </section>
     {/if}
@@ -285,6 +334,59 @@
         <p class="hint">
           Valable jusqu’au {date(familyCode.expiresAt)} · lien : {inviteLink(familyCode.code)}
         </p>
+      {/if}
+    </section>
+
+    <section class="card">
+      <h2>🔒 Données de la famille</h2>
+      <p>
+        L’app garde le strict nécessaire : le nom de la famille, l’e-mail des parents et leur mot de
+        passe (chiffré) ; pour chaque enfant, son prénom, son avatar, sa classe et ses réponses aux
+        exercices, qui servent à suivre ses progrès. Il n’y a ni publicité ni pisteur, et rien n’est
+        transmis à personne.
+      </p>
+      <p class="hint">
+        {#if isAdmin}
+          Tu peux télécharger toutes ces données (fichier JSON). La famille de l’administrateur ne
+          se supprime pas depuis l’app.
+        {:else}
+          Tu peux télécharger toutes ces données (fichier JSON), ou tout supprimer. Après une
+          suppression, les copies de sauvegarde du serveur disparaissent d’elles-mêmes en 14 jours.
+        {/if}
+      </p>
+      <div class="row">
+        <button class="btn small" disabled={exporting} onclick={exportData}
+          >⬇️ Télécharger nos données</button
+        >
+        {#if !isAdmin && !deleteOpen}
+          <button class="btn danger small" onclick={() => (deleteOpen = true)}
+            >Supprimer la famille…</button
+          >
+        {/if}
+      </div>
+      {#if deleteOpen}
+        <form class="delete-form" onsubmit={deleteFamily}>
+          <p>
+            <strong>Attention :</strong> les comptes parents, les profils des enfants et toute leur progression
+            seront effacés. C’est définitif.
+          </p>
+          <div class="row">
+            <div class="field">
+              <label for="delete-pw">Mot de passe pour confirmer</label>
+              <input
+                id="delete-pw"
+                type="password"
+                autocomplete="current-password"
+                bind:value={deletePassword}
+                required
+              />
+            </div>
+            <button class="btn ghost small" type="button" onclick={() => (deleteOpen = false)}
+              >Annuler</button
+            >
+            <button class="btn danger small" type="submit">Tout supprimer</button>
+          </div>
+        </form>
       {/if}
     </section>
 
@@ -450,6 +552,15 @@
     text-align: left;
     padding: 6px 4px;
     border-bottom: 1px solid #eee;
+  }
+  .delete-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 2px solid #ef9a9a;
+    border-radius: 14px;
+    padding: 12px;
+    background: #fff5f5;
   }
   .footer {
     justify-content: center;

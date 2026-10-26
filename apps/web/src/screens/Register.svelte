@@ -73,6 +73,10 @@
         required
       />
     </div>
+    <p class="privacy">
+      🔒 L’app ne garde que le prénom, l’avatar et la classe des enfants, et leurs réponses aux
+      exercices. Depuis l’espace parent, tu peux tout télécharger ou tout supprimer.
+    </p>
     {#if error}<p class="error-msg">{error}</p>{/if}
     <button class="btn" type="submit" disabled={busy}>Créer le compte</button>
     <a class="link" href="#/login">J’ai déjà un compte</a>
@@ -88,6 +92,10 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+  }
+  .privacy {
+    color: var(--text-soft);
+    font-size: 0.88rem;
   }
   .link {
     text-align: center;

@@ -2,6 +2,7 @@
  * Contrat d'API partagé entre le serveur (apps/server) et l'interface (apps/web).
  */
 import type { Streak } from './daily';
+import type { EvaluationCode } from './evaluation';
 import type { GradeId } from './grades';
 import type { NotionMastery } from './mastery';
 import type { LevelChange } from './progression';
@@ -56,6 +57,60 @@ export interface ChildStateResponse {
   assignments: AssignmentDto[];
   /** Révision espacée des notions acquises. */
   reviews: Record<string, NotionReview>;
+  /** Évaluations blanches à faire, et celles finies ces derniers jours. */
+  evaluations: EvaluationDto[];
+}
+
+/** Une question d'évaluation : la notion évaluée, et la question exacte. */
+export interface EvaluationItem extends ReviewItem {
+  notionId: string;
+}
+
+/** Une évaluation blanche préparée par le parent. */
+export interface EvaluationDto {
+  id: number;
+  title: string;
+  notions: string[];
+  perNotion: number;
+  /** Nombre de questions. */
+  total: number;
+  /** Questions déjà répondues. */
+  answered: number;
+  createdAt: number;
+  completedAt: number | null;
+}
+
+export interface NewEvaluation {
+  title: string;
+  notions: string[];
+  perNotion: number;
+}
+
+/** Une ligne de compétence du bilan : barème ( points / total ) et code de l'école. */
+export interface EvaluationLine {
+  notionId: string;
+  points: number;
+  total: number;
+  code: EvaluationCode;
+}
+
+/** Une question du bilan, avec la réponse de l'enfant (null : pas encore répondue). */
+export interface EvaluationQuestion extends EvaluationItem {
+  pluginVersion: number;
+  answers: unknown[] | null;
+  correct: boolean | null;
+  answeredAt: number | null;
+}
+
+/** Le bilan d'une évaluation, au format des évaluations de l'école. */
+export interface EvaluationReport extends EvaluationDto {
+  firstName: string;
+  grade: GradeId;
+  /** Première réponse (ms), null si l'évaluation n'est pas commencée. */
+  startedAt: number | null;
+  points: number;
+  lines: EvaluationLine[];
+  questions: EvaluationQuestion[];
 }
 
 /** Un devoir donné par le parent. */
@@ -96,16 +151,18 @@ export interface DailyState {
 /**
  * training : un seul exercice ; mix : un mélange des exercices de plusieurs notions ;
  * daily : le défi du jour, un mélange de toutes les notions de la classe ;
- * review : les questions ratées, reposées à l'identique ; homework : un devoir du parent.
+ * review : les questions ratées, reposées à l'identique ; homework : un devoir du parent ;
+ * evaluation : une évaluation blanche (un seul essai, sans correction).
  */
-export type PracticeMode = 'training' | 'mix' | 'daily' | 'review' | 'homework';
+export type PracticeMode = 'training' | 'mix' | 'daily' | 'review' | 'homework' | 'evaluation';
 
 export type StartSessionRequest =
   | { mode: 'training'; selection: { pluginId: string } }
   | { mode: 'mix'; selection: { notions: string[] } }
   | { mode: 'daily'; selection: Record<string, never> }
   | { mode: 'review'; selection: Record<string, never> }
-  | { mode: 'homework'; selection: { assignmentId: number } };
+  | { mode: 'homework'; selection: { assignmentId: number } }
+  | { mode: 'evaluation'; selection: { evaluationId: number } };
 
 /** Une question à reposer telle quelle : même exercice, même niveau, même graine. */
 export interface ReviewItem {
@@ -118,11 +175,14 @@ export interface StartSessionResponse {
   id: number;
   /** Questions déjà faites : on reprend le défi du jour là où il s'était arrêté. */
   answered: number;
-  /** Pour « Revoir mes erreurs » : les questions, dans l'ordre. */
+  /**
+   * Pour « Revoir mes erreurs » : les questions, dans l'ordre ; pour une évaluation : celles
+   * qui restent à faire.
+   */
   items?: ReviewItem[];
   /** Pour le défi du jour et un devoir : les notions qu'il mélange. */
   notions?: string[];
-  /** Pour un devoir : le nombre de questions à faire. */
+  /** Pour un devoir ou une évaluation : le nombre de questions à faire. */
   total?: number;
 }
 
@@ -163,6 +223,8 @@ export interface AttemptResponse {
   homeworkBonus: number;
   /** Révision espacée mise à jour des notions de l'exercice. */
   reviews: Record<string, NotionReview>;
+  /** L'évaluation, pour une question d'évaluation. */
+  evaluation: EvaluationDto | null;
 }
 
 export interface RewardResponse {

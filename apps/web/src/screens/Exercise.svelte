@@ -15,6 +15,7 @@
     type AnyPlugin,
     type AttemptResponse,
     type DailyState,
+    type EvaluationReport,
     type Mark,
     type Notion,
     type PluginQuestion,
@@ -25,6 +26,7 @@
   import { getTheme } from '@app/themes';
   import { onMount, untrack } from 'svelte';
   import ChildBar from '../components/ChildBar.svelte';
+  import EvaluationCodes from '../components/EvaluationCodes.svelte';
   import LessonCard from '../components/LessonCard.svelte';
   import NotionBadge from '../components/NotionBadge.svelte';
   import SpeakButton from '../components/SpeakButton.svelte';
@@ -42,7 +44,9 @@
    * Un exercice (pluginId), ou un mélange des exercices de plusieurs notions (mix).
    * Le défi du jour (daily) est un mélange de toutes les notions de la classe ;
    * « Revoir mes erreurs » (review) repose les questions ratées, à l'identique ;
-   * un devoir (homework, son numéro) mélange les notions choisies par le parent.
+   * un devoir (homework, son numéro) mélange les notions choisies par le parent ;
+   * une évaluation blanche (evaluation, son numéro) pose ses questions une seule fois,
+   * sans correction.
    */
   let {
     pluginId,
@@ -50,24 +54,31 @@
     daily = false,
     review = false,
     homework,
+    evaluation,
   }: {
     pluginId?: string;
     mix?: string[];
     daily?: boolean;
     review?: boolean;
     homework?: number;
+    evaluation?: number;
   } = $props();
 
+  const isEvaluation = $derived(evaluation !== undefined);
+  /** Questions posées telles quelles : les erreurs à revoir, ou celles de l'évaluation. */
+  const replaying = $derived(review || isEvaluation);
   let reviewItems = $state.raw<ReviewItem[]>([]);
-  /** Questions du devoir. */
-  let homeworkTotal = $state(0);
-  /** Une série de questions comptées (mélange, défi, erreurs, devoir), et sa longueur. */
-  const series = $derived(Boolean(mix) || review || homework !== undefined);
+  /** Questions déjà répondues avant cette séance (une évaluation reprise en cours). */
+  let itemOffset = 0;
+  /** Questions du devoir ou de l'évaluation. */
+  let serverTotal = $state(0);
+  /** Une série de questions comptées (mélange, défi, erreurs, devoir, évaluation), et sa longueur. */
+  const series = $derived(Boolean(mix) || replaying || homework !== undefined);
   const seriesLength = $derived(
     review
       ? reviewItems.length
-      : homework !== undefined
-        ? homeworkTotal
+      : homework !== undefined || isEvaluation
+        ? serverTotal
         : daily
           ? DAILY_LENGTH
           : 10,
@@ -91,7 +102,7 @@
 
   /** Retour : la matière de l'exercice, ou celle du mélange s'il n'en touche qu'une. */
   const backPath = $derived.by(() => {
-    if (review || homework !== undefined) return '/home';
+    if (replaying || homework !== undefined) return '/home';
     const ids = mix ?? plugin?.notions.slice(0, 1) ?? [];
     const subjects = new Set(
       ids.map((id) => registry.domain(registry.notion(id)?.domain ?? '')?.subject),
@@ -118,6 +129,10 @@
   /** Le défi du jour, une fois réussi pendant cette séance. */
   let dailyDone = $state<DailyState | null>(null);
   let homeworkDone = $state(false);
+  /** Le bilan de l'évaluation, à la fin. */
+  let evaluationReport = $state<EvaluationReport | null>(null);
+  /** Badges gagnés pendant l'évaluation : fêtés à la fin, pour ne rien dévoiler avant. */
+  const evaluationBadges: string[] = [];
   let loadError = $state<string | null>(null);
   let answers: unknown[] = [];
   let startedAt = 0;
@@ -138,29 +153,32 @@
   });
 
   async function start() {
-    if (!review && homework === undefined && (mix ? mixPlugins.length === 0 : !plugin)) return;
+    if (!replaying && homework === undefined && (mix ? mixPlugins.length === 0 : !plugin)) return;
     try {
       const state = session.childState ?? (await loadChildState());
-      if (plugin && !mix && !review)
+      if (plugin && !mix && !replaying)
         level = state.levels[plugin.id]?.level ?? initialLevel(plugin, state.child.grade);
       const started = await api.post<StartSessionResponse>(
         'child/sessions',
-        homework !== undefined
-          ? { mode: 'homework', selection: { assignmentId: homework } }
-          : review
-            ? { mode: 'review', selection: {} }
-            : daily
-              ? { mode: 'daily', selection: {} }
-              : mix
-                ? { mode: 'mix', selection: { notions: mix } }
-                : { mode: 'training', selection: { pluginId: plugin!.id } },
+        evaluation !== undefined
+          ? { mode: 'evaluation', selection: { evaluationId: evaluation } }
+          : homework !== undefined
+            ? { mode: 'homework', selection: { assignmentId: homework } }
+            : review
+              ? { mode: 'review', selection: {} }
+              : daily
+                ? { mode: 'daily', selection: {} }
+                : mix
+                  ? { mode: 'mix', selection: { notions: mix } }
+                  : { mode: 'training', selection: { pluginId: plugin!.id } },
       );
       sessionId = started.id;
       reviewItems = started.items ?? [];
       if (started.notions?.length) serverNotions = started.notions;
-      homeworkTotal = started.total ?? 0;
-      // Le défi du jour et les devoirs reprennent là où ils s'étaient arrêtés.
+      serverTotal = started.total ?? 0;
+      // Le défi du jour, les devoirs et les évaluations reprennent là où ils s'étaient arrêtés.
       questionNumber = started.answered;
+      if (isEvaluation) itemOffset = started.answered;
       nextQuestion();
     } catch (error) {
       loadError = errorMessage(error);
@@ -168,10 +186,10 @@
   }
 
   function nextQuestion() {
-    // Une question à revoir garde son exercice, son niveau et sa graine.
+    // Une question à revoir (ou d'évaluation) garde son exercice, son niveau et sa graine.
     let replay: number | null = null;
-    if (review) {
-      const item = reviewItems[questionNumber];
+    if (replaying) {
+      const item = reviewItems[questionNumber - itemOffset];
       plugin = item && registry.plugin(item.pluginId);
       if (!item || !plugin) return void finish();
       level = item.level;
@@ -225,6 +243,12 @@
     const given = $state.snapshot(answer);
     answers.push(given);
     firstTryMs ??= Math.round(performance.now() - startedAt);
+    // Pendant une évaluation : une seule réponse, sans correction, puis la question suivante.
+    if (isEvaluation) {
+      if (await sendAttempt()) nextQuestion();
+      else answers = [];
+      return;
+    }
     const result = checkAnswer(plugin, question, given);
     marks = result.marks;
 
@@ -251,8 +275,9 @@
     await sendAttempt();
   }
 
-  async function sendAttempt() {
-    if (!plugin || sessionId === null) return;
+  /** Envoie la réponse ; false si elle n'a pas pu être enregistrée. */
+  async function sendAttempt(): Promise<boolean> {
+    if (!plugin || sessionId === null) return false;
     saving = true;
     try {
       const res = await api.post<AttemptResponse>('child/attempts', {
@@ -298,6 +323,11 @@
           const list = session.childState.assignments;
           session.childState.assignments = list.map((a) => (a.id === done.id ? done : a));
         }
+        const evaluated = res.evaluation;
+        if (evaluated) {
+          const list = session.childState.evaluations;
+          session.childState.evaluations = list.map((e) => (e.id === evaluated.id ? evaluated : e));
+        }
       }
       if (res.homeworkBonus > 0) {
         homeworkDone = true;
@@ -305,20 +335,24 @@
         confetti();
         playSound('daily');
       }
-      celebrateBadges(res.badges);
+      if (isEvaluation) evaluationBadges.push(...res.badges);
+      else celebrateBadges(res.badges);
       // Une question revue garde son niveau ; ailleurs, on suit le niveau de l’exercice.
-      if (!review) level = res.level;
+      if (!replaying) level = res.level;
       practiced = [...new Set([...practiced, ...Object.keys(res.notions)])];
       if (session.childState) {
         Object.assign(session.childState.notions, res.notions);
-        session.childState.levels[plugin.id] = {
-          level: res.level,
-          recent: [],
-          consecutiveErrors: 0,
-        };
+        if (!isEvaluation)
+          session.childState.levels[plugin.id] = {
+            level: res.level,
+            recent: [],
+            consecutiveErrors: 0,
+          };
       }
+      return true;
     } catch (error) {
       toast(errorMessage(error));
+      return false;
     } finally {
       saving = false;
     }
@@ -329,6 +363,14 @@
     if (sessionId === null) return navigate(backPath);
     try {
       summary = await api.post<SessionSummary>(`child/sessions/${sessionId}/end`);
+      if (evaluation !== undefined) {
+        evaluationReport = await api.get<EvaluationReport>(`child/evaluations/${evaluation}`);
+        celebrateBadges(evaluationBadges);
+        if (evaluationReport.completedAt) {
+          confetti();
+          playSound('daily');
+        }
+      }
     } catch {
       navigate(backPath);
     }
@@ -349,29 +391,33 @@
   <ChildBar back={{ label: 'J’ai fini', onclick: finish }}>
     {#if series}
       <span class="badge"
-        >{review ? '🔁' : homework !== undefined ? '📝' : daily ? '🎯' : '🎲'}
+        >{isEvaluation ? '📋' : review ? '🔁' : homework !== undefined ? '📝' : daily ? '🎯' : '🎲'}
         {Math.min(questionNumber, seriesLength)}/{seriesLength}</span
       >
     {/if}
-    <span class="badge" title={levelLabel}>Niveau {level}</span>
+    {#if !isEvaluation}<span class="badge" title={levelLabel}>Niveau {level}</span>{/if}
   </ChildBar>
 
   {#if mix && mixPlugins.length === 0}
     <div class="card">Il n’y a rien à mélanger ici pour l’instant.</div>
-  {:else if !mix && !review && homework === undefined && !plugin}
+  {:else if !mix && !replaying && homework === undefined && !plugin}
     <div class="card">Cet exercice n’existe pas (ou plus).</div>
   {:else if loadError}
     <div class="error-msg">{loadError}</div>
   {:else if question && plugin}
     <h1 class="exercise-title">{plugin.icon} {plugin.title}</h1>
-    <p class="level-label">
-      {levelLabel}
-      {#if lessonNotions.length}
-        <button class="btn ghost small lesson-btn" onclick={() => (lessonOpen = true)}
-          >📖 Leçon</button
-        >
-      {/if}
-    </p>
+    {#if isEvaluation}
+      <p class="level-label">📋 Évaluation : une seule réponse, sans aide. Prends ton temps !</p>
+    {:else}
+      <p class="level-label">
+        {levelLabel}
+        {#if lessonNotions.length}
+          <button class="btn ghost small lesson-btn" onclick={() => (lessonOpen = true)}
+            >📖 Leçon</button
+          >
+        {/if}
+      </p>
+    {/if}
 
     <div class="instruction">
       <span>{question.instruction}</span>
@@ -394,7 +440,7 @@
         >{series && questionNumber >= seriesLength ? 'Terminer 🏁' : 'Suivant ➡️'}</button
       >
     {:else if !HAS_OWN_SUBMIT[question.widget]}
-      <button class="btn success" onclick={validate}>Valider ✓</button>
+      <button class="btn success" disabled={saving} onclick={validate}>Valider ✓</button>
     {/if}
   {/if}
 </div>
@@ -403,7 +449,34 @@
   <LessonCard notions={lessonNotions} onclose={() => (lessonOpen = false)} />
 {/if}
 
-{#if summary}
+{#if summary && evaluation !== undefined}
+  <div class="overlay">
+    <div class="card summary">
+      <div class="big">📋</div>
+      {#if evaluationReport?.completedAt}
+        <h2>Évaluation finie, bravo {activeChild()?.firstName} !</h2>
+        <ul class="practiced">
+          {#each evaluationReport.lines as line (line.notionId)}
+            <li>
+              <span>{registry.notion(line.notionId)?.title}</span>
+              <span class="line-score"
+                >{line.points} / {line.total} <EvaluationCodes code={line.code} /></span
+              >
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <h2>À bientôt {activeChild()?.firstName} !</h2>
+        <p>
+          Tu as répondu à <strong>{evaluationReport?.answered ?? summary.nQuestions}</strong>
+          question{(evaluationReport?.answered ?? summary.nQuestions) > 1 ? 's' : ''} sur
+          {seriesLength}. Tu pourras finir ton évaluation plus tard.
+        </p>
+      {/if}
+      <button class="btn" onclick={() => navigate(backPath)}>Continuer</button>
+    </div>
+  </div>
+{:else if summary}
   <div class="overlay">
     <div class="card summary">
       <div class="big">🌟</div>
@@ -474,6 +547,13 @@
     justify-content: space-between;
     gap: 8px;
     text-align: left;
+  }
+  .line-score {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    white-space: nowrap;
   }
   .instruction {
     display: flex;

@@ -10,6 +10,7 @@
   import { SvelteSet } from 'svelte/reactivity';
   import { api } from '../../lib/api';
   import { toast } from '../../lib/effects.svelte';
+  import NotionPicker from './NotionPicker.svelte';
 
   /** Les devoirs d'un enfant : en donner un (notions, nombre de questions, date) et les suivre. */
   let { child, onerror }: { child: ChildDto; onerror: (e: unknown) => void } = $props();
@@ -24,15 +25,6 @@
   let questions = $state(10);
   let dueOn = $state(inDays(7));
   const chosen = new SvelteSet<string>();
-
-  const groups = $derived(
-    registry.domains
-      .map((domain) => ({
-        domain,
-        notions: registry.notionsInScope(domain.id, child.grade),
-      }))
-      .filter((g) => g.notions.length > 0),
-  );
 
   $effect(() => {
     const id = child.id;
@@ -125,25 +117,7 @@
           <input id="hw-due" type="date" min={inDays(0)} bind:value={dueOn} required />
         </div>
       </div>
-      <fieldset>
-        <legend>Notions à travailler</legend>
-        {#each groups as { domain, notions } (domain.id)}
-          <p class="domain">{domain.icon} {domain.title}</p>
-          <div class="notions">
-            {#each notions as notion (notion.id)}
-              <label>
-                <input
-                  type="checkbox"
-                  checked={chosen.has(notion.id)}
-                  onchange={(e) =>
-                    e.currentTarget.checked ? chosen.add(notion.id) : chosen.delete(notion.id)}
-                />
-                {notion.title}
-              </label>
-            {/each}
-          </div>
-        {/each}
-      </fieldset>
+      <NotionPicker grade={child.grade} {chosen} />
       <div class="row">
         <button class="btn ghost small" type="button" onclick={() => (open = false)}>Annuler</button
         >
@@ -213,33 +187,5 @@
   .field.small {
     flex: 0 0 auto;
     min-width: 120px;
-  }
-  fieldset {
-    border: 1px solid #e3d9ec;
-    border-radius: 12px;
-    padding: 8px 12px 12px;
-  }
-  legend {
-    font-weight: 700;
-    color: var(--primary-dark);
-  }
-  .domain {
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-top: 6px;
-  }
-  .notions {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 4px 12px;
-    font-size: 0.9rem;
-  }
-  .notions label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .notions input {
-    accent-color: var(--primary);
   }
 </style>
