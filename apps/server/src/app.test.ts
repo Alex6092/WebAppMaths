@@ -294,7 +294,7 @@ describe('séances et tentatives', () => {
       themeId: 'royaume-magique',
       rewardId: 'r2',
     });
-    expect(bought.json()).toEqual({ coins: 15 });
+    expect(bought.json()).toEqual({ coins: 15, badges: [] });
     const again = await browser.send('POST', '/child/rewards', {
       themeId: 'royaume-magique',
       rewardId: 'r2',

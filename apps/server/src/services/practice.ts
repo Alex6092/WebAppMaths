@@ -2,6 +2,9 @@ import { registry } from '@app/content';
 import {
   applyResult,
   coinsFor,
+  DAILY_BONUS,
+  DAILY_LENGTH,
+  dayKey,
   gradeAttempt,
   initialLevel,
   isGrade,
@@ -13,14 +16,17 @@ import {
   type LevelChange,
   type LevelState,
   type NotionMastery,
+  type RewardResponse,
   type SessionSummary,
   type StartSessionRequest,
+  type StartSessionResponse,
 } from '@app/core';
 import { findReward } from '@app/themes';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { attempts, children, exerciseStates, practiceSessions, rewardsOwned } from '../db/schema';
 import { badRequest, conflict, notFound } from '../errors';
+import { awardBadges, dailyState, todaysDailySession } from './motivation';
 
 type ChildRow = typeof children.$inferSelect;
 
@@ -65,9 +71,28 @@ export function childMasteries(
 
 const MAX_MIX_NOTIONS = 200;
 
-export function startSession(db: Db, child: ChildRow, input: StartSessionRequest): number {
+export function startSession(
+  db: Db,
+  child: ChildRow,
+  input: StartSessionRequest,
+): StartSessionResponse {
   let selection: Record<string, unknown>;
-  if (input.mode === 'training') {
+  if (input.mode === 'daily') {
+    // Le défi du jour reprend là où il s'était arrêté ; une fois réussi, il revient demain.
+    const day = dayKey(new Date());
+    const today = todaysDailySession(db, child.id, day);
+    if (today && today.nQuestions >= DAILY_LENGTH)
+      throw conflict('daily_done', 'Tu as déjà réussi le défi du jour : reviens demain !');
+    if (today) {
+      db.update(practiceSessions)
+        .set({ endedAt: null })
+        .where(eq(practiceSessions.id, today.id))
+        .run();
+      return { id: today.id, answered: today.nQuestions };
+    }
+    const grade = isGrade(child.grade) ? child.grade : 'CP';
+    selection = { day, notions: registry.notionsInScope('all', grade).map((n) => n.id) };
+  } else if (input.mode === 'training') {
     const { pluginId } = input.selection;
     if (typeof pluginId !== 'string' || !registry.plugin(pluginId))
       throw notFound('unknown_plugin', 'Exercice inconnu.');
@@ -88,7 +113,7 @@ export function startSession(db: Db, child: ChildRow, input: StartSessionRequest
     .values({ childId: child.id, mode: input.mode, selection, startedAt: new Date() })
     .returning({ id: practiceSessions.id })
     .get();
-  return row.id;
+  return { id: row.id, answered: 0 };
 }
 
 /** L'exercice fait-il partie de la séance (le bon exercice, ou une notion du mélange) ? */
@@ -97,7 +122,7 @@ function belongsToSession(
   pluginId: string,
   pluginNotions: readonly string[],
 ): boolean {
-  if (session.mode === 'mix') {
+  if (session.mode === 'mix' || session.mode === 'daily') {
     const notions = session.selection.notions;
     return Array.isArray(notions) && pluginNotions.some((n) => notions.includes(n));
   }
@@ -146,6 +171,9 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     throw notFound('session_not_found', 'Séance introuvable ou terminée.');
   if (!belongsToSession(session, plugin.id, plugin.notions))
     throw badRequest('wrong_session', 'Cet exercice ne fait pas partie de la séance.');
+  const isDaily = session.mode === 'daily';
+  if (isDaily && session.nQuestions >= DAILY_LENGTH)
+    throw conflict('daily_done', 'Le défi du jour est déjà terminé.');
 
   let graded: GradedAttempt;
   try {
@@ -172,6 +200,8 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     graded.firstTryCorrect,
     graded.solved,
   );
+  // La dernière question du défi du jour apporte le bonus.
+  const dailyBonus = isDaily && session.nQuestions === DAILY_LENGTH - 1 ? DAILY_BONUS : 0;
   const now = new Date();
 
   const coins = db.transaction((tx) => {
@@ -215,18 +245,19 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
       .set({
         nQuestions: sql`${practiceSessions.nQuestions} + 1`,
         nFirstTry: sql`${practiceSessions.nFirstTry} + ${graded.firstTryCorrect ? 1 : 0}`,
-        coinsEarned: sql`${practiceSessions.coinsEarned} + ${coinsEarned}`,
+        coinsEarned: sql`${practiceSessions.coinsEarned} + ${coinsEarned + dailyBonus}`,
       })
       .where(eq(practiceSessions.id, session.id))
       .run();
     return tx
       .update(children)
-      .set({ coins: sql`${children.coins} + ${coinsEarned}` })
+      .set({ coins: sql`${children.coins} + ${coinsEarned + dailyBonus}` })
       .where(eq(children.id, child.id))
       .returning({ coins: children.coins })
       .get().coins;
   });
 
+  const notions = childMasteries(db, child.id, plugin.notions);
   return {
     firstTryCorrect: graded.firstTryCorrect,
     solved: graded.solved,
@@ -237,14 +268,22 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     level: next.level,
     levelChange,
     results: graded.results,
-    notions: childMasteries(db, child.id, plugin.notions),
+    notions,
+    badges: awardBadges(db, child.id, notions, now),
+    daily: isDaily ? dailyState(db, child.id, now) : null,
+    dailyBonus,
   };
 }
 
-export function buyReward(db: Db, child: ChildRow, themeId: string, rewardId: string): number {
+export function buyReward(
+  db: Db,
+  child: ChildRow,
+  themeId: string,
+  rewardId: string,
+): RewardResponse {
   const reward = findReward(themeId, rewardId);
   if (!reward) throw notFound('unknown_reward', 'Récompense inconnue.');
-  return db.transaction((tx) => {
+  const coins = db.transaction((tx) => {
     const owned = tx
       .select()
       .from(rewardsOwned)
@@ -274,4 +313,6 @@ export function buyReward(db: Db, child: ChildRow, themeId: string, rewardId: st
       .returning({ coins: children.coins })
       .get().coins;
   });
+  // Une collection complète vaut un badge.
+  return { coins, badges: awardBadges(db, child.id, {}) };
 }

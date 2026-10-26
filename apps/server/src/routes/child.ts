@@ -1,8 +1,14 @@
-import type { AttemptRequest, ChildStateResponse, StartSessionRequest } from '@app/core';
+import type {
+  AttemptRequest,
+  ChildDto,
+  ChildStateResponse,
+  StartSessionRequest,
+  ThemeResponse,
+} from '@app/core';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { requireAuth } from '../auth/session';
-import { exerciseStates, rewardsOwned } from '../db/schema';
+import { children, exerciseStates, rewardsOwned } from '../db/schema';
 import { forbidden } from '../errors';
 import { getFamilyChild, toChildDto } from '../services/family';
 import {
@@ -12,6 +18,13 @@ import {
   recordAttempt,
   startSession,
 } from '../services/practice';
+import {
+  awardBadges,
+  chooseTheme,
+  dailyState,
+  earnedBadges,
+  unlockedThemes,
+} from '../services/motivation';
 import type { Deps } from './deps';
 
 /** Routes du profil enfant actif sur cet appareil. */
@@ -35,6 +48,9 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
       .from(rewardsOwned)
       .where(eq(rewardsOwned.childId, child.id))
       .all();
+    const notions = childMasteries(db, child.id);
+    // Rattrape les badges mérités avant leur arrivée (ou gagnés sur un autre appareil).
+    awardBadges(db, child.id, notions);
     return {
       child: toChildDto(child),
       levels: Object.fromEntries(
@@ -43,8 +59,11 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
           { level: s.level, recent: s.recent, consecutiveErrors: s.consecutiveErrors },
         ]),
       ),
-      notions: childMasteries(db, child.id),
+      notions,
       owned,
+      themes: unlockedThemes(db, child.id),
+      badges: earnedBadges(db, child.id),
+      daily: dailyState(db, child.id),
     };
   });
 
@@ -57,7 +76,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
           required: ['mode', 'selection'],
           additionalProperties: false,
           properties: {
-            mode: { type: 'string', enum: ['training', 'mix'] },
+            mode: { type: 'string', enum: ['training', 'mix', 'daily'] },
             selection: {
               type: 'object',
               additionalProperties: false,
@@ -74,7 +93,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
         },
       },
     },
-    async (req) => ({ id: startSession(db, activeChild(req), req.body) }),
+    async (req) => startSession(db, activeChild(req), req.body),
   );
 
   api.post<{ Params: { id: number } }>(
@@ -129,8 +148,45 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
         },
       },
     },
-    async (req) => ({
-      coins: buyReward(db, activeChild(req), req.body.themeId, req.body.rewardId),
-    }),
+    async (req) => buyReward(db, activeChild(req), req.body.themeId, req.body.rewardId),
+  );
+
+  api.post<{ Body: { themeId: string } }>(
+    '/child/theme',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['themeId'],
+          additionalProperties: false,
+          properties: { themeId: { type: 'string', maxLength: 60 } },
+        },
+      },
+    },
+    async (req): Promise<ThemeResponse> => chooseTheme(db, activeChild(req), req.body.themeId),
+  );
+
+  api.patch<{ Body: { sound: boolean } }>(
+    '/child/settings',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['sound'],
+          additionalProperties: false,
+          properties: { sound: { type: 'boolean' } },
+        },
+      },
+    },
+    async (req): Promise<ChildDto> => {
+      const child = activeChild(req);
+      const row = db
+        .update(children)
+        .set({ settings: { ...child.settings, sound: req.body.sound } })
+        .where(eq(children.id, child.id))
+        .returning()
+        .get();
+      return toChildDto(row);
+    },
   );
 }

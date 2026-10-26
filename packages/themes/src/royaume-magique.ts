@@ -8,6 +8,7 @@ export const royaumeMagique: Theme = {
   appTitle: '✨ Le Royaume magique ✨',
   mascot: '🦄',
   banner: '🏰❄️🦁',
+  shopName: 'Boutique magique',
   suggestedGrades: ['CP', 'CE1'],
   unlockCost: 0,
   // 🪙 n'existe pas dans la police emoji de Windows 10 : on garde un emoji plus ancien.
@@ -18,6 +19,8 @@ export const royaumeMagique: Theme = {
     primarySoft: '#ce93d8',
     accent: '#f57f17',
     accentDark: '#e65100',
+    accentLight: '#ffd54f',
+    accentInk: '#4a1f00',
     background: 'linear-gradient(135deg, #e8f4fd 0%, #fce4ec 50%, #e8f5e9 100%)',
     surface: '#ffffff',
     text: '#311b92',

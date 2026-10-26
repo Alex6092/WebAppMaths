@@ -5,6 +5,7 @@
   import { mixNotions } from './lib/notions';
   import { navigate, route } from './lib/router.svelte';
   import { activeChild, loadChildState, refreshMe, session } from './lib/session.svelte';
+  import Badges from './screens/Badges.svelte';
   import ChildHome from './screens/ChildHome.svelte';
   import Exercise from './screens/Exercise.svelte';
   import Gallery from './screens/Gallery.svelte';
@@ -14,6 +15,7 @@
   import Register from './screens/Register.svelte';
   import Shop from './screens/Shop.svelte';
   import Subject from './screens/Subject.svelte';
+  import Themes from './screens/Themes.svelte';
 
   let fatal = $state<string | null>(null);
 
@@ -22,7 +24,17 @@
   });
 
   // Écrans qui demandent un profil enfant actif.
-  const CHILD_SCREENS = new Set(['home', 'subject', 'exercise', 'mix', 'shop', 'collection']);
+  const CHILD_SCREENS = new Set([
+    'home',
+    'subject',
+    'exercise',
+    'mix',
+    'daily',
+    'shop',
+    'collection',
+    'themes',
+    'badges',
+  ]);
 
   const view = $derived.by(() => {
     if (!session.ready) return 'loading';
@@ -73,10 +85,16 @@
       mix={mixNotions(route.segments[1], route.query.get('n'), activeChild()?.grade ?? 'CE1')}
     />
   {/key}
+{:else if view === 'daily'}
+  <Exercise daily mix={mixNotions('all', null, activeChild()?.grade ?? 'CE1')} />
 {:else if view === 'shop'}
   <Shop mode="shop" />
 {:else if view === 'collection'}
   <Shop mode="collection" />
+{:else if view === 'themes'}
+  <Themes />
+{:else if view === 'badges'}
+  <Badges />
 {:else if view === 'gallery'}
   <Gallery />
 {/if}

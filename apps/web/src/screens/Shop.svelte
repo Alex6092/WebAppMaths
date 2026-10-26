@@ -1,10 +1,13 @@
 <script lang="ts">
+  import type { RewardResponse } from '@app/core';
   import { getTheme, type Reward } from '@app/themes';
   import ChildBar from '../components/ChildBar.svelte';
   import { api, errorMessage } from '../lib/api';
+  import { celebrateBadges } from '../lib/badges';
   import { confetti, toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, session, setCoins } from '../lib/session.svelte';
+  import { playSound } from '../lib/sounds';
 
   /** Boutique (achat) ou collection (ce qui est déjà acquis). */
   let { mode }: { mode: 'shop' | 'collection' } = $props();
@@ -26,14 +29,16 @@
   async function buy(reward: Reward) {
     busy = true;
     try {
-      const { coins } = await api.post<{ coins: number }>('child/rewards', {
+      const { coins, badges } = await api.post<RewardResponse>('child/rewards', {
         themeId: theme.id,
         rewardId: reward.id,
       });
       setCoins(coins);
       session.childState?.owned.push({ themeId: theme.id, rewardId: reward.id });
       confetti();
+      playSound('coins');
       toast(`🎉 Tu as obtenu ${reward.icon} ${reward.name} !`);
+      celebrateBadges(badges);
     } catch (error) {
       toast(errorMessage(error));
     } finally {
@@ -44,7 +49,7 @@
 
 <div class="screen">
   <ChildBar back={{ label: 'Accueil', onclick: () => navigate('/home') }} />
-  <h1 class="title">{mode === 'shop' ? '🛍️ Boutique magique' : '⭐ Ma collection'}</h1>
+  <h1 class="title">{mode === 'shop' ? `🛍️ ${theme.shopName}` : '⭐ Ma collection'}</h1>
 
   {#if rewards.length === 0}
     <div class="card empty">
@@ -77,7 +82,7 @@
   </div>
 
   <button class="btn" onclick={() => navigate(mode === 'shop' ? '/collection' : '/shop')}>
-    {mode === 'shop' ? '⭐ Ma collection' : '🛍️ Boutique'}
+    {mode === 'shop' ? '⭐ Ma collection' : `🛍️ ${theme.shopName}`}
   </button>
 </div>
 

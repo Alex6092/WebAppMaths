@@ -16,6 +16,8 @@ export interface Theme {
   appTitle: string;
   mascot: string;
   banner: string;
+  /** Nom de la boutique de récompenses. */
+  shopName: string;
   suggestedGrades: GradeId[];
   /** Pièces pour débloquer le thème (0 = disponible d'emblée). */
   unlockCost: number;
@@ -27,6 +29,9 @@ export interface Theme {
     primarySoft: string;
     accent: string;
     accentDark: string;
+    /** Début du dégradé des boutons d'accent, et couleur de leur texte. */
+    accentLight: string;
+    accentInk: string;
     background: string;
     surface: string;
     text: string;
