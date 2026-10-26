@@ -1,6 +1,6 @@
 <script lang="ts">
   import { lessonSpeech, type Notion } from '@app/core';
-  import { masteryOf } from '../lib/notions';
+  import { masteryOf, reviewOf } from '../lib/notions';
   import LessonBlocks from './lesson/LessonBlocks.svelte';
   import NotionBadge from './NotionBadge.svelte';
   import SpeakButton from './SpeakButton.svelte';
@@ -21,7 +21,7 @@
           <h2>📖 {notion.title}</h2>
           <SpeakButton text={speech(notion)} />
         </header>
-        <NotionBadge mastery={masteryOf(notion.id)} />
+        <NotionBadge mastery={masteryOf(notion.id)} review={reviewOf(notion.id)} />
         {#if notion.lesson}
           <LessonBlocks blocks={notion.lesson} />
         {:else if notion.competence}

@@ -5,7 +5,7 @@
   import LessonCard from '../components/LessonCard.svelte';
   import MixPicker from '../components/MixPicker.svelte';
   import NotionBadge from '../components/NotionBadge.svelte';
-  import { masteryOf } from '../lib/notions';
+  import { isSeen, masteryOf, reviewOf } from '../lib/notions';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, session } from '../lib/session.svelte';
 
@@ -60,9 +60,14 @@
         {#if notions.length}
           <div class="notions">
             {#each notions as notion (notion.id)}
-              <button class="notion" onclick={() => (lesson = notion)}>
+              <button
+                class="notion"
+                class:unseen={!isSeen(notion.id)}
+                onclick={() => (lesson = notion)}
+              >
                 <span class="notion-title">📖 {notion.title}</span>
-                <NotionBadge mastery={masteryOf(notion.id)} />
+                {#if !isSeen(notion.id)}<span class="soon">bientôt en classe</span>{/if}
+                <NotionBadge mastery={masteryOf(notion.id)} review={reviewOf(notion.id)} />
               </button>
             {/each}
           </div>
@@ -131,6 +136,14 @@
     background: var(--surface);
     font-size: 0.95rem;
     text-align: left;
+  }
+  .notion.unseen {
+    border-style: dashed;
+    opacity: 0.75;
+  }
+  .soon {
+    font-size: 0.8rem;
+    color: var(--text-soft);
   }
   .notion:hover {
     border-color: var(--primary);

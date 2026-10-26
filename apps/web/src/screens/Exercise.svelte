@@ -30,7 +30,7 @@
   import SpeakButton from '../components/SpeakButton.svelte';
   import { api, errorMessage } from '../lib/api';
   import { celebrateBadges } from '../lib/badges';
-  import { masteryOf } from '../lib/notions';
+  import { dueNotions, masteryOf, reviewOf } from '../lib/notions';
   import { confetti, praise, toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, session, setCoins } from '../lib/session.svelte';
@@ -41,20 +41,41 @@
   /**
    * Un exercice (pluginId), ou un mélange des exercices de plusieurs notions (mix).
    * Le défi du jour (daily) est un mélange de toutes les notions de la classe ;
-   * « Revoir mes erreurs » (review) repose les questions ratées, à l'identique.
+   * « Revoir mes erreurs » (review) repose les questions ratées, à l'identique ;
+   * un devoir (homework, son numéro) mélange les notions choisies par le parent.
    */
   let {
     pluginId,
     mix,
     daily = false,
     review = false,
-  }: { pluginId?: string; mix?: string[]; daily?: boolean; review?: boolean } = $props();
+    homework,
+  }: {
+    pluginId?: string;
+    mix?: string[];
+    daily?: boolean;
+    review?: boolean;
+    homework?: number;
+  } = $props();
 
   let reviewItems = $state.raw<ReviewItem[]>([]);
-  /** Une série de questions comptées (mélange, défi, erreurs), et sa longueur. */
-  const series = $derived(Boolean(mix) || review);
-  const seriesLength = $derived(review ? reviewItems.length : daily ? DAILY_LENGTH : 10);
-  const mixPlugins = $derived(mix ? registry.pluginsOfNotions(mix) : []);
+  /** Questions du devoir. */
+  let homeworkTotal = $state(0);
+  /** Une série de questions comptées (mélange, défi, erreurs, devoir), et sa longueur. */
+  const series = $derived(Boolean(mix) || review || homework !== undefined);
+  const seriesLength = $derived(
+    review
+      ? reviewItems.length
+      : homework !== undefined
+        ? homeworkTotal
+        : daily
+          ? DAILY_LENGTH
+          : 10,
+  );
+  // Le défi du jour et les devoirs mélangent les notions choisies par le serveur.
+  let serverNotions = $state.raw<string[] | null>(null);
+  const mixIds = $derived(serverNotions ?? mix);
+  const mixPlugins = $derived(mixIds ? registry.pluginsOfNotions(mixIds) : []);
   // Dans un mélange, l'exercice change à chaque question.
   let plugin = $state.raw<AnyPlugin | undefined>(
     untrack(() => (pluginId ? registry.plugin(pluginId) : undefined)),
@@ -70,7 +91,7 @@
 
   /** Retour : la matière de l'exercice, ou celle du mélange s'il n'en touche qu'une. */
   const backPath = $derived.by(() => {
-    if (review) return '/home';
+    if (review || homework !== undefined) return '/home';
     const ids = mix ?? plugin?.notions.slice(0, 1) ?? [];
     const subjects = new Set(
       ids.map((id) => registry.domain(registry.notion(id)?.domain ?? '')?.subject),
@@ -96,9 +117,12 @@
   let summary = $state<SessionSummary | null>(null);
   /** Le défi du jour, une fois réussi pendant cette séance. */
   let dailyDone = $state<DailyState | null>(null);
+  let homeworkDone = $state(false);
   let loadError = $state<string | null>(null);
   let answers: unknown[] = [];
   let startedAt = 0;
+  /** Temps jusqu'à la première réponse validée. */
+  let firstTryMs: number | undefined;
   // Simple mémoire des questions déjà posées : rien à afficher, donc pas besoin de réactivité.
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const seen = new Set<string>();
@@ -114,24 +138,28 @@
   });
 
   async function start() {
-    if (!review && (mix ? mixPlugins.length === 0 : !plugin)) return;
+    if (!review && homework === undefined && (mix ? mixPlugins.length === 0 : !plugin)) return;
     try {
       const state = session.childState ?? (await loadChildState());
       if (plugin && !mix && !review)
         level = state.levels[plugin.id]?.level ?? initialLevel(plugin, state.child.grade);
       const started = await api.post<StartSessionResponse>(
         'child/sessions',
-        review
-          ? { mode: 'review', selection: {} }
-          : daily
-            ? { mode: 'daily', selection: {} }
-            : mix
-              ? { mode: 'mix', selection: { notions: mix } }
-              : { mode: 'training', selection: { pluginId: plugin!.id } },
+        homework !== undefined
+          ? { mode: 'homework', selection: { assignmentId: homework } }
+          : review
+            ? { mode: 'review', selection: {} }
+            : daily
+              ? { mode: 'daily', selection: {} }
+              : mix
+                ? { mode: 'mix', selection: { notions: mix } }
+                : { mode: 'training', selection: { pluginId: plugin!.id } },
       );
       sessionId = started.id;
       reviewItems = started.items ?? [];
-      // Le défi du jour reprend là où il s'était arrêté.
+      if (started.notions?.length) serverNotions = started.notions;
+      homeworkTotal = started.total ?? 0;
+      // Le défi du jour et les devoirs reprennent là où ils s'étaient arrêtés.
       questionNumber = started.answered;
       nextQuestion();
     } catch (error) {
@@ -148,15 +176,16 @@
       if (!item || !plugin) return void finish();
       level = item.level;
       replay = item.seed;
-    } else if (mix) {
+    } else if (mixIds) {
       if (questionNumber >= seriesLength) return void finish();
       const state = session.childState;
       const next = pickMixPlugin(
         createRng(randomSeed()),
         mixPlugins,
-        mix,
+        mixIds!,
         state?.notions ?? {},
         plugin?.id,
+        new Set(dueNotions()),
       );
       plugin = next;
       level = state?.levels[next.id]?.level ?? initialLevel(next, state?.child.grade ?? 'CE1');
@@ -183,6 +212,7 @@
     explanation = null;
     feedback = { kind: 'neutral', text: '' };
     startedAt = performance.now();
+    firstTryMs = undefined;
   }
 
   async function validate() {
@@ -194,6 +224,7 @@
     }
     const given = $state.snapshot(answer);
     answers.push(given);
+    firstTryMs ??= Math.round(performance.now() - startedAt);
     const result = checkAnswer(plugin, question, given);
     marks = result.marks;
 
@@ -232,6 +263,7 @@
         seed,
         answers,
         durationMs: Math.round(performance.now() - startedAt),
+        firstTryMs,
       });
       setCoins(res.coins);
       if (res.coinsEarned > 0) {
@@ -256,6 +288,20 @@
       if (res.dailyBonus > 0 && res.daily) {
         dailyDone = res.daily;
         toast(`🎯 Défi du jour réussi ! +${res.dailyBonus} ${theme.currency.icon}`, 3500);
+        confetti();
+        playSound('daily');
+      }
+      if (session.childState) {
+        Object.assign(session.childState.reviews, res.reviews);
+        const done = res.assignment;
+        if (done) {
+          const list = session.childState.assignments;
+          session.childState.assignments = list.map((a) => (a.id === done.id ? done : a));
+        }
+      }
+      if (res.homeworkBonus > 0) {
+        homeworkDone = true;
+        toast(`📝 Devoir terminé ! +${res.homeworkBonus} ${theme.currency.icon}`, 3500);
         confetti();
         playSound('daily');
       }
@@ -303,7 +349,7 @@
   <ChildBar back={{ label: 'J’ai fini', onclick: finish }}>
     {#if series}
       <span class="badge"
-        >{review ? '🔁' : daily ? '🎯' : '🎲'}
+        >{review ? '🔁' : homework !== undefined ? '📝' : daily ? '🎯' : '🎲'}
         {Math.min(questionNumber, seriesLength)}/{seriesLength}</span
       >
     {/if}
@@ -312,7 +358,7 @@
 
   {#if mix && mixPlugins.length === 0}
     <div class="card">Il n’y a rien à mélanger ici pour l’instant.</div>
-  {:else if !mix && !review && !plugin}
+  {:else if !mix && !review && homework === undefined && !plugin}
     <div class="card">Cet exercice n’existe pas (ou plus).</div>
   {:else if loadError}
     <div class="error-msg">{loadError}</div>
@@ -369,6 +415,9 @@
           : ''} du premier coup sur <strong>{summary.nQuestions}</strong>
       </p>
       <p>{theme.currency.icon} +{summary.coinsEarned} {theme.currency.plural}</p>
+      {#if homeworkDone}
+        <p class="daily-done">📝 Devoir terminé, bravo !</p>
+      {/if}
       {#if dailyDone}
         <p class="daily-done">
           🎯 Défi du jour réussi !<br />🔥 {dailyDone.streak.current} jour{dailyDone.streak
@@ -382,7 +431,7 @@
           {#each practiced as id (id)}
             <li>
               <span>{registry.notion(id)?.title}</span>
-              <NotionBadge mastery={masteryOf(id)} />
+              <NotionBadge mastery={masteryOf(id)} review={reviewOf(id)} />
             </li>
           {/each}
         </ul>

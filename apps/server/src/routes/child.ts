@@ -25,7 +25,10 @@ import {
   earnedBadges,
   unlockedThemes,
 } from '../services/motivation';
+import { childAssignments } from '../services/homework';
+import { activeNotions } from '../services/notions';
 import { reviewQueue } from '../services/report';
+import { childReviews } from '../services/spaced';
 import type { Deps } from './deps';
 
 /** Routes du profil enfant actif sur cet appareil. */
@@ -66,6 +69,9 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
       badges: earnedBadges(db, child.id),
       daily: dailyState(db, child.id),
       mistakes: reviewQueue(db, child.id).length,
+      activeNotions: activeNotions(db, child),
+      assignments: childAssignments(db, child),
+      reviews: childReviews(db, child.id),
     };
   });
 
@@ -78,12 +84,13 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
           required: ['mode', 'selection'],
           additionalProperties: false,
           properties: {
-            mode: { type: 'string', enum: ['training', 'mix', 'daily', 'review'] },
+            mode: { type: 'string', enum: ['training', 'mix', 'daily', 'review', 'homework'] },
             selection: {
               type: 'object',
               additionalProperties: false,
               properties: {
                 pluginId: { type: 'string', maxLength: 100 },
+                assignmentId: { type: 'integer' },
                 notions: {
                   type: 'array',
                   maxItems: 200,
@@ -128,6 +135,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
             seed: { type: 'integer', minimum: 0, maximum: 4294967295 },
             answers: { type: 'array', minItems: 1, maxItems: 5 },
             durationMs: { type: 'integer', minimum: 0 },
+            firstTryMs: { type: 'integer', minimum: 0 },
           },
         },
       },

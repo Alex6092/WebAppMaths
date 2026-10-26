@@ -1,19 +1,33 @@
 <script lang="ts">
   import { registry } from '@app/content';
-  import { DAILY_BONUS, DAILY_LENGTH } from '@app/core';
+  import { addDays, DAILY_BONUS, DAILY_LENGTH, HOMEWORK_BONUS } from '@app/core';
   import { getTheme } from '@app/themes';
   import ChildBar from '../components/ChildBar.svelte';
+  import { dueNotions } from '../lib/notions';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, selectChild, session } from '../lib/session.svelte';
 
   const theme = $derived(getTheme(activeChild()?.themeId));
   const daily = $derived(session.childState?.daily);
   const dailyDone = $derived(daily?.streak.doneToday ?? false);
+  const assignments = $derived(session.childState?.assignments ?? []);
+  const due = $derived(session.childState ? dueNotions() : []);
 
-  // Le défi du jour et la série viennent de l'état de l'enfant.
+  /** « pour demain », « pour lundi 3 novembre », « en retard ». */
+  function dueLabel(dueOn: string): string {
+    const today = session.childState?.daily.day ?? '';
+    if (dueOn < today) return 'en retard';
+    if (dueOn === today) return 'pour aujourd’hui';
+    if (dueOn === addDays(today, 1)) return 'pour demain';
+    const date = new Date(`${dueOn}T12:00:00`);
+    return `pour ${date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}`;
+  }
+
+  // Le défi du jour, les devoirs et la série viennent de l'état de l'enfant.
   $effect(() => {
     if (!session.childState) void loadChildState();
   });
+
   const subjects = registry.subjects.map((subject) => ({
     subject,
     count: registry.pluginsOfSubject(subject.id).length,
@@ -45,6 +59,38 @@
       </button>
     {/each}
   </div>
+
+  {#if assignments.length}
+    <section class="homework">
+      <h2>📝 Mes devoirs</h2>
+      {#each assignments as a (a.id)}
+        <div class="assignment" class:done={a.completedAt !== null}>
+          <div class="assignment-text">
+            <strong>{a.title}</strong>
+            <span
+              class="due"
+              class:late={a.completedAt === null && dueLabel(a.dueOn) === 'en retard'}
+              >{a.completedAt !== null ? 'Fini, bravo !' : dueLabel(a.dueOn)}</span
+            >
+            <span class="progress"
+              ><span style:width="{(a.answered / a.questions) * 100}%"></span></span
+            >
+            <span class="count"
+              >{a.answered}/{a.questions} questions · +{HOMEWORK_BONUS}
+              {theme.currency.icon} à la fin</span
+            >
+          </div>
+          {#if a.completedAt !== null}
+            <span class="check">✅</span>
+          {:else}
+            <button class="btn success" onclick={() => navigate(`/homework/${a.id}`)}
+              >{a.answered > 0 ? 'Continuer' : 'Faire'}</button
+            >
+          {/if}
+        </div>
+      {/each}
+    </section>
+  {/if}
 
   <div class="daily" class:done={dailyDone}>
     <div class="daily-text">
@@ -78,6 +124,11 @@
     {#if (session.childState?.mistakes ?? 0) > 0}
       <button class="btn accent" onclick={() => navigate('/review')}
         >🔁 Revoir mes erreurs ({session.childState?.mistakes})</button
+      >
+    {/if}
+    {#if due.length}
+      <button class="btn accent" onclick={() => navigate(`/mix?n=${due.join(',')}`)}
+        >🧠 À réviser ({due.length} notion{due.length > 1 ? 's' : ''})</button
       >
     {/if}
   </div>
@@ -148,6 +199,65 @@
   .count {
     color: var(--text-soft);
     font-size: 0.95rem;
+  }
+  .homework {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .homework h2 {
+    color: var(--primary-dark);
+    font-size: 1.3rem;
+  }
+  .assignment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 3px solid var(--primary-soft);
+    box-shadow: var(--shadow);
+  }
+  .assignment.done {
+    border-color: #66bb6a;
+  }
+  .assignment-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 200px;
+  }
+  .assignment-text strong {
+    font-size: 1.15rem;
+    color: var(--primary-dark);
+  }
+  .due {
+    color: var(--text-soft);
+  }
+  .due.late {
+    color: #c62828;
+    font-weight: 700;
+  }
+  .progress {
+    height: 10px;
+    border-radius: 5px;
+    background: #ece7f2;
+    overflow: hidden;
+  }
+  .progress span {
+    display: block;
+    height: 100%;
+    border-radius: 5px;
+    background: var(--primary);
+  }
+  .count {
+    font-size: 0.9rem;
+    color: var(--text-soft);
   }
   .daily {
     display: flex;

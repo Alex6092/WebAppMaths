@@ -97,7 +97,7 @@ it('ambiances, défi du jour, série de jours, badges et son', async () => {
   expect(first.answered).toBe(0);
   for (let i = 0; i < 4; i++) await play(first.id);
   const resumed = (await daily()).json<StartSessionResponse>();
-  expect(resumed).toEqual({ id: first.id, answered: 4 });
+  expect(resumed).toMatchObject({ id: first.id, answered: 4 });
 
   let last: AttemptResponse | null = null;
   for (let i = 4; i < DAILY_LENGTH; i++) {

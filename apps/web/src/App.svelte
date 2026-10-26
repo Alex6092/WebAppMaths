@@ -31,6 +31,7 @@
     'mix',
     'daily',
     'review',
+    'homework',
     'shop',
     'collection',
     'themes',
@@ -88,6 +89,8 @@
   {/key}
 {:else if view === 'daily'}
   <Exercise daily mix={mixNotions('all', null, activeChild()?.grade ?? 'CE1')} />
+{:else if view === 'homework'}
+  {#key route.segments[1]}<Exercise homework={Number(route.segments[1])} />{/key}
 {:else if view === 'review'}
   <Exercise review />
 {:else if view === 'shop'}

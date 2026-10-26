@@ -1,4 +1,11 @@
-import { GRADE_IDS, type ChildDto, type ChildReport, type GradeId } from '@app/core';
+import {
+  GRADE_IDS,
+  type AssignmentDto,
+  type ChildDto,
+  type ChildReport,
+  type GradeId,
+  type NewAssignment,
+} from '@app/core';
 import { DEFAULT_THEME_ID } from '@app/themes';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
@@ -6,6 +13,8 @@ import { requireParent } from '../auth/session';
 import { children } from '../db/schema';
 import { getFamilyChild, toChildDto } from '../services/family';
 import { createInvitation } from '../services/invitations';
+import { createAssignment, deleteAssignment, listAssignments } from '../services/homework';
+import { setNotionActive } from '../services/notions';
 import { childReport } from '../services/report';
 import type { Deps } from './deps';
 
@@ -93,6 +102,90 @@ export function familyRoutes(api: FastifyInstance, { db }: Deps): void {
     async (req): Promise<ChildReport> => {
       const auth = requireParent(req);
       return childReport(db, getFamilyChild(db, auth.familyId, req.params.id));
+    },
+  );
+
+  /** Coche ou décoche une notion « vue en classe » ; renvoie les notions vues. */
+  api.patch<{ Params: { id: number }; Body: { notionId: string; active: boolean } }>(
+    '/children/:id/notions',
+    {
+      schema: {
+        params: { type: 'object', properties: { id: { type: 'integer' } } },
+        body: {
+          type: 'object',
+          required: ['notionId', 'active'],
+          additionalProperties: false,
+          properties: {
+            notionId: { type: 'string', maxLength: 100 },
+            active: { type: 'boolean' },
+          },
+        },
+      },
+    },
+    async (req) => {
+      const auth = requireParent(req);
+      const child = getFamilyChild(db, auth.familyId, req.params.id);
+      return { activeNotions: setNotionActive(db, child, req.body.notionId, req.body.active) };
+    },
+  );
+
+  /** Devoirs d'un enfant : les derniers donnés, faits ou non. */
+  api.get<{ Params: { id: number } }>(
+    '/children/:id/assignments',
+    { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
+    async (req): Promise<AssignmentDto[]> => {
+      const auth = requireParent(req);
+      return listAssignments(db, getFamilyChild(db, auth.familyId, req.params.id));
+    },
+  );
+
+  api.post<{ Params: { id: number }; Body: NewAssignment }>(
+    '/children/:id/assignments',
+    {
+      schema: {
+        params: { type: 'object', properties: { id: { type: 'integer' } } },
+        body: {
+          type: 'object',
+          required: ['title', 'notions', 'questions', 'dueOn'],
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string', minLength: 1, maxLength: 80 },
+            notions: {
+              type: 'array',
+              minItems: 1,
+              maxItems: 50,
+              items: { type: 'string', maxLength: 100 },
+            },
+            questions: { type: 'integer', minimum: 1, maximum: 50 },
+            dueOn: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+          },
+        },
+      },
+    },
+    async (req): Promise<AssignmentDto> => {
+      const auth = requireParent(req);
+      return createAssignment(db, getFamilyChild(db, auth.familyId, req.params.id), req.body);
+    },
+  );
+
+  api.delete<{ Params: { id: number; assignmentId: number } }>(
+    '/children/:id/assignments/:assignmentId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          properties: { id: { type: 'integer' }, assignmentId: { type: 'integer' } },
+        },
+      },
+    },
+    async (req) => {
+      const auth = requireParent(req);
+      deleteAssignment(
+        db,
+        getFamilyChild(db, auth.familyId, req.params.id),
+        req.params.assignmentId,
+      );
+      return { ok: true };
     },
   );
 

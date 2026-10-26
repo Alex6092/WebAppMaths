@@ -3,15 +3,34 @@
   import { NEW_MASTERY, type ChildReport, type MistakeDto, type NotionStatus } from '@app/core';
   import { api } from '../../lib/api';
   import { STATUS_LABELS } from '../../lib/notions';
+  import { session } from '../../lib/session.svelte';
   import NotionBadge from '../NotionBadge.svelte';
   import ActivityChart from './ActivityChart.svelte';
   import MistakeViewer from './MistakeViewer.svelte';
+  import ResponseTimes from './ResponseTimes.svelte';
 
   /** Le bilan d'un enfant : activité, acquisition des notions, erreurs fréquentes, séances. */
   let { childId, onerror }: { childId: number; onerror: (e: unknown) => void } = $props();
 
   let report = $state<ChildReport | null>(null);
   let viewing = $state<MistakeDto | null>(null);
+
+  /** Coche ou décoche une notion vue en classe. */
+  async function toggleSeen(notionId: string, active: boolean) {
+    if (!report) return;
+    try {
+      const res = await api.patch<{ activeNotions: string[] }>(
+        `children/${report.child.id}/notions`,
+        { notionId, active },
+      );
+      report.activeNotions = res.activeNotions;
+      // Sur l'appareil de l'enfant, ses mélanges en tiennent compte tout de suite.
+      if (session.childState?.child.id === report.child.id)
+        session.childState.activeNotions = res.activeNotions;
+    } catch (e) {
+      onerror(e);
+    }
+  }
 
   $effect(() => {
     const id = childId;
@@ -97,7 +116,13 @@
   <h3>Activité</h3>
   <ActivityChart days={report.days} />
 
+  <h3>⏱️ Temps de réponse</h3>
+  <ResponseTimes timing={report.timing} />
+
   <h3>Acquisition des notions ({report.child.grade})</h3>
+  <p class="muted hint">
+    ☑️ = vue en classe : « Tout mélanger » et le défi du jour ne prennent que ces notions.
+  </p>
   {#each subjects as { subject, domains } (subject.id)}
     {@const ids = domains.flatMap((d) => d.notions.map((n) => n.id))}
     <div class="subject">
@@ -116,12 +141,19 @@
           {#each notions as notion (notion.id)}
             {@const m = masteryOf(notion.id)}
             <li>
+              <input
+                type="checkbox"
+                checked={report.activeNotions.includes(notion.id)}
+                onchange={(e) => toggleSeen(notion.id, e.currentTarget.checked)}
+                aria-label="{notion.title} : vue en classe"
+                title="Vue en classe"
+              />
               <span class="notion-title" title={notion.competence}>{notion.title}</span>
               <span class="meter" title="{m.mastery} / 100"
                 ><span style:width="{m.mastery}%"></span></span
               >
               <span class="attempts">{m.attempts} q.</span>
-              <NotionBadge mastery={m} />
+              <NotionBadge mastery={m} review={report.reviews[notion.id]} />
             </li>
           {/each}
         </ul>
@@ -239,10 +271,18 @@
   }
   .notions li {
     display: grid;
-    grid-template-columns: 1fr 90px 44px 104px;
+    grid-template-columns: 22px 1fr 90px 44px 104px;
     align-items: center;
     gap: 10px;
     font-size: 0.92rem;
+  }
+  .notions input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+  }
+  .hint {
+    font-size: 0.85rem;
   }
   .meter {
     height: 8px;
@@ -297,7 +337,7 @@
   }
   @media (max-width: 520px) {
     .notions li {
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 22px 1fr auto;
     }
     .meter,
     .attempts {
