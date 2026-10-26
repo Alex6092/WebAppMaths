@@ -38,6 +38,8 @@
     {/each}
   </div>
 
+  <button class="btn success" onclick={() => navigate('/mix/all')}>🎲 Tout mélanger</button>
+
   <div class="actions">
     <button class="btn accent" onclick={() => navigate('/shop')}>🛍️ Boutique</button>
     <button class="btn" onclick={() => navigate('/collection')}>⭐ Ma collection</button>

@@ -4,6 +4,7 @@ export * from './contract';
 export * from './engine';
 export * from './geometry';
 export * from './grades';
+export * from './mastery';
 export * from './plugin';
 export * from './progression';
 export * from './question';

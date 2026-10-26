@@ -2,33 +2,64 @@
   import { registry } from '@app/content';
   import {
     checkAnswer,
+    createRng,
     generateQuestion,
     getWidget,
     initialLevel,
     maxTries,
+    pickMixPlugin,
     questionSignature,
     questionSpeech,
     randomSeed,
+    type AnyPlugin,
     type AttemptResponse,
     type Mark,
+    type Notion,
     type PluginQuestion,
     type SessionSummary,
   } from '@app/core';
   import { getTheme } from '@app/themes';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import ChildBar from '../components/ChildBar.svelte';
+  import LessonCard from '../components/LessonCard.svelte';
+  import NotionBadge from '../components/NotionBadge.svelte';
   import SpeakButton from '../components/SpeakButton.svelte';
   import { api, errorMessage } from '../lib/api';
+  import { masteryOf } from '../lib/notions';
   import { confetti, praise, toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, session, setCoins } from '../lib/session.svelte';
   import { stopSpeaking } from '../lib/tts';
   import { HAS_OWN_SUBMIT, Widget, type Phase } from '../widgets';
 
-  let { pluginId }: { pluginId: string } = $props();
+  /** Un exercice (pluginId), ou un mélange des exercices de plusieurs notions (mix). */
+  let { pluginId, mix }: { pluginId?: string; mix?: string[] } = $props();
 
-  const plugin = $derived(registry.plugin(pluginId));
-  const subjectId = $derived(plugin ? registry.subjectOf(plugin)?.id : undefined);
+  /** Nombre de questions d'un mélange. */
+  const MIX_LENGTH = 10;
+  const mixPlugins = $derived(mix ? registry.pluginsOfNotions(mix) : []);
+  // Dans un mélange, l'exercice change à chaque question.
+  let plugin = $state.raw<AnyPlugin | undefined>(
+    untrack(() => (pluginId ? registry.plugin(pluginId) : undefined)),
+  );
+  let questionNumber = $state(0);
+  let practiced = $state<string[]>([]);
+  let lessonOpen = $state(false);
+  const lessonNotions = $derived(
+    (plugin?.notions ?? [])
+      .map((id) => registry.notion(id))
+      .filter((n): n is Notion => Boolean(n?.lesson)),
+  );
+
+  /** Retour : la matière de l'exercice, ou celle du mélange s'il n'en touche qu'une. */
+  const backPath = $derived.by(() => {
+    const ids = mix ?? plugin?.notions.slice(0, 1) ?? [];
+    const subjects = new Set(
+      ids.map((id) => registry.domain(registry.notion(id)?.domain ?? '')?.subject),
+    );
+    const [only] = subjects;
+    return subjects.size === 1 && only ? `/subject/${only}` : '/home';
+  });
   const theme = $derived(getTheme(activeChild()?.themeId));
 
   let sessionId: number | null = null;
@@ -63,15 +94,18 @@
   });
 
   async function start() {
-    if (!plugin) return;
+    if (mix ? mixPlugins.length === 0 : !plugin) return;
     try {
       const state = session.childState ?? (await loadChildState());
-      level = state.levels[plugin.id]?.level ?? initialLevel(plugin, state.child.grade);
+      if (plugin && !mix)
+        level = state.levels[plugin.id]?.level ?? initialLevel(plugin, state.child.grade);
       sessionId = (
-        await api.post<{ id: number }>('child/sessions', {
-          mode: 'training',
-          selection: { pluginId: plugin.id },
-        })
+        await api.post<{ id: number }>(
+          'child/sessions',
+          mix
+            ? { mode: 'mix', selection: { notions: mix } }
+            : { mode: 'training', selection: { pluginId: plugin!.id } },
+        )
       ).id;
       nextQuestion();
     } catch (error) {
@@ -80,16 +114,32 @@
   }
 
   function nextQuestion() {
-    if (!plugin) return;
-    stopSpeaking();
-    // On évite de reposer une question déjà vue pendant la séance.
-    let s = randomSeed();
-    let q = generateQuestion(plugin, level, s);
-    for (let i = 0; i < 20 && seen.has(questionSignature(plugin, q)); i++) {
-      s = randomSeed();
-      q = generateQuestion(plugin, level, s);
+    if (mix) {
+      if (questionNumber >= MIX_LENGTH) return void finish();
+      const state = session.childState;
+      const next = pickMixPlugin(
+        createRng(randomSeed()),
+        mixPlugins,
+        mix,
+        state?.notions ?? {},
+        plugin?.id,
+      );
+      plugin = next;
+      level = state?.levels[next.id]?.level ?? initialLevel(next, state?.child.grade ?? 'CE1');
     }
-    seen.add(questionSignature(plugin, q));
+    const current = plugin;
+    if (!current) return;
+    stopSpeaking();
+    questionNumber++;
+    // On évite de reposer une question déjà vue pendant la séance.
+    const signature = (q: PluginQuestion) => `${current.id}:${questionSignature(current, q)}`;
+    let s = randomSeed();
+    let q = generateQuestion(current, level, s);
+    for (let i = 0; i < 20 && seen.has(signature(q)); i++) {
+      s = randomSeed();
+      q = generateQuestion(current, level, s);
+    }
+    seen.add(signature(q));
     seed = s;
     question = q;
     answer = getWidget(q.widget).emptyAnswer(q as never);
@@ -160,7 +210,9 @@
         toast(`Pas de souci, on s’entraîne au niveau ${res.level} 💪`);
       }
       level = res.level;
+      practiced = [...new Set([...practiced, ...Object.keys(res.notions)])];
       if (session.childState) {
+        Object.assign(session.childState.notions, res.notions);
         session.childState.levels[plugin.id] = {
           level: res.level,
           recent: [],
@@ -176,11 +228,11 @@
 
   async function finish() {
     stopSpeaking();
-    if (sessionId === null) return navigate(subjectId ? `/subject/${subjectId}` : '/home');
+    if (sessionId === null) return navigate(backPath);
     try {
       summary = await api.post<SessionSummary>(`child/sessions/${sessionId}/end`);
     } catch {
-      navigate(subjectId ? `/subject/${subjectId}` : '/home');
+      navigate(backPath);
     }
   }
 
@@ -197,16 +249,28 @@
 
 <div class="screen">
   <ChildBar back={{ label: 'J’ai fini', onclick: finish }}>
+    {#if mix}
+      <span class="badge">🎲 {Math.min(questionNumber, MIX_LENGTH)}/{MIX_LENGTH}</span>
+    {/if}
     <span class="badge" title={levelLabel}>Niveau {level}</span>
   </ChildBar>
 
-  {#if !plugin}
+  {#if mix && mixPlugins.length === 0}
+    <div class="card">Il n’y a rien à mélanger ici pour l’instant.</div>
+  {:else if !mix && !plugin}
     <div class="card">Cet exercice n’existe pas (ou plus).</div>
   {:else if loadError}
     <div class="error-msg">{loadError}</div>
-  {:else if question}
+  {:else if question && plugin}
     <h1 class="exercise-title">{plugin.icon} {plugin.title}</h1>
-    <p class="level-label">{levelLabel}</p>
+    <p class="level-label">
+      {levelLabel}
+      {#if lessonNotions.length}
+        <button class="btn ghost small lesson-btn" onclick={() => (lessonOpen = true)}
+          >📖 Leçon</button
+        >
+      {/if}
+    </p>
 
     <div class="instruction">
       <span>{question.instruction}</span>
@@ -225,12 +289,18 @@
     {/if}
 
     {#if phase === 'success' || phase === 'revealed'}
-      <button class="btn next" disabled={saving} onclick={nextQuestion}>Suivant ➡️</button>
+      <button class="btn next" disabled={saving} onclick={nextQuestion}
+        >{mix && questionNumber >= MIX_LENGTH ? 'Terminer 🏁' : 'Suivant ➡️'}</button
+      >
     {:else if !HAS_OWN_SUBMIT[question.widget]}
       <button class="btn success" onclick={validate}>Valider ✓</button>
     {/if}
   {/if}
 </div>
+
+{#if lessonOpen}
+  <LessonCard notions={lessonNotions} onclose={() => (lessonOpen = false)} />
+{/if}
 
 {#if summary}
   <div class="overlay">
@@ -244,9 +314,17 @@
           : ''} du premier coup sur <strong>{summary.nQuestions}</strong>
       </p>
       <p>{theme.currency.icon} +{summary.coinsEarned} {theme.currency.plural}</p>
-      <button class="btn" onclick={() => navigate(subjectId ? `/subject/${subjectId}` : '/home')}
-        >Continuer</button
-      >
+      {#if practiced.length}
+        <ul class="practiced">
+          {#each practiced as id (id)}
+            <li>
+              <span>{registry.notion(id)?.title}</span>
+              <NotionBadge mastery={masteryOf(id)} />
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      <button class="btn" onclick={() => navigate(backPath)}>Continuer</button>
     </div>
   </div>
 {/if}
@@ -260,6 +338,30 @@
   .level-label {
     margin-top: -12px;
     color: var(--text-soft);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .lesson-btn {
+    padding: 4px 12px;
+  }
+  .practiced {
+    list-style: none;
+    padding: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.95rem;
+  }
+  .practiced li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
   }
   .instruction {
     display: flex;

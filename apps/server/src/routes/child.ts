@@ -5,7 +5,13 @@ import { requireAuth } from '../auth/session';
 import { exerciseStates, rewardsOwned } from '../db/schema';
 import { forbidden } from '../errors';
 import { getFamilyChild, toChildDto } from '../services/family';
-import { buyReward, endSession, recordAttempt, startSession } from '../services/practice';
+import {
+  buyReward,
+  childMasteries,
+  endSession,
+  recordAttempt,
+  startSession,
+} from '../services/practice';
 import type { Deps } from './deps';
 
 /** Routes du profil enfant actif sur cet appareil. */
@@ -37,6 +43,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
           { level: s.level, recent: s.recent, consecutiveErrors: s.consecutiveErrors },
         ]),
       ),
+      notions: childMasteries(db, child.id),
       owned,
     };
   });
@@ -50,18 +57,24 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
           required: ['mode', 'selection'],
           additionalProperties: false,
           properties: {
-            mode: { type: 'string', enum: ['training'] },
+            mode: { type: 'string', enum: ['training', 'mix'] },
             selection: {
               type: 'object',
-              required: ['pluginId'],
               additionalProperties: false,
-              properties: { pluginId: { type: 'string', maxLength: 100 } },
+              properties: {
+                pluginId: { type: 'string', maxLength: 100 },
+                notions: {
+                  type: 'array',
+                  maxItems: 200,
+                  items: { type: 'string', maxLength: 100 },
+                },
+              },
             },
           },
         },
       },
     },
-    async (req) => ({ id: startSession(db, activeChild(req), req.body.selection.pluginId) }),
+    async (req) => ({ id: startSession(db, activeChild(req), req.body) }),
   );
 
   api.post<{ Params: { id: number } }>(
