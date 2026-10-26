@@ -2,6 +2,7 @@
   import { blankParts } from '@app/core';
   import { untrack } from 'svelte';
   import Keyboard from '../components/Keyboard.svelte';
+  import Numpad from '../components/Numpad.svelte';
   import FigureView from '../geometry/FigureView.svelte';
   import { isLocked, type WidgetProps } from './types';
 
@@ -24,7 +25,9 @@
 
   let active = $state(untrack(firstToFill));
   const blank = $derived(question.blanks[active]);
-  const hasText = $derived(question.blanks.some((b) => b.kind === 'text'));
+  const hasText = $derived(question.blanks.some((b) => b.kind === 'text' && !b.digits));
+  const digitsActive = $derived(blank?.kind === 'text' && blank.digits === true);
+  const MAX_DIGITS = 4;
 
   // Au deuxième essai, on se place sur le premier trou à corriger.
   $effect(() => {
@@ -46,6 +49,18 @@
     return '';
   }
 
+  /** Une case courte pour un nombre ou une étiquette courte ; sinon la largeur par défaut. */
+  function widthOf(i: number): string | undefined {
+    const b = question.blanks[i];
+    const chars =
+      b?.kind === 'choice'
+        ? Math.max(...b.options.map((o) => o.length))
+        : b?.kind === 'text'
+          ? b.size
+          : undefined;
+    return chars !== undefined && chars <= 6 ? `${chars + 2.5}ch` : undefined;
+  }
+
   function nextEmpty(from: number): number {
     for (let k = 1; k <= question.blanks.length; k++) {
       const i = (from + k) % question.blanks.length;
@@ -62,7 +77,9 @@
 
   function type(char: string) {
     if (locked || blank?.kind !== 'text') return;
+    if (blank.digits && !/^\d$/.test(char)) return;
     const value = answer.values[active] ?? '';
+    if (blank.digits && value.length >= MAX_DIGITS) return;
     if (value.length < MAX_LENGTH)
       answer.values[active] = value + (blank.upper ? char.toUpperCase() : char);
   }
@@ -96,7 +113,7 @@
 
 <!-- Sur une ligne : un retour à la ligne dans le gabarit ajouterait un espace avant « , » ou « . ». -->
 <!-- prettier-ignore -->
-<p class="prompt">{#each parts as part, p (p)}{#if typeof part === 'number'}<button class="blank {status(part)}" class:active={part === active && !locked} class:text={question.blanks[part]?.kind === 'text'} disabled={locked} data-testid="blank-{part}" onclick={() => (active = part)}>{shown(part) || ' '}</button>{:else}{#each part.split('\n') as line, l (l)}{#if l > 0}<br />{/if}{line}{/each}{/if}{/each}</p>
+<p class="prompt">{#each parts as part, p (p)}{#if typeof part === 'number'}<button class="blank {status(part)}" class:active={part === active && !locked} class:text={question.blanks[part]?.kind === 'text'} style:min-width={widthOf(part)} disabled={locked} data-testid="blank-{part}" onclick={() => (active = part)}>{shown(part) || ' '}</button>{:else}{#each part.split('\n') as line, l (l)}{#if l > 0}<br />{/if}{line}{/each}{/if}{/each}</p>
 
 {#if blank?.kind === 'choice' && !locked}
   <div class="options" role="group" aria-label="Étiquettes">
@@ -108,6 +125,8 @@
       >
     {/each}
   </div>
+{:else if digitsActive && !locked}
+  <Numpad ondigit={type} ondelete={erase} />
 {:else if hasText && !locked}
   <Keyboard
     disabled={blank?.kind !== 'text'}

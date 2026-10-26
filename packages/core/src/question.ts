@@ -150,8 +150,11 @@ export interface ClassifyAnswer {
 
 export type Blank =
   | { kind: 'choice'; options: string[] }
-  /** upper : les lettres tapées s'écrivent en majuscules (noms de points : [AB]). */
-  | { kind: 'text'; size?: number; upper?: boolean };
+  /**
+   * upper : les lettres tapées s'écrivent en majuscules (noms de points : [AB]) ;
+   * digits : un nombre, tapé au pavé numérique.
+   */
+  | { kind: 'text'; size?: number; upper?: boolean; digits?: boolean };
 /** Texte à trous : étiquettes à choisir ou mots à taper (clavier à l'écran). */
 export interface FillBlankQuestion extends QuestionBase {
   widget: 'fill-blank';

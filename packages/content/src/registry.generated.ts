@@ -16,20 +16,27 @@ import plugin11 from './francais/conjugaison/vrai-faux-temps/plugin';
 import plugin12 from './maths/calcul/addition-posee/plugin';
 import plugin13 from './maths/calcul/calcul-mental/plugin';
 import plugin14 from './maths/calcul/soustraction-posee/plugin';
-import plugin15 from './maths/geometrie/alignes-oui-non/plugin';
-import plugin16 from './maths/geometrie/entoure-milieu/plugin';
-import plugin17 from './maths/geometrie/entoure-segments/plugin';
-import plugin18 from './maths/geometrie/longueurs-milieu/plugin';
-import plugin19 from './maths/geometrie/milieu-oui-non/plugin';
-import plugin20 from './maths/geometrie/nomme-segment/plugin';
-import plugin21 from './maths/geometrie/place-alignes/plugin';
-import plugin22 from './maths/geometrie/place-milieu/plugin';
-import plugin23 from './maths/geometrie/relie-alignes/plugin';
-import plugin24 from './maths/geometrie/trace-alignes/plugin';
-import plugin25 from './maths/geometrie/trace-segment-milieu/plugin';
-import plugin26 from './maths/geometrie/vocabulaire-segment/plugin';
-import plugin27 from './maths/mesures/mesure-segment/plugin';
-import plugin28 from './maths/nombres/comparer-signe/plugin';
+import plugin15 from './maths/calcul/tables/plugin';
+import plugin16 from './maths/geometrie/alignes-oui-non/plugin';
+import plugin17 from './maths/geometrie/entoure-milieu/plugin';
+import plugin18 from './maths/geometrie/entoure-segments/plugin';
+import plugin19 from './maths/geometrie/longueurs-milieu/plugin';
+import plugin20 from './maths/geometrie/milieu-oui-non/plugin';
+import plugin21 from './maths/geometrie/nomme-segment/plugin';
+import plugin22 from './maths/geometrie/place-alignes/plugin';
+import plugin23 from './maths/geometrie/place-milieu/plugin';
+import plugin24 from './maths/geometrie/relie-alignes/plugin';
+import plugin25 from './maths/geometrie/trace-alignes/plugin';
+import plugin26 from './maths/geometrie/trace-segment-milieu/plugin';
+import plugin27 from './maths/geometrie/vocabulaire-segment/plugin';
+import plugin28 from './maths/mesures/mesure-segment/plugin';
+import plugin29 from './maths/nombres/comparer-signe/plugin';
+import plugin30 from './maths/nombres/decomposer/plugin';
+import plugin31 from './maths/nombres/ecrire-chiffres/plugin';
+import plugin32 from './maths/nombres/ecrire-lettres/plugin';
+import plugin33 from './maths/nombres/encadrer/plugin';
+import plugin34 from './maths/nombres/lire-nombre/plugin';
+import plugin35 from './maths/nombres/ranger/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
@@ -65,6 +72,13 @@ export const plugins: AnyPlugin[] = [
   plugin26,
   plugin27,
   plugin28,
+  plugin29,
+  plugin30,
+  plugin31,
+  plugin32,
+  plugin33,
+  plugin34,
+  plugin35,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -84,6 +98,7 @@ export const pluginPathIds: string[] = [
   'maths.calcul.addition-posee',
   'maths.calcul.calcul-mental',
   'maths.calcul.soustraction-posee',
+  'maths.calcul.tables',
   'maths.geometrie.alignes-oui-non',
   'maths.geometrie.entoure-milieu',
   'maths.geometrie.entoure-segments',
@@ -98,6 +113,12 @@ export const pluginPathIds: string[] = [
   'maths.geometrie.vocabulaire-segment',
   'maths.mesures.mesure-segment',
   'maths.nombres.comparer-signe',
+  'maths.nombres.decomposer',
+  'maths.nombres.ecrire-chiffres',
+  'maths.nombres.ecrire-lettres',
+  'maths.nombres.encadrer',
+  'maths.nombres.lire-nombre',
+  'maths.nombres.ranger',
 ];
 
 export const domainModules: { domains: Domain[]; notions: Notion[] }[] = [

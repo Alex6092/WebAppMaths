@@ -3,7 +3,8 @@
     disabled?: boolean;
     ondigit: (digit: string) => void;
     ondelete: () => void;
-    onvalidate: () => void;
+    /** Sans onvalidate, pas de touche ✓ : l'écran a son propre bouton « Valider ». */
+    onvalidate?: () => void;
   }
   let { disabled = false, ondigit, ondelete, onvalidate }: Props = $props();
 
@@ -16,7 +17,9 @@
   {/each}
   <button class="key del" {disabled} onclick={ondelete} aria-label="Effacer">⌫</button>
   <button class="key digit" {disabled} onclick={() => ondigit('0')}>0</button>
-  <button class="key ok" {disabled} onclick={onvalidate} aria-label="Valider">✓</button>
+  {#if onvalidate}
+    <button class="key ok" {disabled} onclick={onvalidate} aria-label="Valider">✓</button>
+  {/if}
 </div>
 
 <style>

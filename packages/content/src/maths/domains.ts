@@ -21,6 +21,52 @@ export const notions: Notion[] = [
       'Pour comparer, je regarde d’abord le nombre de chiffres, puis les centaines, puis les dizaines, puis les unités.',
   },
   {
+    id: 'maths.nombres.ecrire',
+    domain: 'maths.nombres',
+    title: 'Lire et écrire les nombres',
+    grades: ['CP', 'CE1'],
+    competence: 'Lire et écrire les nombres jusqu’à 1000, en chiffres et en lettres.',
+    lesson:
+      'Je lis d’abord les **centaines**, puis le reste : 347 → **trois cent** quarante-sept.\n\n' +
+      'Sous cent, je mets des traits d’union : dix-sept, quatre-vingt-dix. Mais pas avec « et » : ' +
+      'vingt **et** un, soixante **et** onze.\n\n' +
+      '**Cent** et **vingt** prennent un **s** quand ils sont multipliés et à la fin du nombre : ' +
+      'deux cent**s**, quatre-vingt**s**. Mais deux cent un, quatre-vingt-trois.',
+  },
+  {
+    id: 'maths.nombres.decomposer',
+    domain: 'maths.nombres',
+    title: 'Centaines, dizaines, unités',
+    grades: ['CE1'],
+    competence: 'Décomposer un nombre en centaines, dizaines et unités.',
+    lesson:
+      'Dans **347** : 3 centaines, 4 dizaines et 7 unités.\n\n' +
+      '347 = 300 + 40 + 7.\n\n' +
+      '1 centaine = 10 dizaines = 100 unités. 1 dizaine = 10 unités.',
+  },
+  {
+    id: 'maths.nombres.ranger',
+    domain: 'maths.nombres',
+    title: 'Ranger des nombres',
+    grades: ['CP', 'CE1'],
+    competence: 'Ranger des nombres dans l’ordre croissant ou décroissant.',
+    lesson:
+      'Ordre **croissant** : du plus petit au plus grand (avec <).\n\n' +
+      'Ordre **décroissant** : du plus grand au plus petit (avec >).\n\n' +
+      'Je compare d’abord les centaines, puis les dizaines, puis les unités.',
+  },
+  {
+    id: 'maths.nombres.encadrer',
+    domain: 'maths.nombres',
+    title: 'Encadrer un nombre',
+    grades: ['CE1'],
+    competence: 'Trouver le nombre d’avant et d’après ; encadrer à la dizaine et à la centaine.',
+    lesson:
+      'Le nombre juste après 399 est **400** ; le nombre juste avant 400 est **399**.\n\n' +
+      'Encadrer 347 **à la dizaine** : 340 < 347 < 350.\n\n' +
+      'Encadrer 347 **à la centaine** : 300 < 347 < 400.',
+  },
+  {
     id: 'maths.calcul.poser-addition',
     domain: 'maths.calcul',
     title: 'Poser et calculer une addition',
@@ -47,6 +93,17 @@ export const notions: Notion[] = [
     title: 'Calculer mentalement',
     grades: ['CP', 'CE1'],
     competence: 'Calculer mentalement des sommes, des différences, des doubles et des moitiés.',
+  },
+  {
+    id: 'maths.calcul.tables',
+    domain: 'maths.calcul',
+    title: 'Tables de multiplication',
+    grades: ['CE1', 'CE2'],
+    competence: 'Connaître les tables de multiplication de 2, 3, 4, 5 et 10.',
+    lesson:
+      '**3 × 4**, c’est 3 fois 4 : 4 + 4 + 4 = 12.\n\n' +
+      'On peut retourner : 3 × 4 = 4 × 3 = 12.\n\n' +
+      'Dans la table de 10, j’ajoute un zéro : 7 × 10 = 70. Dans la table de 5, les résultats finissent par 0 ou 5.',
   },
   {
     id: 'maths.geometrie.alignes-identifier',
