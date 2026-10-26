@@ -28,6 +28,10 @@
       return solution?.picks[i] ? (given === solution.picks[i] ? 'ok' : 'expected') : '';
     }
     if (phase === 'success') return given ? 'ok' : '';
+    if (phase === 'review') {
+      if (marks?.[i] === 'wrong') return given !== null ? 'wrong' : 'was-wrong';
+      return given !== null ? 'ok' : '';
+    }
     if (phase === 'retry' && marks?.[i] === 'ok' && given !== null) return 'ok';
     if (phase === 'retry' && marks?.[i] === 'wrong' && given === null) return 'was-wrong';
     return '';

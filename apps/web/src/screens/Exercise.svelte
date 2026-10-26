@@ -18,6 +18,7 @@
     type Mark,
     type Notion,
     type PluginQuestion,
+    type ReviewItem,
     type SessionSummary,
     type StartSessionResponse,
   } from '@app/core';
@@ -39,16 +40,20 @@
 
   /**
    * Un exercice (pluginId), ou un mélange des exercices de plusieurs notions (mix).
-   * Le défi du jour (daily) est un mélange de toutes les notions de la classe.
+   * Le défi du jour (daily) est un mélange de toutes les notions de la classe ;
+   * « Revoir mes erreurs » (review) repose les questions ratées, à l'identique.
    */
   let {
     pluginId,
     mix,
     daily = false,
-  }: { pluginId?: string; mix?: string[]; daily?: boolean } = $props();
+    review = false,
+  }: { pluginId?: string; mix?: string[]; daily?: boolean; review?: boolean } = $props();
 
-  /** Nombre de questions d'un mélange. */
-  const MIX_LENGTH = $derived(daily ? DAILY_LENGTH : 10);
+  let reviewItems = $state.raw<ReviewItem[]>([]);
+  /** Une série de questions comptées (mélange, défi, erreurs), et sa longueur. */
+  const series = $derived(Boolean(mix) || review);
+  const seriesLength = $derived(review ? reviewItems.length : daily ? DAILY_LENGTH : 10);
   const mixPlugins = $derived(mix ? registry.pluginsOfNotions(mix) : []);
   // Dans un mélange, l'exercice change à chaque question.
   let plugin = $state.raw<AnyPlugin | undefined>(
@@ -65,6 +70,7 @@
 
   /** Retour : la matière de l'exercice, ou celle du mélange s'il n'en touche qu'une. */
   const backPath = $derived.by(() => {
+    if (review) return '/home';
     const ids = mix ?? plugin?.notions.slice(0, 1) ?? [];
     const subjects = new Set(
       ids.map((id) => registry.domain(registry.notion(id)?.domain ?? '')?.subject),
@@ -108,20 +114,23 @@
   });
 
   async function start() {
-    if (mix ? mixPlugins.length === 0 : !plugin) return;
+    if (!review && (mix ? mixPlugins.length === 0 : !plugin)) return;
     try {
       const state = session.childState ?? (await loadChildState());
-      if (plugin && !mix)
+      if (plugin && !mix && !review)
         level = state.levels[plugin.id]?.level ?? initialLevel(plugin, state.child.grade);
       const started = await api.post<StartSessionResponse>(
         'child/sessions',
-        daily
-          ? { mode: 'daily', selection: {} }
-          : mix
-            ? { mode: 'mix', selection: { notions: mix } }
-            : { mode: 'training', selection: { pluginId: plugin!.id } },
+        review
+          ? { mode: 'review', selection: {} }
+          : daily
+            ? { mode: 'daily', selection: {} }
+            : mix
+              ? { mode: 'mix', selection: { notions: mix } }
+              : { mode: 'training', selection: { pluginId: plugin!.id } },
       );
       sessionId = started.id;
+      reviewItems = started.items ?? [];
       // Le défi du jour reprend là où il s'était arrêté.
       questionNumber = started.answered;
       nextQuestion();
@@ -131,8 +140,16 @@
   }
 
   function nextQuestion() {
-    if (mix) {
-      if (questionNumber >= MIX_LENGTH) return void finish();
+    // Une question à revoir garde son exercice, son niveau et sa graine.
+    let replay: number | null = null;
+    if (review) {
+      const item = reviewItems[questionNumber];
+      plugin = item && registry.plugin(item.pluginId);
+      if (!item || !plugin) return void finish();
+      level = item.level;
+      replay = item.seed;
+    } else if (mix) {
+      if (questionNumber >= seriesLength) return void finish();
       const state = session.childState;
       const next = pickMixPlugin(
         createRng(randomSeed()),
@@ -150,9 +167,9 @@
     questionNumber++;
     // On évite de reposer une question déjà vue pendant la séance.
     const signature = (q: PluginQuestion) => `${current.id}:${questionSignature(current, q)}`;
-    let s = randomSeed();
+    let s = replay ?? randomSeed();
     let q = generateQuestion(current, level, s);
-    for (let i = 0; i < 20 && seen.has(signature(q)); i++) {
+    for (let i = 0; replay === null && i < 20 && seen.has(signature(q)); i++) {
       s = randomSeed();
       q = generateQuestion(current, level, s);
     }
@@ -231,6 +248,11 @@
         toast(`Pas de souci, on s’entraîne au niveau ${res.level} 💪`);
       }
       if (res.daily && session.childState) session.childState.daily = res.daily;
+      // Le compteur « à revoir » de l'accueil : une question réparée, ou une nouvelle erreur.
+      if (session.childState) {
+        if (review && res.firstTryCorrect) session.childState.mistakes--;
+        if (!review && !res.firstTryCorrect) session.childState.mistakes++;
+      }
       if (res.dailyBonus > 0 && res.daily) {
         dailyDone = res.daily;
         toast(`🎯 Défi du jour réussi ! +${res.dailyBonus} ${theme.currency.icon}`, 3500);
@@ -238,7 +260,8 @@
         playSound('daily');
       }
       celebrateBadges(res.badges);
-      level = res.level;
+      // Une question revue garde son niveau ; ailleurs, on suit le niveau de l’exercice.
+      if (!review) level = res.level;
       practiced = [...new Set([...practiced, ...Object.keys(res.notions)])];
       if (session.childState) {
         Object.assign(session.childState.notions, res.notions);
@@ -278,9 +301,10 @@
 
 <div class="screen">
   <ChildBar back={{ label: 'J’ai fini', onclick: finish }}>
-    {#if mix}
+    {#if series}
       <span class="badge"
-        >{daily ? '🎯' : '🎲'} {Math.min(questionNumber, MIX_LENGTH)}/{MIX_LENGTH}</span
+        >{review ? '🔁' : daily ? '🎯' : '🎲'}
+        {Math.min(questionNumber, seriesLength)}/{seriesLength}</span
       >
     {/if}
     <span class="badge" title={levelLabel}>Niveau {level}</span>
@@ -288,7 +312,7 @@
 
   {#if mix && mixPlugins.length === 0}
     <div class="card">Il n’y a rien à mélanger ici pour l’instant.</div>
-  {:else if !mix && !plugin}
+  {:else if !mix && !review && !plugin}
     <div class="card">Cet exercice n’existe pas (ou plus).</div>
   {:else if loadError}
     <div class="error-msg">{loadError}</div>
@@ -321,7 +345,7 @@
 
     {#if phase === 'success' || phase === 'revealed'}
       <button class="btn next" disabled={saving} onclick={nextQuestion}
-        >{mix && questionNumber >= MIX_LENGTH ? 'Terminer 🏁' : 'Suivant ➡️'}</button
+        >{series && questionNumber >= seriesLength ? 'Terminer 🏁' : 'Suivant ➡️'}</button
       >
     {:else if !HAS_OWN_SUBMIT[question.widget]}
       <button class="btn success" onclick={validate}>Valider ✓</button>

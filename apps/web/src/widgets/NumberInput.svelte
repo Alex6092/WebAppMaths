@@ -21,9 +21,13 @@
       ? 'ok'
       : phase === 'revealed'
         ? 'fixed'
-        : marks?.value === 'wrong' && answer.value === ''
-          ? 'wrong'
-          : '',
+        : phase === 'review'
+          ? marks?.value === 'ok'
+            ? 'ok'
+            : 'wrong'
+          : marks?.value === 'wrong' && answer.value === ''
+            ? 'wrong'
+            : '',
   );
 
   function typeDigit(digit: string) {

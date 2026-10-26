@@ -94,6 +94,8 @@
   function cellState(i: number): string {
     if (phase === 'success') return 'ok';
     if (phase === 'revealed') return marks?.[i] === 'ok' ? 'ok' : 'fixed';
+    if (phase === 'review')
+      return marks?.[i] === 'wrong' ? 'wrong' : marks?.[i] === 'ok' ? 'ok' : '';
     if (marks?.[i] === 'wrong' && answer.digits[i] === '') return 'wrong';
     return i === selected ? 'selected' : '';
   }

@@ -73,7 +73,14 @@
     {/if}
   </div>
 
-  <button class="btn" onclick={() => navigate('/mix/all')}>🎲 Tout mélanger</button>
+  <div class="actions">
+    <button class="btn" onclick={() => navigate('/mix/all')}>🎲 Tout mélanger</button>
+    {#if (session.childState?.mistakes ?? 0) > 0}
+      <button class="btn accent" onclick={() => navigate('/review')}
+        >🔁 Revoir mes erreurs ({session.childState?.mistakes})</button
+      >
+    {/if}
+  </div>
 
   <div class="actions">
     <button class="btn accent" onclick={() => navigate('/shop')}>🛍️ {theme.shopName}</button>

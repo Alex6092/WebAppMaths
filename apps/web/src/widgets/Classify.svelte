@@ -24,6 +24,7 @@
     const given = answer.placed[i] ?? null;
     if (phase === 'success') return 'ok';
     if (phase === 'revealed') return given === solution?.placed[i] ? 'ok' : 'expected';
+    if (phase === 'review') return marks?.[i] === 'ok' ? 'ok' : 'was-wrong';
     if (phase === 'retry' && marks?.[i] === 'ok' && given !== null) return 'ok';
     if (phase === 'retry' && marks?.[i] === 'wrong' && given === null) return 'was-wrong';
     return '';

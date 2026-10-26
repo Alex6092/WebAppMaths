@@ -7,6 +7,7 @@
     type InvitationDto,
     type MeResponse,
   } from '@app/core';
+  import ChildReport from '../components/parent/ChildReport.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
   import { toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
@@ -47,6 +48,11 @@
   let invitationNote = $state('');
 
   const isAdmin = $derived(session.me?.user.role === 'admin');
+  // Enfant dont on regarde le bilan (le premier par défaut).
+  let followedId = $state<number | null>(null);
+  const followed = $derived(
+    session.me?.children.find((c) => c.id === followedId) ?? session.me?.children[0] ?? null,
+  );
 
   $effect(() => {
     if (unlocked && isAdmin) void loadInvitations();
@@ -186,6 +192,26 @@
       <button class="btn" type="submit">Déverrouiller</button>
     </form>
   {:else}
+    {#if followed}
+      <section class="card">
+        <h2>📊 Suivi</h2>
+        {#if (session.me?.children.length ?? 0) > 1}
+          <div class="children">
+            {#each session.me?.children ?? [] as child (child.id)}
+              <button
+                class="child"
+                class:active={followed.id === child.id}
+                onclick={() => (followedId = child.id)}
+              >
+                <span class="avatar">{child.avatar}</span><strong>{child.firstName}</strong>
+              </button>
+            {/each}
+          </div>
+        {/if}
+        <ChildReport childId={followed.id} onerror={handle} />
+      </section>
+    {/if}
+
     <section class="card">
       <h2>Profils des enfants</h2>
       <div class="children">

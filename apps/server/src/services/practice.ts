@@ -16,6 +16,7 @@ import {
   type LevelChange,
   type LevelState,
   type NotionMastery,
+  type ReviewItem,
   type RewardResponse,
   type SessionSummary,
   type StartSessionRequest,
@@ -27,6 +28,7 @@ import type { Db } from '../db/client';
 import { attempts, children, exerciseStates, practiceSessions, rewardsOwned } from '../db/schema';
 import { badRequest, conflict, notFound } from '../errors';
 import { awardBadges, dailyState, todaysDailySession } from './motivation';
+import { REVIEW_LENGTH, reviewQueue } from './report';
 
 type ChildRow = typeof children.$inferSelect;
 
@@ -77,6 +79,19 @@ export function startSession(
   input: StartSessionRequest,
 ): StartSessionResponse {
   let selection: Record<string, unknown>;
+  if (input.mode === 'review') {
+    const items: ReviewItem[] = reviewQueue(db, child.id)
+      .slice(0, REVIEW_LENGTH)
+      .map(({ pluginId, level, seed }) => ({ pluginId, level, seed }));
+    if (items.length === 0)
+      throw badRequest('nothing_to_review', 'Bravo, tu n’as pas d’erreur à revoir !');
+    const row = db
+      .insert(practiceSessions)
+      .values({ childId: child.id, mode: 'review', selection: { items }, startedAt: new Date() })
+      .returning({ id: practiceSessions.id })
+      .get();
+    return { id: row.id, answered: 0, items };
+  }
   if (input.mode === 'daily') {
     // Le défi du jour reprend là où il s'était arrêté ; une fois réussi, il revient demain.
     const day = dayKey(new Date());
@@ -116,12 +131,24 @@ export function startSession(
   return { id: row.id, answered: 0 };
 }
 
-/** L'exercice fait-il partie de la séance (le bon exercice, ou une notion du mélange) ? */
+/**
+ * La question fait-elle partie de la séance : le bon exercice, une notion du mélange, ou
+ * l'une des questions à revoir (même exercice, même niveau, même graine) ?
+ */
 function belongsToSession(
   session: { mode: string; selection: Record<string, unknown> },
-  pluginId: string,
+  { pluginId, level, seed }: ReviewItem,
   pluginNotions: readonly string[],
 ): boolean {
+  if (session.mode === 'review') {
+    const items = session.selection.items;
+    return (
+      Array.isArray(items) &&
+      (items as ReviewItem[]).some(
+        (i) => i.pluginId === pluginId && i.level === level && i.seed === seed,
+      )
+    );
+  }
   if (session.mode === 'mix' || session.mode === 'daily') {
     const notions = session.selection.notions;
     return Array.isArray(notions) && pluginNotions.some((n) => notions.includes(n));
@@ -169,7 +196,7 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     .get();
   if (!session || session.endedAt)
     throw notFound('session_not_found', 'Séance introuvable ou terminée.');
-  if (!belongsToSession(session, plugin.id, plugin.notions))
+  if (!belongsToSession(session, input, plugin.notions))
     throw badRequest('wrong_session', 'Cet exercice ne fait pas partie de la séance.');
   const isDaily = session.mode === 'daily';
   if (isDaily && session.nQuestions >= DAILY_LENGTH)

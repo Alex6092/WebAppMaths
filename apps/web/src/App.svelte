@@ -30,6 +30,7 @@
     'exercise',
     'mix',
     'daily',
+    'review',
     'shop',
     'collection',
     'themes',
@@ -87,6 +88,8 @@
   {/key}
 {:else if view === 'daily'}
   <Exercise daily mix={mixNotions('all', null, activeChild()?.grade ?? 'CE1')} />
+{:else if view === 'review'}
+  <Exercise review />
 {:else if view === 'shop'}
   <Shop mode="shop" />
 {:else if view === 'collection'}
