@@ -15,7 +15,7 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { verifyPassword } from '../auth/crypto';
 import { requireParent, SESSION_COOKIE } from '../auth/session';
-import { children, parentUsers } from '../db/schema';
+import { children, exerciseStates, parentUsers } from '../db/schema';
 import { HttpError } from '../errors';
 import {
   createEvaluation,
@@ -116,6 +116,22 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     async (req): Promise<ChildReport> => {
       const auth = requireParent(req);
       return childReport(db, getFamilyChild(db, auth.familyId, req.params.id));
+    },
+  );
+
+  /** Niveau de l'enfant dans chaque exercice déjà travaillé (pour les fiches à imprimer). */
+  api.get<{ Params: { id: number } }>(
+    '/children/:id/levels',
+    { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
+    async (req): Promise<Record<string, number>> => {
+      const auth = requireParent(req);
+      const child = getFamilyChild(db, auth.familyId, req.params.id);
+      const rows = db
+        .select({ pluginId: exerciseStates.pluginId, level: exerciseStates.level })
+        .from(exerciseStates)
+        .where(eq(exerciseStates.childId, child.id))
+        .all();
+      return Object.fromEntries(rows.map((r) => [r.pluginId, r.level]));
     },
   );
 

@@ -224,7 +224,11 @@ button:disabled {
   }
 }
 
-/* Une fiche ouverte (bilan d'évaluation) s'imprime seule, sur fond blanc. */
+/* Une fiche ouverte (bilan d'évaluation, fiche d'exercices) s'imprime seule, sur fond blanc. */
+@page {
+  size: A4;
+  margin: 12mm;
+}
 @media print {
   body.has-print-root > :not(.print-root) {
     display: none !important;
