@@ -119,6 +119,8 @@ export const attempts = sqliteTable(
     tries: integer('tries').notNull(),
     score: real('score').notNull(),
     durationMs: integer('duration_ms').notNull(),
+    /** Temps jusqu'à la première réponse (absent pour les tentatives d'avant). */
+    firstTryMs: integer('first_try_ms'),
     coins: integer('coins').notNull(),
     createdAt: createdAt(),
   },
@@ -182,4 +184,58 @@ export const badges = sqliteTable(
     earnedAt: integer('earned_at', { mode: 'timestamp_ms' }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.childId, t.badgeId] })],
+);
+
+/**
+ * Notions vues en classe, réglées par le parent. Sans ligne, une notion de la classe de
+ * l'enfant est considérée comme vue.
+ */
+export const notionSettings = sqliteTable(
+  'notion_setting',
+  {
+    childId: integer('child_id')
+      .notNull()
+      .references(() => children.id, { onDelete: 'cascade' }),
+    notionId: text('notion_id').notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.childId, t.notionId] })],
+);
+
+/** Devoirs donnés par le parent : des notions, un nombre de questions, une date. */
+export const assignments = sqliteTable(
+  'assignment',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    childId: integer('child_id')
+      .notNull()
+      .references(() => children.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    notions: text('notions', { mode: 'json' }).$type<string[]>().notNull(),
+    questions: integer('questions').notNull(),
+    /** Pour quel jour (AAAA-MM-JJ). */
+    dueOn: text('due_on').notNull(),
+    createdAt: createdAt(),
+    completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [index('assignment_child_idx').on(t.childId, t.createdAt)],
+);
+
+/**
+ * Révision espacée d'une notion acquise : elle revient à J+1, J+3, J+7, J+14 puis J+30.
+ * box : révisions réussies d'affilée ; dueAt : quand la reposer.
+ */
+export const notionReviews = sqliteTable(
+  'notion_review',
+  {
+    childId: integer('child_id')
+      .notNull()
+      .references(() => children.id, { onDelete: 'cascade' }),
+    notionId: text('notion_id').notNull(),
+    box: integer('box').notNull(),
+    dueAt: integer('due_at', { mode: 'timestamp_ms' }).notNull(),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [primaryKey({ columns: [t.childId, t.notionId] })],
 );

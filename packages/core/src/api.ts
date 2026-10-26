@@ -6,6 +6,7 @@ import type { GradeId } from './grades';
 import type { NotionMastery } from './mastery';
 import type { LevelChange } from './progression';
 import type { CheckResult } from './question';
+import type { NotionReview } from './spaced';
 
 export type Role = 'admin' | 'parent';
 
@@ -49,6 +50,32 @@ export interface ChildStateResponse {
   daily: DailyState;
   /** Questions ratées qui restent à revoir. */
   mistakes: number;
+  /** Notions vues en classe : « Tout mélanger » et le défi du jour ne prennent qu'elles. */
+  activeNotions: string[];
+  /** Devoirs à faire, et ceux finis ces derniers jours. */
+  assignments: AssignmentDto[];
+  /** Révision espacée des notions acquises. */
+  reviews: Record<string, NotionReview>;
+}
+
+/** Un devoir donné par le parent. */
+export interface AssignmentDto {
+  id: number;
+  title: string;
+  notions: string[];
+  questions: number;
+  /** Questions déjà faites. */
+  answered: number;
+  dueOn: string;
+  createdAt: number;
+  completedAt: number | null;
+}
+
+export interface NewAssignment {
+  title: string;
+  notions: string[];
+  questions: number;
+  dueOn: string;
 }
 
 export interface EarnedBadge {
@@ -69,15 +96,16 @@ export interface DailyState {
 /**
  * training : un seul exercice ; mix : un mélange des exercices de plusieurs notions ;
  * daily : le défi du jour, un mélange de toutes les notions de la classe ;
- * review : les questions ratées, reposées à l'identique.
+ * review : les questions ratées, reposées à l'identique ; homework : un devoir du parent.
  */
-export type PracticeMode = 'training' | 'mix' | 'daily' | 'review';
+export type PracticeMode = 'training' | 'mix' | 'daily' | 'review' | 'homework';
 
 export type StartSessionRequest =
   | { mode: 'training'; selection: { pluginId: string } }
   | { mode: 'mix'; selection: { notions: string[] } }
   | { mode: 'daily'; selection: Record<string, never> }
-  | { mode: 'review'; selection: Record<string, never> };
+  | { mode: 'review'; selection: Record<string, never> }
+  | { mode: 'homework'; selection: { assignmentId: number } };
 
 /** Une question à reposer telle quelle : même exercice, même niveau, même graine. */
 export interface ReviewItem {
@@ -92,6 +120,10 @@ export interface StartSessionResponse {
   answered: number;
   /** Pour « Revoir mes erreurs » : les questions, dans l'ordre. */
   items?: ReviewItem[];
+  /** Pour le défi du jour et un devoir : les notions qu'il mélange. */
+  notions?: string[];
+  /** Pour un devoir : le nombre de questions à faire. */
+  total?: number;
 }
 
 export interface AttemptRequest {
@@ -103,6 +135,8 @@ export interface AttemptRequest {
   /** Une réponse par essai, dans l'ordre. */
   answers: unknown[];
   durationMs: number;
+  /** Temps jusqu'à la première réponse : la rapidité de l'enfant. */
+  firstTryMs?: number;
 }
 
 export interface AttemptResponse {
@@ -123,6 +157,12 @@ export interface AttemptResponse {
   daily: DailyState | null;
   /** Pièces du défi du jour, si cette réponse le termine. */
   dailyBonus: number;
+  /** Le devoir, pour une question d'un devoir. */
+  assignment: AssignmentDto | null;
+  /** Pièces du devoir, si cette réponse le termine. */
+  homeworkBonus: number;
+  /** Révision espacée mise à jour des notions de l'exercice. */
+  reviews: Record<string, NotionReview>;
 }
 
 export interface RewardResponse {
@@ -166,6 +206,18 @@ export interface ChildReport {
   mistakes: { pluginId: string; attempts: number; errors: number; recent: MistakeDto[] }[];
   /** Questions ratées qui restent à revoir. */
   toReview: number;
+  /** Temps de première réponse des dernières questions de chaque exercice, de la plus ancienne à la plus récente. */
+  timing: { pluginId: string; points: TimingPoint[] }[];
+  /** Notions vues en classe. */
+  activeNotions: string[];
+  reviews: Record<string, NotionReview>;
+}
+
+export interface TimingPoint {
+  ms: number;
+  level: number;
+  firstTry: boolean;
+  at: number;
 }
 
 export interface SessionSummary {

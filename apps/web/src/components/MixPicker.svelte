@@ -2,12 +2,12 @@
   import { registry } from '@app/content';
   import { untrack } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
-  import { masteryOf } from '../lib/notions';
+  import { masteryOf, reviewOf, seenAmong } from '../lib/notions';
   import { navigate } from '../lib/router.svelte';
   import { activeChild } from '../lib/session.svelte';
   import NotionBadge from './NotionBadge.svelte';
 
-  /** Choisir les notions d'un mélange (toutes cochées au départ). */
+  /** Choisir les notions d'un mélange. */
   let { scope, onclose }: { scope: string; onclose: () => void } = $props();
 
   const notions = $derived(registry.notionsInScope(scope, activeChild()?.grade));
@@ -16,8 +16,9 @@
       .map((domain) => ({ domain, notions: notions.filter((n) => n.domain === domain.id) }))
       .filter((g) => g.notions.length > 0),
   );
+  // Les notions vues en classe sont cochées au départ.
   const chosen = new SvelteSet<string>(
-    untrack(() => registry.notionsInScope(scope).map((n) => n.id)),
+    untrack(() => seenAmong(registry.notionsInScope(scope, activeChild()?.grade).map((n) => n.id))),
   );
 
   function toggle(id: string) {
@@ -55,7 +56,7 @@
               onchange={() => toggle(notion.id)}
             />
             <span class="name">{notion.title}</span>
-            <NotionBadge mastery={masteryOf(notion.id)} />
+            <NotionBadge mastery={masteryOf(notion.id)} review={reviewOf(notion.id)} />
           </label>
         {/each}
       </section>

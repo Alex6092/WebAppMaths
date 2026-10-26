@@ -4,6 +4,8 @@
 export const DAILY_LENGTH = 10;
 /** Pièces gagnées en plus quand le défi du jour est terminé. */
 export const DAILY_BONUS = 20;
+/** Pièces gagnées en plus quand un devoir est terminé. */
+export const HOMEWORK_BONUS = 15;
 /** Les jours se comptent à l'heure de la famille (France). */
 export const DAILY_TIME_ZONE = 'Europe/Paris';
 
@@ -19,12 +21,15 @@ export function dayKey(date: Date, timeZone = DAILY_TIME_ZONE): string {
   return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
-/** Le jour d'avant (AAAA-MM-JJ). */
-export function previousDay(day: string): string {
+/** Le jour n jours plus tard (ou plus tôt si n < 0), au format AAAA-MM-JJ. */
+export function addDays(day: string, n: number): string {
   const d = new Date(`${day}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() - 1);
+  d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
+
+/** Le jour d'avant (AAAA-MM-JJ). */
+export const previousDay = (day: string) => addDays(day, -1);
 
 export interface Streak {
   /** Jours de suite jusqu'à aujourd'hui (ou hier, si le défi d'aujourd'hui reste à faire). */
@@ -45,14 +50,8 @@ export function streakOf(days: Iterable<string>, today: string): Streak {
     // On ne compte qu'à partir du premier jour de chaque série.
     if (done.has(previousDay(day))) continue;
     let length = 0;
-    for (let d = day; done.has(d); d = nextDay(d)) length++;
+    for (let d = day; done.has(d); d = addDays(d, 1)) length++;
     best = Math.max(best, length);
   }
   return { current, best, doneToday };
-}
-
-function nextDay(day: string): string {
-  const d = new Date(`${day}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + 1);
-  return d.toISOString().slice(0, 10);
 }

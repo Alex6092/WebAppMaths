@@ -1,14 +1,21 @@
 <script lang="ts">
-  import type { NotionMastery } from '@app/core';
+  import { isMastered, type NotionMastery, type NotionReview } from '@app/core';
   import { STATUS_LABELS } from '../lib/notions';
 
-  /** Où en est l'enfant sur une notion : une pastille colorée et quelques mots. */
-  let { mastery }: { mastery: NotionMastery } = $props();
+  /**
+   * Où en est l'enfant sur une notion : une pastille colorée et quelques mots. Une notion
+   * acquise et réussie en révision espacée est « Maîtrisée ».
+   */
+  let { mastery, review }: { mastery: NotionMastery; review?: NotionReview | undefined } = $props();
+  const mastered = $derived(isMastered(review, mastery.status === 'A'));
 </script>
 
-<span class="badge {mastery.status}" title="{mastery.mastery} %">
-  {#if mastery.status === 'A'}⭐{/if}
-  {STATUS_LABELS[mastery.status]}
+<span class="badge {mastered ? 'M' : mastery.status}" title="{mastery.mastery} %">
+  {#if mastered}🌟 Maîtrisé
+  {:else}
+    {#if mastery.status === 'A'}⭐{/if}
+    {STATUS_LABELS[mastery.status]}
+  {/if}
 </span>
 
 <style>
@@ -37,5 +44,10 @@
   .A {
     background: #c8e6c9;
     color: #1b5e20;
+  }
+  .M {
+    background: #fff3c4;
+    color: #7a5a00;
+    box-shadow: inset 0 0 0 2px #ffd54f;
   }
 </style>

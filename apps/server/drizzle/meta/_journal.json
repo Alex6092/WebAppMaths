@@ -15,6 +15,13 @@
       "when": 1793017132307,
       "tag": "0001_motivation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793022664836,
+      "tag": "0002_classe_devoirs_revision",
+      "breakpoints": true
     }
   ]
 }

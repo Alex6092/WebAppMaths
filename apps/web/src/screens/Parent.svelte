@@ -8,6 +8,7 @@
     type MeResponse,
   } from '@app/core';
   import ChildReport from '../components/parent/ChildReport.svelte';
+  import Homework from '../components/parent/Homework.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
   import { toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
@@ -208,6 +209,8 @@
             {/each}
           </div>
         {/if}
+        <h3>📝 Devoirs</h3>
+        <Homework child={followed} onerror={handle} />
         <ChildReport childId={followed.id} onerror={handle} />
       </section>
     {/if}

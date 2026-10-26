@@ -6,11 +6,13 @@ import {
   DAILY_LENGTH,
   dayKey,
   gradeAttempt,
+  HOMEWORK_BONUS,
   initialLevel,
   isGrade,
   masteryByNotion,
   newLevelState,
   type AttemptRequest,
+  type AssignmentDto,
   type AttemptResponse,
   type GradedAttempt,
   type LevelChange,
@@ -27,8 +29,11 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { attempts, children, exerciseStates, practiceSessions, rewardsOwned } from '../db/schema';
 import { badRequest, conflict, notFound } from '../errors';
+import { assignmentDto, getAssignment, progressAssignment } from './homework';
 import { awardBadges, dailyState, todaysDailySession } from './motivation';
+import { activeNotions, gradeNotions } from './notions';
 import { REVIEW_LENGTH, reviewQueue } from './report';
+import { updateReviews } from './spaced';
 
 type ChildRow = typeof children.$inferSelect;
 
@@ -79,6 +84,26 @@ export function startSession(
   input: StartSessionRequest,
 ): StartSessionResponse {
   let selection: Record<string, unknown>;
+  if (input.mode === 'homework') {
+    const assignment = getAssignment(db, child, input.selection.assignmentId);
+    if (assignment.completedAt) throw conflict('homework_done', 'Ce devoir est déjà fini, bravo !');
+    const row = db
+      .insert(practiceSessions)
+      .values({
+        childId: child.id,
+        mode: 'homework',
+        selection: { assignmentId: assignment.id, notions: assignment.notions },
+        startedAt: new Date(),
+      })
+      .returning({ id: practiceSessions.id })
+      .get();
+    return {
+      id: row.id,
+      answered: assignmentDto(db, assignment).answered,
+      notions: assignment.notions,
+      total: assignment.questions,
+    };
+  }
   if (input.mode === 'review') {
     const items: ReviewItem[] = reviewQueue(db, child.id)
       .slice(0, REVIEW_LENGTH)
@@ -103,10 +128,16 @@ export function startSession(
         .set({ endedAt: null })
         .where(eq(practiceSessions.id, today.id))
         .run();
-      return { id: today.id, answered: today.nQuestions };
+      const notions = today.selection.notions;
+      return {
+        id: today.id,
+        answered: today.nQuestions,
+        notions: Array.isArray(notions) ? (notions as string[]) : [],
+      };
     }
-    const grade = isGrade(child.grade) ? child.grade : 'CP';
-    selection = { day, notions: registry.notionsInScope('all', grade).map((n) => n.id) };
+    // Les notions vues en classe (toutes celles de la classe si le parent n'en a coché aucune).
+    const seen = activeNotions(db, child);
+    selection = { day, notions: seen.length ? seen : gradeNotions(child) };
   } else if (input.mode === 'training') {
     const { pluginId } = input.selection;
     if (typeof pluginId !== 'string' || !registry.plugin(pluginId))
@@ -128,7 +159,11 @@ export function startSession(
     .values({ childId: child.id, mode: input.mode, selection, startedAt: new Date() })
     .returning({ id: practiceSessions.id })
     .get();
-  return { id: row.id, answered: 0 };
+  return {
+    id: row.id,
+    answered: 0,
+    ...(input.mode === 'daily' ? { notions: selection.notions as string[] } : {}),
+  };
 }
 
 /**
@@ -149,7 +184,7 @@ function belongsToSession(
       )
     );
   }
-  if (session.mode === 'mix' || session.mode === 'daily') {
+  if (session.mode === 'mix' || session.mode === 'daily' || session.mode === 'homework') {
     const notions = session.selection.notions;
     return Array.isArray(notions) && pluginNotions.some((n) => notions.includes(n));
   }
@@ -201,6 +236,9 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
   const isDaily = session.mode === 'daily';
   if (isDaily && session.nQuestions >= DAILY_LENGTH)
     throw conflict('daily_done', 'Le défi du jour est déjà terminé.');
+  const assignmentId = session.mode === 'homework' ? Number(session.selection.assignmentId) : null;
+  if (assignmentId !== null && getAssignment(db, child, assignmentId).completedAt)
+    throw conflict('homework_done', 'Ce devoir est déjà fini, bravo !');
 
   let graded: GradedAttempt;
   try {
@@ -231,6 +269,8 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
   const dailyBonus = isDaily && session.nQuestions === DAILY_LENGTH - 1 ? DAILY_BONUS : 0;
   const now = new Date();
 
+  let assignment: AssignmentDto | null = null;
+  let homeworkBonus = 0;
   const coins = db.transaction((tx) => {
     try {
       tx.insert(attempts)
@@ -247,6 +287,10 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
           tries: graded.tries,
           score: graded.score,
           durationMs: Math.max(0, Math.min(input.durationMs, 3_600_000)),
+          firstTryMs:
+            input.firstTryMs === undefined
+              ? null
+              : Math.max(0, Math.min(input.firstTryMs, input.durationMs, 3_600_000)),
           coins: coinsEarned,
           createdAt: now,
         })
@@ -276,9 +320,21 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
       })
       .where(eq(practiceSessions.id, session.id))
       .run();
+    // La question qui termine un devoir apporte son bonus.
+    if (assignmentId !== null) {
+      const progress = progressAssignment(tx, child, assignmentId, now);
+      assignment = progress.assignment;
+      if (progress.justCompleted) {
+        homeworkBonus = HOMEWORK_BONUS;
+        tx.update(practiceSessions)
+          .set({ coinsEarned: sql`${practiceSessions.coinsEarned} + ${homeworkBonus}` })
+          .where(eq(practiceSessions.id, session.id))
+          .run();
+      }
+    }
     return tx
       .update(children)
-      .set({ coins: sql`${children.coins} + ${coinsEarned + dailyBonus}` })
+      .set({ coins: sql`${children.coins} + ${coinsEarned + dailyBonus + homeworkBonus}` })
       .where(eq(children.id, child.id))
       .returning({ coins: children.coins })
       .get().coins;
@@ -299,6 +355,9 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     badges: awardBadges(db, child.id, notions, now),
     daily: isDaily ? dailyState(db, child.id, now) : null,
     dailyBonus,
+    assignment,
+    homeworkBonus,
+    reviews: updateReviews(db, child.id, notions, graded.firstTryCorrect, now),
   };
 }
 

@@ -1,10 +1,18 @@
 import { registry } from '@app/content';
-import { dayKey, previousDay, type ChildReport, type MistakeDto } from '@app/core';
+import {
+  dayKey,
+  previousDay,
+  type ChildReport,
+  type MistakeDto,
+  type TimingPoint,
+} from '@app/core';
 import { and, desc, eq, gt, gte } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { attempts, children, practiceSessions } from '../db/schema';
 import { toChildDto } from './family';
 import { dailyState } from './motivation';
+import { activeNotions } from './notions';
+import { childReviews } from './spaced';
 import { childMasteries } from './practice';
 
 type ChildRow = typeof children.$inferSelect;
@@ -72,6 +80,45 @@ function pendingMistakes(rows: readonly AttemptRow[]): MistakeDto[] {
 
 export function reviewQueue(db: Db, childId: number, now = new Date()): MistakeDto[] {
   return pendingMistakes(recentAttempts(db, childId, now));
+}
+
+/** Questions gardées par exercice pour suivre le temps de réponse. */
+const TIMING_POINTS = 30;
+
+/**
+ * Temps de première réponse des dernières questions de chaque exercice (au moins 3), sans
+ * limite de date : on veut voir l'évolution sur plusieurs semaines.
+ */
+function responseTimes(db: Db, childId: number): ChildReport['timing'] {
+  const rows = db
+    .select({
+      pluginId: attempts.pluginId,
+      level: attempts.level,
+      tries: attempts.tries,
+      firstTryCorrect: attempts.firstTryCorrect,
+      durationMs: attempts.durationMs,
+      firstTryMs: attempts.firstTryMs,
+      createdAt: attempts.createdAt,
+    })
+    .from(attempts)
+    .where(eq(attempts.childId, childId))
+    .orderBy(desc(attempts.createdAt), desc(attempts.id))
+    .limit(3000)
+    .all();
+  const byPlugin = new Map<string, TimingPoint[]>();
+  for (const a of rows) {
+    // Avant la mesure de la première réponse, seul le temps d'une réponse en un essai est sûr.
+    const ms = a.firstTryMs ?? (a.tries === 1 ? a.durationMs : null);
+    if (ms === null || !registry.plugin(a.pluginId)) continue;
+    const points = byPlugin.get(a.pluginId) ?? [];
+    if (points.length < TIMING_POINTS)
+      points.push({ ms, level: a.level, firstTry: a.firstTryCorrect, at: a.createdAt.getTime() });
+    byPlugin.set(a.pluginId, points);
+  }
+  return [...byPlugin.entries()]
+    .filter(([, points]) => points.length >= 3)
+    .map(([pluginId, points]) => ({ pluginId, points: points.reverse() }))
+    .sort((a, b) => b.points.length - a.points.length);
 }
 
 export function childReport(db: Db, child: ChildRow, now = new Date()): ChildReport {
@@ -143,5 +190,8 @@ export function childReport(db: Db, child: ChildRow, now = new Date()): ChildRep
     sessions,
     mistakes,
     toReview: pendingMistakes(rows).length,
+    timing: responseTimes(db, child.id),
+    activeNotions: activeNotions(db, child),
+    reviews: childReviews(db, child.id),
   };
 }

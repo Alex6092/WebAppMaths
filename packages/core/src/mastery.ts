@@ -111,6 +111,8 @@ export function pickMixPlugin(
   notionIds: readonly string[],
   masteries: Record<string, NotionMastery | undefined>,
   previous?: string,
+  /** Notions à réviser aujourd'hui (révision espacée) : elles reviennent plus souvent. */
+  due: ReadonlySet<string> = new Set(),
 ): AnyPlugin {
   if (plugins.length === 0) throw new Error('pickMixPlugin : aucun exercice');
   const candidates = plugins.length > 1 ? plugins.filter((p) => p.id !== previous) : plugins;
@@ -118,8 +120,10 @@ export function pickMixPlugin(
     const notions = p.notions.filter((n) => notionIds.includes(n));
     const levels = notions.map((n) => masteries[n]?.mastery ?? 0);
     const mastery = levels.length ? levels.reduce((a, b) => a + b, 0) / levels.length : 0;
-    // Une notion acquise revient encore de temps en temps (poids 0,25 contre 1,25).
-    return 1.25 - mastery / 100;
+    // Une notion acquise revient encore de temps en temps (poids 0,25 contre 1,25) ;
+    // à réviser, elle compte autant qu'une notion à travailler.
+    const weight = 1.25 - mastery / 100;
+    return notions.some((n) => due.has(n)) ? Math.max(weight, 1.25) : weight;
   });
   let r = rng.next() * weights.reduce((a, b) => a + b, 0);
   for (let i = 0; i < candidates.length; i++) {
