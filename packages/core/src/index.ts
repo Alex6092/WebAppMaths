@@ -2,6 +2,7 @@ export * from './api';
 export * from './catalog';
 export * from './contract';
 export * from './engine';
+export * from './geometry';
 export * from './grades';
 export * from './plugin';
 export * from './progression';

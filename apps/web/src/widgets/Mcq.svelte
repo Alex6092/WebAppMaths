@@ -1,9 +1,20 @@
 <script lang="ts">
+  import FigureView from '../geometry/FigureView.svelte';
   import { isLocked, type WidgetProps } from './types';
 
   let { question, answer = $bindable(), phase, marks, solution }: WidgetProps<'mcq'> = $props();
 
   const locked = $derived(isLocked(phase));
+  // « {?} » dans l'énoncé : une case qui montre le choix en cours (le signe entre deux nombres).
+  const slotted = $derived(question.prompt?.includes('{?}') ?? false);
+  const [before = '', after = ''] = $derived(question.prompt?.split('{?}') ?? []);
+  const shownId = $derived(
+    phase === 'revealed' && solution ? solution.selected[0] : answer.selected[0],
+  );
+  const shown = $derived(question.choices.find((c) => c.id === shownId)?.label ?? '');
+  const slotState = $derived(
+    phase === 'success' ? 'ok' : phase === 'revealed' ? 'expected' : shown ? 'chosen' : '',
+  );
 
   function toggle(id: string) {
     if (locked) return;
@@ -38,7 +49,15 @@
 
 <svelte:window {onkeydown} />
 
-{#if question.prompt}
+{#if question.figure}
+  <FigureView figure={question.figure} />
+{/if}
+
+{#if slotted}
+  <!-- Sur une ligne : l'énoncé garde ses espaces (pre-wrap). -->
+  <!-- prettier-ignore -->
+  <div class="prompt">{before}<span class="slot {slotState}" data-testid="mcq-slot">{shown || ' '}</span>{after}</div>
+{:else if question.prompt}
   <div class="prompt">{question.prompt}</div>
 {/if}
 
@@ -68,6 +87,33 @@
     color: var(--primary-dark);
     text-align: center;
     white-space: pre-wrap;
+  }
+  .slot {
+    display: inline-block;
+    min-width: 1.6em;
+    margin: 0 0.3em;
+    padding: 0 0.2em;
+    border: 3px dashed var(--primary-soft);
+    border-radius: 14px;
+    background: #f7f2fb;
+    line-height: 1.3;
+  }
+  .slot.chosen {
+    border-style: solid;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .slot.ok {
+    border-style: solid;
+    border-color: var(--ok);
+    background: #a5d6a7;
+    color: #1b5e20;
+  }
+  .slot.expected {
+    border-style: solid;
+    border-color: var(--accent-dark);
+    background: #ffe0b2;
+    color: var(--accent-dark);
   }
   .choices {
     display: grid;

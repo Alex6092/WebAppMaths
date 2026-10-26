@@ -10,6 +10,54 @@ export interface QuestionBase {
   speech?: string;
 }
 
+/** Point d'une figure. Les coordonnées sont en centimètres, origine en haut à gauche. */
+export interface FigPoint {
+  id: string;
+  x: number;
+  y: number;
+  /** Nom affiché à côté du point (aucun s'il est absent). */
+  label?: string;
+  /** cross : croix ×, tick : petit trait sur un segment, dot : point rond, none : invisible. */
+  mark?: 'cross' | 'tick' | 'dot' | 'none';
+  /** Côté où s'écrit le nom (n par défaut). */
+  labelAt?: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+}
+export interface FigSegment {
+  from: string;
+  to: string;
+  /** line : droite, prolongée jusqu'aux bords de la figure. */
+  kind?: 'segment' | 'line';
+  dashed?: boolean;
+}
+/** Trait libre (courbe, ligne brisée) : pour reconnaître un segment parmi d'autres lignes. */
+export interface FigPath {
+  id: string;
+  points: [number, number][];
+  smooth?: boolean;
+  /** Petits points ronds aux deux bouts. */
+  dots?: boolean;
+  /** Légende sous le trait (« a/ »). */
+  caption?: string;
+}
+export interface FigText {
+  x: number;
+  y: number;
+  text: string;
+}
+/** Figure de géométrie dessinée à l'échelle : 1 unité = 1 cm sur la règle de l'app. */
+export interface Figure {
+  width: number;
+  height: number;
+  points: FigPoint[];
+  segments?: FigSegment[];
+  paths?: FigPath[];
+  texts?: FigText[];
+  /** Cadre autour de la figure (les « cases » des évaluations). */
+  frame?: boolean;
+  /** Une règle graduée à déplacer et tourner. */
+  ruler?: boolean;
+}
+
 /** Opération posée en colonnes, avec cases de retenue. */
 export interface ColumnOpQuestion extends QuestionBase {
   widget: 'column-op';
@@ -30,6 +78,7 @@ export interface NumberInputQuestion extends QuestionBase {
   prompt: string;
   unit?: string;
   maxLength?: number;
+  figure?: Figure;
 }
 export interface NumberInputAnswer {
   value: string;
@@ -43,10 +92,12 @@ export interface McqChoice {
 /** Choix unique ou multiple (VRAI/FAUX, COCHE, signe <, >, =…). */
 export interface McqQuestion extends QuestionBase {
   widget: 'mcq';
+  /** « {?} » y marque une case qui montre le choix en cours (« 12 {?} 15 »). */
   prompt?: string;
   choices: McqChoice[];
   multiple: boolean;
   layout?: 'row' | 'grid' | 'list';
+  figure?: Figure;
 }
 export interface McqAnswer {
   selected: string[];
@@ -97,7 +148,10 @@ export interface ClassifyAnswer {
   placed: (string | null)[];
 }
 
-export type Blank = { kind: 'choice'; options: string[] } | { kind: 'text'; size?: number };
+export type Blank =
+  | { kind: 'choice'; options: string[] }
+  /** upper : les lettres tapées s'écrivent en majuscules (noms de points : [AB]). */
+  | { kind: 'text'; size?: number; upper?: boolean };
 /** Texte à trous : étiquettes à choisir ou mots à taper (clavier à l'écran). */
 export interface FillBlankQuestion extends QuestionBase {
   widget: 'fill-blank';
@@ -106,6 +160,35 @@ export interface FillBlankQuestion extends QuestionBase {
   blanks: Blank[];
   /** Les majuscules comptent (faux par défaut). Les accents comptent toujours. */
   caseSensitive?: boolean;
+  figure?: Figure;
+}
+
+/**
+ * Outils de la géométrie : ENTOURER des points ou des traits, TRACER entre deux points,
+ * PLACER des points nommés. Un tracé « help » sert d'aide et n'est pas corrigé.
+ */
+export type GeoTool =
+  | { kind: 'pick'; targets: string[] }
+  | { kind: 'draw'; as: 'segment' | 'line'; help?: boolean }
+  | { kind: 'place'; labels: string[] };
+export interface GeometryQuestion extends QuestionBase {
+  widget: 'geometry';
+  figure: Figure;
+  tools: GeoTool[];
+  /** Écart permis pour un point placé, en cm (0,3 par défaut). */
+  tolerance?: number;
+}
+export interface PlacedPoint {
+  id: string;
+  x: number;
+  y: number;
+}
+export interface GeometryAnswer {
+  /** Points ou traits entourés (identifiants). */
+  picked: string[];
+  /** Traits tracés entre deux points de la figure. */
+  drawn: [string, string][];
+  placed: PlacedPoint[];
 }
 export interface FillBlankAnswer {
   values: string[];
@@ -117,7 +200,8 @@ export type Question =
   | McqQuestion
   | WordSelectQuestion
   | ClassifyQuestion
-  | FillBlankQuestion;
+  | FillBlankQuestion
+  | GeometryQuestion;
 export type WidgetId = Question['widget'];
 
 export interface AnswerMap {
@@ -127,6 +211,7 @@ export interface AnswerMap {
   'word-select': WordSelectAnswer;
   classify: ClassifyAnswer;
   'fill-blank': FillBlankAnswer;
+  geometry: GeometryAnswer;
 }
 
 export type QuestionOf<W extends WidgetId> = Extract<Question, { widget: W }>;

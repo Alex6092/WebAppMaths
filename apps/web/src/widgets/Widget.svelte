@@ -3,6 +3,7 @@
   import Classify from './Classify.svelte';
   import ColumnOp from './ColumnOp.svelte';
   import FillBlank from './FillBlank.svelte';
+  import Geometry from './Geometry.svelte';
   import Mcq from './Mcq.svelte';
   import NumberInput from './NumberInput.svelte';
   import type { Phase } from './types';
@@ -32,4 +33,6 @@
   <Classify {question} bind:answer {phase} {marks} {solution} />
 {:else if question.widget === 'fill-blank'}
   <FillBlank {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'geometry'}
+  <Geometry {question} bind:answer {phase} {marks} {solution} />
 {/if}

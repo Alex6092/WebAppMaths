@@ -2,6 +2,7 @@ import type { WidgetId } from '../question';
 import { classifyWidget } from './classify';
 import { columnOpWidget } from './column-op';
 import { fillBlankWidget } from './fill-blank';
+import { geometryWidget } from './geometry';
 import { mcqWidget } from './mcq';
 import { numberInputWidget } from './number-input';
 import type { WidgetDef } from './types';
@@ -14,6 +15,7 @@ export const WIDGETS: { [W in WidgetId]: WidgetDef<W> } = {
   'word-select': wordSelectWidget,
   classify: classifyWidget,
   'fill-blank': fillBlankWidget,
+  geometry: geometryWidget,
 };
 
 export function getWidget<W extends WidgetId>(id: W): WidgetDef<W> {
@@ -25,6 +27,7 @@ export function getWidget<W extends WidgetId>(id: W): WidgetDef<W> {
 export * from './column-op';
 export { compareAssignments } from './assign';
 export { ACCENT_HINT, blankParts, compareBlanks } from './fill-blank';
+export { checkGeometry, DEFAULT_TOLERANCE, sameDrawing, type GeometryRules } from './geometry';
 export { normalizeNumber } from './number-input';
 export type { WidgetDef } from './types';
 export { isSelectable, tokensText } from './word-select';

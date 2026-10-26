@@ -8,6 +8,7 @@ export const HAS_OWN_SUBMIT: Record<WidgetId, boolean> = {
   'word-select': false,
   classify: false,
   'fill-blank': false,
+  geometry: false,
 };
 
 export { default as Widget } from './Widget.svelte';

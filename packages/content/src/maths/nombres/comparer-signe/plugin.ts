@@ -50,7 +50,7 @@ export default definePlugin('mcq', {
     return {
       widget: 'mcq',
       instruction: 'COMPLÈTE avec <, > ou =.',
-      prompt: `${a}  …  ${b}`,
+      prompt: `${a} {?} ${b}`,
       choices: (['lt', 'eq', 'gt'] as const).map((id) => ({ id, label: SIGN[id] })),
       multiple: false,
       layout: 'row',
