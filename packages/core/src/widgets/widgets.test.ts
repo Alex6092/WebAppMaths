@@ -81,6 +81,10 @@ describe('mcq', () => {
     expect(mcqWidget.validate(q, { selected: ['a', 'a'] })).toBe(false);
     expect(mcqWidget.validate({ ...q, multiple: false }, { selected: ['a', 'b'] })).toBe(false);
   });
+
+  it('lit la case « {?} » comme un silence', () => {
+    expect(mcqWidget.speech?.({ ...q, prompt: '12 {?} 15' })).toBe('12 15. A, B, C');
+  });
 });
 
 describe('number-input et lecture', () => {

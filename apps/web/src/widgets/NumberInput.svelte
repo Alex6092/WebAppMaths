@@ -1,5 +1,6 @@
 <script lang="ts">
   import Numpad from '../components/Numpad.svelte';
+  import FigureView from '../geometry/FigureView.svelte';
   import { isLocked, type WidgetProps } from './types';
 
   let {
@@ -43,6 +44,10 @@
 </script>
 
 <svelte:window {onkeydown} />
+
+{#if question.figure}
+  <FigureView figure={question.figure} />
+{/if}
 
 <div class="prompt">
   {#if before.trim()}<span>{before.trim()}</span>{/if}

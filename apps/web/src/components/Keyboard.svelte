@@ -2,10 +2,12 @@
   /** Clavier AZERTY à l'écran, avec les lettres accentuées (pas de clavier du système sur tablette). */
   interface Props {
     disabled?: boolean;
+    /** Lettres capitales, sans accents (noms de points). */
+    upper?: boolean;
     onkey: (char: string) => void;
     ondelete: () => void;
   }
-  let { disabled = false, onkey, ondelete }: Props = $props();
+  let { disabled = false, upper = false, onkey, ondelete }: Props = $props();
 
   const rows = [
     ['a', 'z', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
@@ -16,15 +18,19 @@
 </script>
 
 <div class="keyboard" aria-label="Clavier">
-  <div class="row accents">
-    {#each accents as k (k)}
-      <button class="key accent" {disabled} onclick={() => onkey(k)}>{k}</button>
-    {/each}
-  </div>
+  {#if !upper}
+    <div class="row accents">
+      {#each accents as k (k)}
+        <button class="key accent" {disabled} onclick={() => onkey(k)}>{k}</button>
+      {/each}
+    </div>
+  {/if}
   {#each rows as row, r (r)}
     <div class="row">
       {#each row as k (k)}
-        <button class="key" {disabled} onclick={() => onkey(k)}>{k}</button>
+        <button class="key" {disabled} onclick={() => onkey(k)}
+          >{upper ? k.toUpperCase() : k}</button
+        >
       {/each}
       {#if r === 2}
         <button class="key del" {disabled} onclick={ondelete} aria-label="Effacer">⌫</button>

@@ -49,6 +49,8 @@ export const mcqWidget: WidgetDef<'mcq'> = {
 
   speech(q) {
     const choices = q.choices.map((c) => c.label).join(', ');
-    return mathToSpeech([q.prompt, choices].filter(Boolean).join('. '));
+    // La case « {?} » est lue comme un silence : le choix reste à faire.
+    const prompt = q.prompt?.replace(/\{\?\}/g, '…');
+    return mathToSpeech([prompt, choices].filter(Boolean).join('. '));
   },
 };

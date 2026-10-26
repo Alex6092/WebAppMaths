@@ -26,7 +26,8 @@
   let answer = $state<any>(null);
   const solution = $derived(plugin && question ? plugin.solve(question) : null);
 
-  $effect(() => {
+  // Avant le rendu : le widget ne doit jamais recevoir la réponse d'une autre question.
+  $effect.pre(() => {
     if (question) {
       answer = getWidget(question.widget).emptyAnswer(question as never);
       phase = 'answering';
@@ -71,7 +72,7 @@
     <button class="btn small" onclick={() => (seed = randomSeed())}>🎲 Nouvelle graine</button>
   </div>
 
-  {#if plugin && question}
+  {#if plugin && question && answer}
     <div class="instruction">
       <span>{question.instruction}</span>
       <SpeakButton text={questionSpeech(question)} />

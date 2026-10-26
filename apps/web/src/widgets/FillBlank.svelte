@@ -2,6 +2,7 @@
   import { blankParts } from '@app/core';
   import { untrack } from 'svelte';
   import Keyboard from '../components/Keyboard.svelte';
+  import FigureView from '../geometry/FigureView.svelte';
   import { isLocked, type WidgetProps } from './types';
 
   let {
@@ -62,7 +63,8 @@
   function type(char: string) {
     if (locked || blank?.kind !== 'text') return;
     const value = answer.values[active] ?? '';
-    if (value.length < MAX_LENGTH) answer.values[active] = value + char;
+    if (value.length < MAX_LENGTH)
+      answer.values[active] = value + (blank.upper ? char.toUpperCase() : char);
   }
 
   function erase() {
@@ -88,6 +90,10 @@
 
 <svelte:window {onkeydown} />
 
+{#if question.figure}
+  <FigureView figure={question.figure} />
+{/if}
+
 <!-- Sur une ligne : un retour à la ligne dans le gabarit ajouterait un espace avant « , » ou « . ». -->
 <!-- prettier-ignore -->
 <p class="prompt">{#each parts as part, p (p)}{#if typeof part === 'number'}<button class="blank {status(part)}" class:active={part === active && !locked} class:text={question.blanks[part]?.kind === 'text'} disabled={locked} data-testid="blank-{part}" onclick={() => (active = part)}>{shown(part) || ' '}</button>{:else}{#each part.split('\n') as line, l (l)}{#if l > 0}<br />{/if}{line}{/each}{/if}{/each}</p>
@@ -103,7 +109,12 @@
     {/each}
   </div>
 {:else if hasText && !locked}
-  <Keyboard disabled={blank?.kind !== 'text'} onkey={type} ondelete={erase} />
+  <Keyboard
+    disabled={blank?.kind !== 'text'}
+    upper={blank?.kind === 'text' && blank.upper === true}
+    onkey={type}
+    ondelete={erase}
+  />
 {/if}
 
 <style>

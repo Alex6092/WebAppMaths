@@ -16,7 +16,20 @@ import plugin11 from './francais/conjugaison/vrai-faux-temps/plugin';
 import plugin12 from './maths/calcul/addition-posee/plugin';
 import plugin13 from './maths/calcul/calcul-mental/plugin';
 import plugin14 from './maths/calcul/soustraction-posee/plugin';
-import plugin15 from './maths/nombres/comparer-signe/plugin';
+import plugin15 from './maths/geometrie/alignes-oui-non/plugin';
+import plugin16 from './maths/geometrie/entoure-milieu/plugin';
+import plugin17 from './maths/geometrie/entoure-segments/plugin';
+import plugin18 from './maths/geometrie/longueurs-milieu/plugin';
+import plugin19 from './maths/geometrie/milieu-oui-non/plugin';
+import plugin20 from './maths/geometrie/nomme-segment/plugin';
+import plugin21 from './maths/geometrie/place-alignes/plugin';
+import plugin22 from './maths/geometrie/place-milieu/plugin';
+import plugin23 from './maths/geometrie/relie-alignes/plugin';
+import plugin24 from './maths/geometrie/trace-alignes/plugin';
+import plugin25 from './maths/geometrie/trace-segment-milieu/plugin';
+import plugin26 from './maths/geometrie/vocabulaire-segment/plugin';
+import plugin27 from './maths/mesures/mesure-segment/plugin';
+import plugin28 from './maths/nombres/comparer-signe/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
@@ -39,6 +52,19 @@ export const plugins: AnyPlugin[] = [
   plugin13,
   plugin14,
   plugin15,
+  plugin16,
+  plugin17,
+  plugin18,
+  plugin19,
+  plugin20,
+  plugin21,
+  plugin22,
+  plugin23,
+  plugin24,
+  plugin25,
+  plugin26,
+  plugin27,
+  plugin28,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -58,6 +84,19 @@ export const pluginPathIds: string[] = [
   'maths.calcul.addition-posee',
   'maths.calcul.calcul-mental',
   'maths.calcul.soustraction-posee',
+  'maths.geometrie.alignes-oui-non',
+  'maths.geometrie.entoure-milieu',
+  'maths.geometrie.entoure-segments',
+  'maths.geometrie.longueurs-milieu',
+  'maths.geometrie.milieu-oui-non',
+  'maths.geometrie.nomme-segment',
+  'maths.geometrie.place-alignes',
+  'maths.geometrie.place-milieu',
+  'maths.geometrie.relie-alignes',
+  'maths.geometrie.trace-alignes',
+  'maths.geometrie.trace-segment-milieu',
+  'maths.geometrie.vocabulaire-segment',
+  'maths.mesures.mesure-segment',
   'maths.nombres.comparer-signe',
 ];
 
