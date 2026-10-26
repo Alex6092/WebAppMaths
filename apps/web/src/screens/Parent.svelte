@@ -11,6 +11,7 @@
   import ChildReport from '../components/parent/ChildReport.svelte';
   import Evaluations from '../components/parent/Evaluations.svelte';
   import Homework from '../components/parent/Homework.svelte';
+  import Worksheets from '../components/parent/Worksheets.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
   import { toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
@@ -260,6 +261,8 @@
         <Homework child={followed} onerror={handle} />
         <h3>📋 Évaluations blanches</h3>
         <Evaluations child={followed} onerror={handle} />
+        <h3>🖨️ Fiches à imprimer</h3>
+        <Worksheets child={followed} onerror={handle} />
         <ChildReport childId={followed.id} onerror={handle} />
       </section>
     {/if}

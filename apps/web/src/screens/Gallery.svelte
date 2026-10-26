@@ -10,6 +10,7 @@
   } from '@app/core';
   import SpeakButton from '../components/SpeakButton.svelte';
   import { navigate } from '../lib/router.svelte';
+  import PrintQuestion from '../print/PrintQuestion.svelte';
   import { Widget, type Phase } from '../widgets';
 
   // Galerie de relecture : chaque plugin, chaque niveau, une graine au choix.
@@ -100,6 +101,16 @@
           💡 {plugin.explain(question, $state.snapshot(answer))}
         </p>{/if}
     {/if}
+    <!-- La même question sur papier, telle qu'elle sort sur une fiche, puis son corrigé. -->
+    <details class="card paper">
+      <summary>🖨️ Sur papier</summary>
+      <div class="sheet">
+        <p class="own">{question.instruction}</p>
+        <PrintQuestion {question} />
+        <p class="own">Corrigé</p>
+        <PrintQuestion {question} solution={plugin.solve(question)} />
+      </div>
+    </details>
     <details class="card">
       <summary>Question (JSON)</summary>
       <pre>{JSON.stringify(question, null, 2)}</pre>
@@ -108,6 +119,22 @@
 </div>
 
 <style>
+  .paper {
+    width: 100%;
+  }
+  .sheet {
+    background: white;
+    color: #111;
+    padding: 0.8cm;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3cm;
+    font-size: 12pt;
+  }
+  .own {
+    font-weight: 700;
+  }
   .top {
     display: flex;
     align-items: center;

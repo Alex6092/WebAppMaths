@@ -18,3 +18,4 @@ export * from './spaced';
 export * from './speech';
 export * from './text';
 export * from './widgets';
+export * from './worksheet';
