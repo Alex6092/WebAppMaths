@@ -106,6 +106,9 @@ export default definePlugin('number-input', {
 Pour `fill-blank`, une réponse tapée est comptée fausse s'il manque un accent, mais l'enfant voit
 « Attention aux accents » et garde ce qu'il a tapé pour le deuxième essai. Quand plusieurs réponses
 conviennent, écris un `check` avec `compareBlanks(q, [[...réponses admises du trou 0], ...], answer)`.
+Un trou `{ kind: 'text', digits: true }` attend un nombre, tapé au pavé numérique ; avec
+`upper: true`, les lettres s'écrivent en capitales (noms de points). Les nombres en lettres
+viennent de `lib/lettres.ts` (orthographe traditionnelle de la classe : deux cent trente et un).
 
 Une **figure** de géométrie (`Figure` : points, segments, traits libres, longueurs écrites) se
 décrit en centimètres. Elle s'affiche dans `geometry`, mais aussi au-dessus d'un `mcq`, d'un
