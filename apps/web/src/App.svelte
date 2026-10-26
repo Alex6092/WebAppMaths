@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Effects from './components/Effects.svelte';
   import { errorMessage } from './lib/api';
+  import { mixNotions } from './lib/notions';
   import { navigate, route } from './lib/router.svelte';
   import { activeChild, loadChildState, refreshMe, session } from './lib/session.svelte';
   import ChildHome from './screens/ChildHome.svelte';
@@ -21,7 +22,7 @@
   });
 
   // Écrans qui demandent un profil enfant actif.
-  const CHILD_SCREENS = new Set(['home', 'subject', 'exercise', 'shop', 'collection']);
+  const CHILD_SCREENS = new Set(['home', 'subject', 'exercise', 'mix', 'shop', 'collection']);
 
   const view = $derived.by(() => {
     if (!session.ready) return 'loading';
@@ -66,6 +67,12 @@
   {#key route.segments[1]}<Subject subjectId={route.segments[1] ?? ''} />{/key}
 {:else if view === 'exercise'}
   {#key route.segments[1]}<Exercise pluginId={route.segments[1] ?? ''} />{/key}
+{:else if view === 'mix'}
+  {#key `${route.path}?${route.query}`}
+    <Exercise
+      mix={mixNotions(route.segments[1], route.query.get('n'), activeChild()?.grade ?? 'CE1')}
+    />
+  {/key}
 {:else if view === 'shop'}
   <Shop mode="shop" />
 {:else if view === 'collection'}

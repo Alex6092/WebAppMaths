@@ -5,16 +5,19 @@ import {
   gradeAttempt,
   initialLevel,
   isGrade,
+  masteryByNotion,
   newLevelState,
   type AttemptRequest,
   type AttemptResponse,
   type GradedAttempt,
   type LevelChange,
   type LevelState,
+  type NotionMastery,
   type SessionSummary,
+  type StartSessionRequest,
 } from '@app/core';
 import { findReward } from '@app/themes';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { attempts, children, exerciseStates, practiceSessions, rewardsOwned } from '../db/schema';
 import { badRequest, conflict, notFound } from '../errors';
@@ -35,14 +38,70 @@ export function getLevelState(db: Db, child: ChildRow, pluginId: string): LevelS
   );
 }
 
-export function startSession(db: Db, child: ChildRow, pluginId: string): number {
-  if (!registry.plugin(pluginId)) throw notFound('unknown_plugin', 'Exercice inconnu.');
+/** Tentatives prises en compte pour l'acquisition (les plus récentes). */
+const MASTERY_HISTORY = 5000;
+
+/** Acquisition des notions demandées (toutes par défaut), d'après les tentatives de l'enfant. */
+export function childMasteries(
+  db: Db,
+  childId: number,
+  notionIds: readonly string[] = registry.notions.map((n) => n.id),
+): Record<string, NotionMastery> {
+  const records = db
+    .select({
+      pluginId: attempts.pluginId,
+      level: attempts.level,
+      firstTryCorrect: attempts.firstTryCorrect,
+      solved: attempts.solved,
+    })
+    .from(attempts)
+    .where(eq(attempts.childId, childId))
+    .orderBy(desc(attempts.createdAt), desc(attempts.id))
+    .limit(MASTERY_HISTORY)
+    .all()
+    .reverse();
+  return masteryByNotion(records, registry.plugins, notionIds);
+}
+
+const MAX_MIX_NOTIONS = 200;
+
+export function startSession(db: Db, child: ChildRow, input: StartSessionRequest): number {
+  let selection: Record<string, unknown>;
+  if (input.mode === 'training') {
+    const { pluginId } = input.selection;
+    if (typeof pluginId !== 'string' || !registry.plugin(pluginId))
+      throw notFound('unknown_plugin', 'Exercice inconnu.');
+    selection = { pluginId };
+  } else {
+    const notions = [...new Set(input.selection.notions ?? [])];
+    if (
+      notions.length === 0 ||
+      notions.length > MAX_MIX_NOTIONS ||
+      notions.some((id) => !registry.notion(id)) ||
+      registry.pluginsOfNotions(notions).length === 0
+    )
+      throw badRequest('invalid_selection', 'Choisis au moins une notion avec des exercices.');
+    selection = { notions };
+  }
   const row = db
     .insert(practiceSessions)
-    .values({ childId: child.id, mode: 'training', selection: { pluginId }, startedAt: new Date() })
+    .values({ childId: child.id, mode: input.mode, selection, startedAt: new Date() })
     .returning({ id: practiceSessions.id })
     .get();
   return row.id;
+}
+
+/** L'exercice fait-il partie de la séance (le bon exercice, ou une notion du mélange) ? */
+function belongsToSession(
+  session: { mode: string; selection: Record<string, unknown> },
+  pluginId: string,
+  pluginNotions: readonly string[],
+): boolean {
+  if (session.mode === 'mix') {
+    const notions = session.selection.notions;
+    return Array.isArray(notions) && pluginNotions.some((n) => notions.includes(n));
+  }
+  return session.selection.pluginId === pluginId;
 }
 
 export function endSession(db: Db, child: ChildRow, sessionId: number): SessionSummary {
@@ -85,6 +144,8 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     .get();
   if (!session || session.endedAt)
     throw notFound('session_not_found', 'Séance introuvable ou terminée.');
+  if (!belongsToSession(session, plugin.id, plugin.notions))
+    throw badRequest('wrong_session', 'Cet exercice ne fait pas partie de la séance.');
 
   let graded: GradedAttempt;
   try {
@@ -176,6 +237,7 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     level: next.level,
     levelChange,
     results: graded.results,
+    notions: childMasteries(db, child.id, plugin.notions),
   };
 }
 

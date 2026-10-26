@@ -2,6 +2,7 @@
  * Contrat d'API partagé entre le serveur (apps/server) et l'interface (apps/web).
  */
 import type { GradeId } from './grades';
+import type { NotionMastery } from './mastery';
 import type { LevelChange } from './progression';
 import type { CheckResult } from './question';
 
@@ -36,15 +37,17 @@ export interface ChildStateResponse {
   child: ChildDto;
   /** Niveau courant par plugin (absent = jamais joué). */
   levels: Record<string, LevelStateDto>;
+  /** Acquisition de chaque notion du catalogue. */
+  notions: Record<string, NotionMastery>;
   owned: { themeId: string; rewardId: string }[];
 }
 
-export type PracticeMode = 'training';
+/** training : un seul exercice ; mix : un mélange des exercices de plusieurs notions. */
+export type PracticeMode = 'training' | 'mix';
 
-export interface StartSessionRequest {
-  mode: PracticeMode;
-  selection: { pluginId: string };
-}
+export type StartSessionRequest =
+  | { mode: 'training'; selection: { pluginId: string } }
+  | { mode: 'mix'; selection: { notions: string[] } };
 
 export interface AttemptRequest {
   sessionId: number;
@@ -67,6 +70,8 @@ export interface AttemptResponse {
   level: number;
   levelChange: LevelChange;
   results: CheckResult[];
+  /** Acquisition mise à jour des notions de l'exercice. */
+  notions: Record<string, NotionMastery>;
 }
 
 export interface SessionSummary {

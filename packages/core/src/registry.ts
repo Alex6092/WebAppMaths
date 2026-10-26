@@ -1,4 +1,5 @@
 import type { Catalog, Domain, Notion, Subject } from './catalog';
+import type { GradeId } from './grades';
 import type { AnyPlugin } from './plugin';
 
 /** Catalogue (matières, domaines, notions) et plugins, avec les liens entre eux. */
@@ -55,6 +56,28 @@ export class Registry {
       p.notions.some((n) => domains.has(this.notionById.get(n)?.domain ?? '')),
     );
   }
+  /**
+   * Les notions d'un mélange : « all », une matière, un domaine ou une notion, limitées à
+   * celles qui ont des exercices (et, si une classe est donnée, travaillées dans cette classe).
+   */
+  notionsInScope(scope: string, grade?: GradeId): Notion[] {
+    return this.notions.filter((n) => {
+      const domain = this.domainById.get(n.domain);
+      const inScope =
+        scope === 'all' || n.id === scope || n.domain === scope || domain?.subject === scope;
+      return (
+        inScope &&
+        (!grade || n.grades.includes(grade)) &&
+        this.plugins.some((p) => p.notions.includes(n.id))
+      );
+    });
+  }
+
+  /** Les exercices qui entraînent au moins une de ces notions. */
+  pluginsOfNotions(notionIds: readonly string[]): AnyPlugin[] {
+    return this.plugins.filter((p) => p.notions.some((n) => notionIds.includes(n)));
+  }
+
   /** Matière d'un plugin (celle de sa première notion). */
   subjectOf(plugin: AnyPlugin): Subject | undefined {
     const notion = this.notionById.get(plugin.notions[0] ?? '');
