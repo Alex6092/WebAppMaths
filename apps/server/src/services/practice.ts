@@ -14,6 +14,7 @@ import {
   type AttemptRequest,
   type AssignmentDto,
   type AttemptResponse,
+  type EvaluationDto,
   type GradedAttempt,
   type LevelChange,
   type LevelState,
@@ -29,6 +30,7 @@ import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { attempts, children, exerciseStates, practiceSessions, rewardsOwned } from '../db/schema';
 import { badRequest, conflict, notFound } from '../errors';
+import { getEvaluation, progressEvaluation, remainingItems } from './evaluation';
 import { assignmentDto, getAssignment, progressAssignment } from './homework';
 import { awardBadges, dailyState, todaysDailySession } from './motivation';
 import { activeNotions, gradeNotions } from './notions';
@@ -84,6 +86,29 @@ export function startSession(
   input: StartSessionRequest,
 ): StartSessionResponse {
   let selection: Record<string, unknown>;
+  if (input.mode === 'evaluation') {
+    // Une évaluation reprend aux questions qui restent.
+    const evaluation = getEvaluation(db, child, input.selection.evaluationId);
+    const items = remainingItems(db, evaluation);
+    if (evaluation.completedAt || items.length === 0)
+      throw conflict('evaluation_done', 'Cette évaluation est déjà finie, bravo !');
+    const row = db
+      .insert(practiceSessions)
+      .values({
+        childId: child.id,
+        mode: 'evaluation',
+        selection: { evaluationId: evaluation.id },
+        startedAt: new Date(),
+      })
+      .returning({ id: practiceSessions.id })
+      .get();
+    return {
+      id: row.id,
+      answered: evaluation.items.length - items.length,
+      items: items.map(({ pluginId, level, seed }) => ({ pluginId, level, seed })),
+      total: evaluation.items.length,
+    };
+  }
   if (input.mode === 'homework') {
     const assignment = getAssignment(db, child, input.selection.assignmentId);
     if (assignment.completedAt) throw conflict('homework_done', 'Ce devoir est déjà fini, bravo !');
@@ -231,7 +256,24 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     .get();
   if (!session || session.endedAt)
     throw notFound('session_not_found', 'Séance introuvable ou terminée.');
-  if (!belongsToSession(session, input, plugin.notions))
+  // Une évaluation : une question de la liste, pas encore répondue, et un seul essai.
+  const evaluation =
+    session.mode === 'evaluation'
+      ? getEvaluation(db, child, Number(session.selection.evaluationId))
+      : null;
+  if (evaluation) {
+    if (evaluation.completedAt)
+      throw conflict('evaluation_done', 'Cette évaluation est déjà finie, bravo !');
+    const remaining = remainingItems(db, evaluation);
+    if (
+      !remaining.some(
+        (i) => i.pluginId === input.pluginId && i.level === input.level && i.seed === input.seed,
+      )
+    )
+      throw badRequest('wrong_session', 'Cette question ne fait pas partie de l’évaluation.');
+    if (input.answers.length !== 1)
+      throw badRequest('invalid_answer', 'Une seule réponse par question pendant l’évaluation.');
+  } else if (!belongsToSession(session, input, plugin.notions))
     throw badRequest('wrong_session', 'Cet exercice ne fait pas partie de la séance.');
   const isDaily = session.mode === 'daily';
   if (isDaily && session.nQuestions >= DAILY_LENGTH)
@@ -250,8 +292,9 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
   const current = getLevelState(db, child, plugin.id);
   let next = current;
   let levelChange: LevelChange = null;
-  // Le niveau n'évolue que pour une question du niveau courant (pas pour un niveau rejoué).
-  if (input.level === current.level) {
+  // Le niveau n'évolue que pour une question du niveau courant (pas pour un niveau rejoué),
+  // et jamais pendant une évaluation.
+  if (!evaluation && input.level === current.level) {
     ({ state: next, change: levelChange } = applyResult(
       current,
       graded.firstTryCorrect,
@@ -259,18 +302,17 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
       plugin.progression,
     ));
   }
-  const coinsEarned = coinsFor(
-    plugin,
-    Math.min(input.level, current.level),
-    graded.firstTryCorrect,
-    graded.solved,
-  );
+  // Pas de pièces pendant une évaluation, comme en classe.
+  const coinsEarned = evaluation
+    ? 0
+    : coinsFor(plugin, Math.min(input.level, current.level), graded.firstTryCorrect, graded.solved);
   // La dernière question du défi du jour apporte le bonus.
   const dailyBonus = isDaily && session.nQuestions === DAILY_LENGTH - 1 ? DAILY_BONUS : 0;
   const now = new Date();
 
   let assignment: AssignmentDto | null = null;
   let homeworkBonus = 0;
+  let evaluationState: EvaluationDto | null = null;
   const coins = db.transaction((tx) => {
     try {
       tx.insert(attempts)
@@ -300,18 +342,20 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
         throw conflict('duplicate_attempt', 'Question déjà enregistrée.');
       throw error;
     }
-    tx.insert(exerciseStates)
-      .values({ childId: child.id, pluginId: plugin.id, ...next, updatedAt: now })
-      .onConflictDoUpdate({
-        target: [exerciseStates.childId, exerciseStates.pluginId],
-        set: {
-          level: next.level,
-          recent: next.recent,
-          consecutiveErrors: next.consecutiveErrors,
-          updatedAt: now,
-        },
-      })
-      .run();
+    if (evaluation) evaluationState = progressEvaluation(tx, evaluation, now);
+    else
+      tx.insert(exerciseStates)
+        .values({ childId: child.id, pluginId: plugin.id, ...next, updatedAt: now })
+        .onConflictDoUpdate({
+          target: [exerciseStates.childId, exerciseStates.pluginId],
+          set: {
+            level: next.level,
+            recent: next.recent,
+            consecutiveErrors: next.consecutiveErrors,
+            updatedAt: now,
+          },
+        })
+        .run();
     tx.update(practiceSessions)
       .set({
         nQuestions: sql`${practiceSessions.nQuestions} + 1`,
@@ -358,6 +402,7 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     assignment,
     homeworkBonus,
     reviews: updateReviews(db, child.id, notions, graded.firstTryCorrect, now),
+    evaluation: evaluationState,
   };
 }
 

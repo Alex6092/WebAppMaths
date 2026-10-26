@@ -1,3 +1,4 @@
+import type { EvaluationItem } from '@app/core';
 import {
   index,
   integer,
@@ -238,4 +239,25 @@ export const notionReviews = sqliteTable(
     reviewedAt: integer('reviewed_at', { mode: 'timestamp_ms' }),
   },
   (t) => [primaryKey({ columns: [t.childId, t.notionId] })],
+);
+
+/**
+ * Évaluations blanches préparées par le parent : les questions sont tirées à la création
+ * (exercice, niveau attendu, graine), groupées par notion comme sur les évaluations de l'école.
+ */
+export const evaluations = sqliteTable(
+  'evaluation',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    childId: integer('child_id')
+      .notNull()
+      .references(() => children.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    notions: text('notions', { mode: 'json' }).$type<string[]>().notNull(),
+    perNotion: integer('per_notion').notNull(),
+    items: text('items', { mode: 'json' }).$type<EvaluationItem[]>().notNull(),
+    createdAt: createdAt(),
+    completedAt: integer('completed_at', { mode: 'timestamp_ms' }),
+  },
+  (t) => [index('evaluation_child_idx').on(t.childId, t.createdAt)],
 );

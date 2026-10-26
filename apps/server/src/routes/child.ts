@@ -2,6 +2,7 @@ import type {
   AttemptRequest,
   ChildDto,
   ChildStateResponse,
+  EvaluationReport,
   StartSessionRequest,
   ThemeResponse,
 } from '@app/core';
@@ -25,6 +26,7 @@ import {
   earnedBadges,
   unlockedThemes,
 } from '../services/motivation';
+import { childEvaluations, evaluationReport, getEvaluation } from '../services/evaluation';
 import { childAssignments } from '../services/homework';
 import { activeNotions } from '../services/notions';
 import { reviewQueue } from '../services/report';
@@ -72,8 +74,19 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
       activeNotions: activeNotions(db, child),
       assignments: childAssignments(db, child),
       reviews: childReviews(db, child.id),
+      evaluations: childEvaluations(db, child),
     };
   });
+
+  /** Le bilan d'une évaluation finie, montré à l'enfant à la fin. */
+  api.get<{ Params: { id: number } }>(
+    '/child/evaluations/:id',
+    { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
+    async (req): Promise<EvaluationReport> => {
+      const child = activeChild(req);
+      return evaluationReport(db, child, getEvaluation(db, child, req.params.id));
+    },
+  );
 
   api.post<{ Body: StartSessionRequest }>(
     '/child/sessions',
@@ -84,13 +97,17 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
           required: ['mode', 'selection'],
           additionalProperties: false,
           properties: {
-            mode: { type: 'string', enum: ['training', 'mix', 'daily', 'review', 'homework'] },
+            mode: {
+              type: 'string',
+              enum: ['training', 'mix', 'daily', 'review', 'homework', 'evaluation'],
+            },
             selection: {
               type: 'object',
               additionalProperties: false,
               properties: {
                 pluginId: { type: 'string', maxLength: 100 },
                 assignmentId: { type: 'integer' },
+                evaluationId: { type: 'integer' },
                 notions: {
                   type: 'array',
                   maxItems: 200,

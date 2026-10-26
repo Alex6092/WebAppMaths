@@ -5,9 +5,11 @@
 
   /**
    * La question exacte ratée par l'enfant (régénérée depuis sa graine) : ses réponses avec les
-   * erreurs marquées, puis la bonne réponse. Rien n'est modifiable.
+   * erreurs marquées, puis la bonne réponse. Rien n'est modifiable. note remplace la mention
+   * « corrigée au 2e essai » (une question d'évaluation, par exemple).
    */
-  let { mistake, onclose }: { mistake: MistakeDto; onclose: () => void } = $props();
+  let { mistake, note, onclose }: { mistake: MistakeDto; note?: string; onclose: () => void } =
+    $props();
 
   const plugin = $derived(registry.plugin(mistake.pluginId));
   const question = $derived(plugin ? generateQuestion(plugin, mistake.level, mistake.seed) : null);
@@ -40,7 +42,7 @@
 <svelte:window onkeydown={(e) => e.key === 'Escape' && onclose()} />
 
 <div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && onclose()}>
-  <div class="card viewer" role="dialog" aria-modal="true" aria-label="Question ratée">
+  <div class="card viewer" role="dialog" aria-modal="true" aria-label="Question">
     {#if plugin && question && view}
       <header>
         <h2>{plugin.icon} {plugin.title}</h2>
@@ -52,7 +54,7 @@
             hour: '2-digit',
             minute: '2-digit',
           })}
-          · {mistake.solved ? 'corrigée au 2e essai' : 'non trouvée'}
+          · {note ?? (mistake.solved ? 'corrigée au 2e essai' : 'non trouvée')}
         </p>
       </header>
       <div class="tabs" role="tablist">

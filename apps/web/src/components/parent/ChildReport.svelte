@@ -82,6 +82,8 @@
   function sessionLabel(s: ChildReport['sessions'][number]): string {
     if (s.mode === 'daily') return '🎯 Défi du jour';
     if (s.mode === 'review') return '🔁 Revoir mes erreurs';
+    if (s.mode === 'homework') return '📝 Devoir';
+    if (s.mode === 'evaluation') return '📋 Évaluation blanche';
     if (s.mode === 'mix') return `🎲 Mélange (${s.notions} notion${s.notions > 1 ? 's' : ''})`;
     const plugin = s.pluginId ? registry.plugin(s.pluginId) : undefined;
     return plugin ? `${plugin.icon ?? '📝'} ${plugin.title}` : 'Exercice';

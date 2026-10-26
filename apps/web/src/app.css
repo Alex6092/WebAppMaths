@@ -223,3 +223,16 @@ button:disabled {
     transition: none !important;
   }
 }
+
+/* Une fiche ouverte (bilan d'évaluation) s'imprime seule, sur fond blanc. */
+@media print {
+  body.has-print-root > :not(.print-root) {
+    display: none !important;
+  }
+  body.has-print-root {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
