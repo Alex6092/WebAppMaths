@@ -1,13 +1,14 @@
 <script lang="ts">
-  import type { Notion } from '@app/core';
-  import { lessonParagraphs, masteryOf } from '../lib/notions';
+  import { lessonSpeech, type Notion } from '@app/core';
+  import { masteryOf } from '../lib/notions';
+  import LessonBlocks from './lesson/LessonBlocks.svelte';
   import NotionBadge from './NotionBadge.svelte';
   import SpeakButton from './SpeakButton.svelte';
 
   /** La fiche de leçon d'une ou plusieurs notions, comme celles du cahier. */
   let { notions, onclose }: { notions: Notion[]; onclose: () => void } = $props();
 
-  const speech = (n: Notion) => [n.title, n.lesson?.replaceAll('**', '') ?? ''].join('. ');
+  const speech = (n: Notion) => `${n.title}. ${lessonSpeech(n.lesson ?? [])}`;
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && onclose()} />
@@ -22,12 +23,7 @@
         </header>
         <NotionBadge mastery={masteryOf(notion.id)} />
         {#if notion.lesson}
-          {#each lessonParagraphs(notion.lesson) as paragraph, p (p)}
-            <p>
-              {#each paragraph as part, i (i)}{#if part.bold}<strong>{part.text}</strong
-                  >{:else}{part.text}{/if}{/each}
-            </p>
-          {/each}
+          <LessonBlocks blocks={notion.lesson} />
         {:else if notion.competence}
           <p>{notion.competence}</p>
         {/if}
@@ -49,7 +45,8 @@
     z-index: 60;
   }
   .lesson {
-    max-width: 560px;
+    max-width: 640px;
+    width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     display: flex;
@@ -75,9 +72,6 @@
   p {
     font-size: 1.15rem;
     line-height: 1.55;
-  }
-  strong {
-    color: var(--primary);
   }
   .btn {
     align-self: center;

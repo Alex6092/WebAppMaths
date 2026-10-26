@@ -1,4 +1,7 @@
-import type { Domain, Notion } from '@app/core';
+import type { Domain, LessonBlock, Notion } from '@app/core';
+import { MOMENT_LABEL, MOMENTS } from './lib/conjugaison';
+import { MOMENT_COLOR, PINK } from './lib/couleurs';
+import { indicatorsOf } from './lib/indicateurs';
 
 export const domains: Domain[] = [
   { id: 'francais.conjugaison', subject: 'francais', title: 'Conjugaison', icon: '⏳', order: 1 },
@@ -9,24 +12,59 @@ export const domains: Domain[] = [
 ];
 
 // CONJ 1 : le verbe, forme infinitive et conjuguée.
-const CONJ1_LESSON =
-  'Le **verbe à l’infinitif** est le verbe « tout seul », comme dans le dictionnaire : ' +
-  '*chanter, finir, prendre*. On peut dire « il faut chanter ».\n\n' +
-  'Le **verbe conjugué** change selon la personne et le moment : *je chante, nous chantons, ' +
-  'tu chanteras*. On trouve devant lui une personne (je, tu, il, Léa, les enfants…).\n\n' +
-  'Pour trouver l’infinitif, je dis « il faut… » : *nous plongeons → il faut plonger*.';
+const CONJ1_LESSON: LessonBlock[] = [
+  'Le **verbe à l’infinitif** est le verbe « tout seul », comme dans le dictionnaire. On peut dire « il faut… » devant lui : il faut *chanter*.',
+  'Le **verbe conjugué** change selon la personne et le moment. Devant lui, il y a une personne : je, tu, il, Léa, les enfants…',
+  {
+    kind: 'table',
+    columns: [
+      { title: 'à l’infinitif', color: PINK[0]!.color, cells: ['chanter', 'finir', 'prendre'] },
+      { title: 'conjugué', cells: ['je chante', 'nous finissons', 'tu prendras'] },
+    ],
+  },
+  'Dans une phrase, je **souligne** le verbe conjugué :',
+  { kind: 'example', lines: ['*Les enfants __plongent__ dans la piscine.*'] },
+  'Pour trouver l’infinitif, je dis « il faut… » :',
+  {
+    kind: 'example',
+    lines: ['nous plongeons → il faut **plonger**', 'tu finis → il faut **finir**'],
+  },
+];
 
-// CONJ 2 : les temps, passé, présent, futur.
-const CONJ2_LESSON =
-  'Le **verbe conjugué** indique le **moment** où se passe l’action.\n\n' +
-  '- Au **passé** : ce qui s’est passé AVANT → *L’année dernière, j’allais à l’école.*\n' +
-  '- Au **présent** : ce qui se passe MAINTENANT → *Aujourd’hui, je vais à l’école.*\n' +
-  '- Au **futur** : ce qui se passera APRÈS → *Demain, j’irai à l’école.*\n\n' +
-  'Pour connaître le temps, je repère le **temps du verbe** (*il chantait* → on dit « hier il ' +
-  'chantait » → passé) et les **indicateurs de temps** :\n\n' +
-  '- passé : hier, avant-hier, il y a 2 jours, samedi dernier, la semaine dernière, autrefois, jadis\n' +
-  '- présent : en ce moment, aujourd’hui, actuellement, maintenant\n' +
-  '- futur : demain, après-demain, dans 2 jours, samedi prochain, la semaine prochaine, dans quelques années';
+// CONJ 2 : les temps, passé, présent, futur (la frise et le tableau de la fiche de l'école).
+const CONJ2_LESSON: LessonBlock[] = [
+  'Dans une phrase, le **verbe conjugué** indique le **moment** où se passe l’action.',
+  {
+    kind: 'timeline',
+    steps: [
+      {
+        title: 'passé',
+        color: MOMENT_COLOR.passe,
+        text: 'ce qui s’est passé **AVANT** : *L’année dernière, j’__allais__ à l’école.*',
+      },
+      {
+        title: 'présent',
+        color: MOMENT_COLOR.present,
+        text: 'ce qui se passe **MAINTENANT** : *Aujourd’hui, je __vais__ à l’école.*',
+      },
+      {
+        title: 'futur',
+        color: MOMENT_COLOR.futur,
+        text: 'ce qui se passera **APRÈS** : *Demain, j’__irai__ à l’école.*',
+      },
+    ],
+  },
+  'Pour connaître le temps d’une action, je repère le **temps du verbe** : *il chantait* → on dit « hier il chantait » → passé.',
+  'Je repère aussi les **indicateurs de temps** :',
+  {
+    kind: 'table',
+    columns: MOMENTS.map((m) => ({
+      title: MOMENT_LABEL[m],
+      color: MOMENT_COLOR[m],
+      cells: indicatorsOf(m, true).map((i) => i.text.replace("'", '’')),
+    })),
+  },
+];
 
 export const notions: Notion[] = [
   {

@@ -14,13 +14,6 @@ export function masteryOf(notionId: string): NotionMastery {
   return session.childState?.notions[notionId] ?? NEW_MASTERY;
 }
 
-/** Une leçon en paragraphes, avec les passages en **gras** (le seul format utilisé). */
-export function lessonParagraphs(markdown: string): { text: string; bold: boolean }[][] {
-  return markdown
-    .split(/\n{2,}/)
-    .map((p) => p.split('**').map((text, i) => ({ text, bold: i % 2 === 1 })));
-}
-
 /** Les notions d'un mélange : une portée (all, matière, domaine, notion) ou une liste « a,b,c ». */
 export function mixNotions(
   scope: string | undefined,

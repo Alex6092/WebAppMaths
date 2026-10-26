@@ -11,3 +11,5 @@ export const catalog: Catalog = {
 export const registry = new Registry(catalog, plugins);
 
 export { pluginPathIds };
+
+export { PLACE_COLORS, type Place } from './maths/lib/couleurs';
