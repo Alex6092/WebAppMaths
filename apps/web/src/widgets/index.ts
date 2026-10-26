@@ -9,6 +9,7 @@ export const HAS_OWN_SUBMIT: Record<WidgetId, boolean> = {
   classify: false,
   'fill-blank': false,
   geometry: false,
+  order: false,
 };
 
 export { default as Widget } from './Widget.svelte';

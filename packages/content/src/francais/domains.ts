@@ -66,6 +66,56 @@ const CONJ2_LESSON: LessonBlock[] = [
   },
 ];
 
+// Leçon « La phrase » du cahier.
+const PHRASE_LESSON: LessonBlock[] = [
+  'Une **phrase** est une suite de mots qui **veut dire quelque chose** : elle a un **sens**.',
+  'Elle commence par une **MAJUSCULE** et se termine par un **point**.',
+  { kind: 'example', lines: ['*__J__e vais à la piscine__.__*'] },
+  'Attention : l’**ordre des mots** compte ! Quand les mots sont mélangés, la phrase ne veut plus rien dire.',
+  {
+    kind: 'example',
+    lines: [
+      '*Aujourd’hui mange une je glace.* → ce n’est pas une phrase',
+      '*Aujourd’hui je mange une glace.* → c’est une phrase',
+    ],
+  },
+];
+
+// Leçon « La ponctuation » du cahier.
+const PONCTUATION_LESSON: LessonBlock[] = [
+  'Les **points** disent **comment lire** la phrase : où faire une pause, et si la voix **descend** ou **monte**.',
+  {
+    kind: 'list',
+    items: [
+      '**.** Le **point** : la phrase **donne une information**. La voix descend. *Tom lit un livre.*',
+      '**!** Le **point d’exclamation** : pour un **ordre** ou une **émotion** (joie, surprise, peur…). *Waouh, quel beau dessin !*',
+      '**?** Le **point d’interrogation** : la phrase **pose une question**. La voix monte. *Où est mon cartable ?*',
+    ],
+  },
+];
+
+// Leçon « Les familles de mots » du cahier.
+const FAMILLES_LESSON: LessonBlock[] = [
+  'Une **famille de mots**, ce sont tous les mots fabriqués à partir d’un **même mot**. Ils font penser à la **même idée**.',
+  'Les mots d’une même famille ont une **partie commune** :',
+  {
+    kind: 'example',
+    lines: [
+      '**jardin** → **jardin**ier, **jardin**er, **jardin**age',
+      '**nage** → **nage**ur, **nage**oire',
+    ],
+  },
+  'On fabrique les mots de la famille en **ajoutant des lettres** au début ou à la fin du mot :',
+  {
+    kind: 'example',
+    lines: [
+      'à la fin : fleur → fleur__iste__, fleur__ir__',
+      'au début : faire → __dé__faire, __re__faire',
+      'au début et à la fin : terre → __at__terr__ir__',
+    ],
+  },
+];
+
 export const notions: Notion[] = [
   {
     id: 'francais.conjugaison.infinitif-conjugue',
@@ -122,5 +172,37 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Utiliser le bon temps dans une phrase.',
     lesson: CONJ2_LESSON,
+  },
+  {
+    id: 'francais.grammaire.phrase',
+    domain: 'francais.grammaire',
+    title: 'Reconnaître une phrase',
+    grades: ['CE1'],
+    competence: 'Reconnaître une phrase : elle a un sens, une majuscule et un point.',
+    lesson: PHRASE_LESSON,
+  },
+  {
+    id: 'francais.grammaire.ordre-mots',
+    domain: 'francais.grammaire',
+    title: 'Remettre les mots dans l’ordre',
+    grades: ['CE1'],
+    competence: 'Remettre les mots d’une phrase dans l’ordre.',
+    lesson: PHRASE_LESSON,
+  },
+  {
+    id: 'francais.grammaire.ponctuation',
+    domain: 'francais.grammaire',
+    title: 'La ponctuation',
+    grades: ['CE1'],
+    competence: 'Utiliser le point, le point d’exclamation et le point d’interrogation.',
+    lesson: PONCTUATION_LESSON,
+  },
+  {
+    id: 'francais.vocabulaire.familles',
+    domain: 'francais.vocabulaire',
+    title: 'Les familles de mots',
+    grades: ['CE1'],
+    competence: 'Trouver les mots d’une même famille.',
+    lesson: FAMILLES_LESSON,
   },
 ];

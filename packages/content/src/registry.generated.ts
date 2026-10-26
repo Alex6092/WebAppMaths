@@ -13,30 +13,42 @@ import plugin8 from './francais/conjugaison/range-indicateurs/plugin';
 import plugin9 from './francais/conjugaison/reecris-temps/plugin';
 import plugin10 from './francais/conjugaison/souligne-verbe/plugin';
 import plugin11 from './francais/conjugaison/vrai-faux-temps/plugin';
-import plugin12 from './maths/calcul/addition-posee/plugin';
-import plugin13 from './maths/calcul/calcul-mental/plugin';
-import plugin14 from './maths/calcul/soustraction-posee/plugin';
-import plugin15 from './maths/calcul/tables/plugin';
-import plugin16 from './maths/geometrie/alignes-oui-non/plugin';
-import plugin17 from './maths/geometrie/entoure-milieu/plugin';
-import plugin18 from './maths/geometrie/entoure-segments/plugin';
-import plugin19 from './maths/geometrie/longueurs-milieu/plugin';
-import plugin20 from './maths/geometrie/milieu-oui-non/plugin';
-import plugin21 from './maths/geometrie/nomme-segment/plugin';
-import plugin22 from './maths/geometrie/place-alignes/plugin';
-import plugin23 from './maths/geometrie/place-milieu/plugin';
-import plugin24 from './maths/geometrie/relie-alignes/plugin';
-import plugin25 from './maths/geometrie/trace-alignes/plugin';
-import plugin26 from './maths/geometrie/trace-segment-milieu/plugin';
-import plugin27 from './maths/geometrie/vocabulaire-segment/plugin';
-import plugin28 from './maths/mesures/mesure-segment/plugin';
-import plugin29 from './maths/nombres/comparer-signe/plugin';
-import plugin30 from './maths/nombres/decomposer/plugin';
-import plugin31 from './maths/nombres/ecrire-chiffres/plugin';
-import plugin32 from './maths/nombres/ecrire-lettres/plugin';
-import plugin33 from './maths/nombres/encadrer/plugin';
-import plugin34 from './maths/nombres/lire-nombre/plugin';
-import plugin35 from './maths/nombres/ranger/plugin';
+import plugin12 from './francais/grammaire/choisis-point/plugin';
+import plugin13 from './francais/grammaire/est-ce-une-phrase/plugin';
+import plugin14 from './francais/grammaire/remets-ordre/plugin';
+import plugin15 from './francais/grammaire/type-phrase/plugin';
+import plugin16 from './francais/vocabulaire/classe-familles/plugin';
+import plugin17 from './francais/vocabulaire/intrus-famille/plugin';
+import plugin18 from './francais/vocabulaire/meme-famille/plugin';
+import plugin19 from './maths/calcul/addition-posee/plugin';
+import plugin20 from './maths/calcul/calcul-mental/plugin';
+import plugin21 from './maths/calcul/soustraction-posee/plugin';
+import plugin22 from './maths/calcul/tables/plugin';
+import plugin23 from './maths/geometrie/alignes-oui-non/plugin';
+import plugin24 from './maths/geometrie/entoure-milieu/plugin';
+import plugin25 from './maths/geometrie/entoure-segments/plugin';
+import plugin26 from './maths/geometrie/longueurs-milieu/plugin';
+import plugin27 from './maths/geometrie/milieu-oui-non/plugin';
+import plugin28 from './maths/geometrie/nomme-segment/plugin';
+import plugin29 from './maths/geometrie/place-alignes/plugin';
+import plugin30 from './maths/geometrie/place-milieu/plugin';
+import plugin31 from './maths/geometrie/relie-alignes/plugin';
+import plugin32 from './maths/geometrie/trace-alignes/plugin';
+import plugin33 from './maths/geometrie/trace-segment-milieu/plugin';
+import plugin34 from './maths/geometrie/vocabulaire-segment/plugin';
+import plugin35 from './maths/mesures/mesure-segment/plugin';
+import plugin36 from './maths/nombres/comparer-signe/plugin';
+import plugin37 from './maths/nombres/decomposer/plugin';
+import plugin38 from './maths/nombres/ecrire-chiffres/plugin';
+import plugin39 from './maths/nombres/ecrire-lettres/plugin';
+import plugin40 from './maths/nombres/encadrer/plugin';
+import plugin41 from './maths/nombres/lire-nombre/plugin';
+import plugin42 from './maths/nombres/ranger/plugin';
+import plugin43 from './qlm/vivant/aliments-transformes/plugin';
+import plugin44 from './qlm/vivant/classe-familles-aliments/plugin';
+import plugin45 from './qlm/vivant/famille-aliment/plugin';
+import plugin46 from './qlm/vivant/origine-aliments/plugin';
+import plugin47 from './qlm/vivant/provenance-aliments/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
@@ -79,6 +91,18 @@ export const plugins: AnyPlugin[] = [
   plugin33,
   plugin34,
   plugin35,
+  plugin36,
+  plugin37,
+  plugin38,
+  plugin39,
+  plugin40,
+  plugin41,
+  plugin42,
+  plugin43,
+  plugin44,
+  plugin45,
+  plugin46,
+  plugin47,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -95,6 +119,13 @@ export const pluginPathIds: string[] = [
   'francais.conjugaison.reecris-temps',
   'francais.conjugaison.souligne-verbe',
   'francais.conjugaison.vrai-faux-temps',
+  'francais.grammaire.choisis-point',
+  'francais.grammaire.est-ce-une-phrase',
+  'francais.grammaire.remets-ordre',
+  'francais.grammaire.type-phrase',
+  'francais.vocabulaire.classe-familles',
+  'francais.vocabulaire.intrus-famille',
+  'francais.vocabulaire.meme-famille',
   'maths.calcul.addition-posee',
   'maths.calcul.calcul-mental',
   'maths.calcul.soustraction-posee',
@@ -119,6 +150,11 @@ export const pluginPathIds: string[] = [
   'maths.nombres.encadrer',
   'maths.nombres.lire-nombre',
   'maths.nombres.ranger',
+  'qlm.vivant.aliments-transformes',
+  'qlm.vivant.classe-familles-aliments',
+  'qlm.vivant.famille-aliment',
+  'qlm.vivant.origine-aliments',
+  'qlm.vivant.provenance-aliments',
 ];
 
 export const domainModules: { domains: Domain[]; notions: Notion[] }[] = [

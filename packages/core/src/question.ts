@@ -197,6 +197,23 @@ export interface FillBlankAnswer {
   values: string[];
 }
 
+/** Une étiquette à remettre en place. */
+export interface OrderTile {
+  text: string;
+  /** Collée à l'étiquette d'avant, sans espace (le point à la fin de la phrase). */
+  glue?: boolean;
+}
+/** Remettre des étiquettes dans l'ordre (les mots d'une phrase…), en les touchant une à une. */
+export interface OrderQuestion extends QuestionBase {
+  widget: 'order';
+  /** Les étiquettes, dans l'ordre où elles sont montrées (mélangé). */
+  tiles: OrderTile[];
+}
+export interface OrderAnswer {
+  /** Numéros des étiquettes posées, dans l'ordre. */
+  order: number[];
+}
+
 export type Question =
   | ColumnOpQuestion
   | NumberInputQuestion
@@ -204,7 +221,8 @@ export type Question =
   | WordSelectQuestion
   | ClassifyQuestion
   | FillBlankQuestion
-  | GeometryQuestion;
+  | GeometryQuestion
+  | OrderQuestion;
 export type WidgetId = Question['widget'];
 
 export interface AnswerMap {
@@ -215,6 +233,7 @@ export interface AnswerMap {
   classify: ClassifyAnswer;
   'fill-blank': FillBlankAnswer;
   geometry: GeometryAnswer;
+  order: OrderAnswer;
 }
 
 export type QuestionOf<W extends WidgetId> = Extract<Question, { widget: W }>;
