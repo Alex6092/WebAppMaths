@@ -42,6 +42,8 @@
   function status(i: number): string {
     if (phase === 'success') return 'ok';
     if (phase === 'revealed') return marks?.[i] === 'ok' ? 'ok' : 'expected';
+    if (phase === 'review')
+      return marks?.[i] === 'ok' ? 'ok' : marks?.[i] === 'near' ? 'near' : 'was-wrong';
     if (phase === 'retry' && marks?.[i] === 'ok') return 'ok';
     if (phase === 'retry' && marks?.[i] === 'near') return 'near';
     if (phase === 'retry' && marks?.[i] && marks[i] !== 'ok' && answer.values[i] === '')

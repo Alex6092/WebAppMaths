@@ -25,6 +25,7 @@ import {
   earnedBadges,
   unlockedThemes,
 } from '../services/motivation';
+import { reviewQueue } from '../services/report';
 import type { Deps } from './deps';
 
 /** Routes du profil enfant actif sur cet appareil. */
@@ -64,6 +65,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
       themes: unlockedThemes(db, child.id),
       badges: earnedBadges(db, child.id),
       daily: dailyState(db, child.id),
+      mistakes: reviewQueue(db, child.id).length,
     };
   });
 
@@ -76,7 +78,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
           required: ['mode', 'selection'],
           additionalProperties: false,
           properties: {
-            mode: { type: 'string', enum: ['training', 'mix', 'daily'] },
+            mode: { type: 'string', enum: ['training', 'mix', 'daily', 'review'] },
             selection: {
               type: 'object',
               additionalProperties: false,

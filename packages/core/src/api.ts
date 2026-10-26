@@ -47,6 +47,8 @@ export interface ChildStateResponse {
   themes: string[];
   badges: EarnedBadge[];
   daily: DailyState;
+  /** Questions ratées qui restent à revoir. */
+  mistakes: number;
 }
 
 export interface EarnedBadge {
@@ -66,19 +68,30 @@ export interface DailyState {
 
 /**
  * training : un seul exercice ; mix : un mélange des exercices de plusieurs notions ;
- * daily : le défi du jour, un mélange de toutes les notions de la classe.
+ * daily : le défi du jour, un mélange de toutes les notions de la classe ;
+ * review : les questions ratées, reposées à l'identique.
  */
-export type PracticeMode = 'training' | 'mix' | 'daily';
+export type PracticeMode = 'training' | 'mix' | 'daily' | 'review';
 
 export type StartSessionRequest =
   | { mode: 'training'; selection: { pluginId: string } }
   | { mode: 'mix'; selection: { notions: string[] } }
-  | { mode: 'daily'; selection: Record<string, never> };
+  | { mode: 'daily'; selection: Record<string, never> }
+  | { mode: 'review'; selection: Record<string, never> };
+
+/** Une question à reposer telle quelle : même exercice, même niveau, même graine. */
+export interface ReviewItem {
+  pluginId: string;
+  level: number;
+  seed: number;
+}
 
 export interface StartSessionResponse {
   id: number;
   /** Questions déjà faites : on reprend le défi du jour là où il s'était arrêté. */
   answered: number;
+  /** Pour « Revoir mes erreurs » : les questions, dans l'ordre. */
+  items?: ReviewItem[];
 }
 
 export interface AttemptRequest {
@@ -121,6 +134,38 @@ export interface ThemeResponse {
   coins: number;
   themeId: string;
   themes: string[];
+}
+
+/** Une question ratée (pas juste du premier coup), avec les réponses de l'enfant. */
+export interface MistakeDto extends ReviewItem {
+  pluginVersion: number;
+  answers: unknown[];
+  solved: boolean;
+  createdAt: number;
+}
+
+/** Bilan d'un enfant pour l'espace parent. */
+export interface ChildReport {
+  child: ChildDto;
+  notions: Record<string, NotionMastery>;
+  daily: DailyState;
+  /** Activité par jour, du plus ancien au plus récent (jours sans activité compris). */
+  days: { day: string; questions: number; firstTry: number; minutes: number }[];
+  /** Dernières séances, de la plus récente à la plus ancienne. */
+  sessions: {
+    id: number;
+    mode: string;
+    pluginId: string | null;
+    notions: number;
+    startedAt: number;
+    durationMs: number;
+    nQuestions: number;
+    nFirstTry: number;
+  }[];
+  /** Exercices les plus ratés sur la période, avec les dernières questions ratées. */
+  mistakes: { pluginId: string; attempts: number; errors: number; recent: MistakeDto[] }[];
+  /** Questions ratées qui restent à revoir. */
+  toReview: number;
 }
 
 export interface SessionSummary {

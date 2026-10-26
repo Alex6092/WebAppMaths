@@ -225,6 +225,7 @@
       if (solution?.picked.includes(id)) return chosen ? 'ok' : 'expected';
       return chosen ? 'wrong' : '';
     }
+    if (phase === 'review' && chosen) return marks?.[`p:${id}`] === 'ok' ? 'ok' : 'wrong';
     if (phase === 'retry' && chosen && marks?.[`p:${id}`] === 'ok') return 'ok';
     return chosen ? 'chosen' : '';
   }
@@ -232,14 +233,15 @@
   function drawnState(i: number): string {
     if (drawTool?.kind === 'draw' && drawTool.help) return 'help';
     if (phase === 'success') return 'ok';
-    if (phase === 'revealed') return marks?.[`d:${i}`] === 'ok' ? 'ok' : 'wrong';
+    if (phase === 'revealed' || phase === 'review')
+      return marks?.[`d:${i}`] === 'ok' ? 'ok' : 'wrong';
     return 'chosen';
   }
 
   function placedState(id: string): string {
     if (phase === 'success') return 'ok';
     const mark = marks?.[`l:${id}`];
-    if (phase === 'revealed') return mark === 'ok' ? 'ok' : 'wrong';
+    if (phase === 'revealed' || phase === 'review') return mark === 'ok' ? 'ok' : 'wrong';
     if (phase === 'retry' && mark === 'ok') return 'ok';
     return 'chosen';
   }

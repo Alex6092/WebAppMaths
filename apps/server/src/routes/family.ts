@@ -1,4 +1,4 @@
-import { GRADE_IDS, type ChildDto, type GradeId } from '@app/core';
+import { GRADE_IDS, type ChildDto, type ChildReport, type GradeId } from '@app/core';
 import { DEFAULT_THEME_ID } from '@app/themes';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
@@ -6,6 +6,7 @@ import { requireParent } from '../auth/session';
 import { children } from '../db/schema';
 import { getFamilyChild, toChildDto } from '../services/family';
 import { createInvitation } from '../services/invitations';
+import { childReport } from '../services/report';
 import type { Deps } from './deps';
 
 const CHILD_FIELDS = {
@@ -82,6 +83,16 @@ export function familyRoutes(api: FastifyInstance, { db }: Deps): void {
       const child = getFamilyChild(db, auth.familyId, req.params.id);
       db.delete(children).where(eq(children.id, child.id)).run();
       return { ok: true };
+    },
+  );
+
+  /** Bilan d'un enfant : acquisition, activité, séances et erreurs fréquentes. */
+  api.get<{ Params: { id: number } }>(
+    '/children/:id/report',
+    { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
+    async (req): Promise<ChildReport> => {
+      const auth = requireParent(req);
+      return childReport(db, getFamilyChild(db, auth.familyId, req.params.id));
     },
   );
 

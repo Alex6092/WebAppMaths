@@ -13,7 +13,17 @@
   );
   const shown = $derived(question.choices.find((c) => c.id === shownId)?.label ?? '');
   const slotState = $derived(
-    phase === 'success' ? 'ok' : phase === 'revealed' ? 'expected' : shown ? 'chosen' : '',
+    phase === 'success'
+      ? 'ok'
+      : phase === 'revealed'
+        ? 'expected'
+        : phase === 'review'
+          ? marks?.[shownId ?? ''] === 'ok'
+            ? 'ok'
+            : 'wrong'
+          : shown
+            ? 'chosen'
+            : '',
   );
 
   function toggle(id: string) {
@@ -31,6 +41,7 @@
       if (solution?.selected.includes(id)) return 'expected';
       return chosen ? 'wrong' : '';
     }
+    if (phase === 'review') return chosen ? (marks?.[id] === 'wrong' ? 'wrong' : 'ok') : '';
     if (phase === 'retry' && marks?.[id] === 'wrong' && !chosen) return 'was-wrong';
     return chosen ? 'chosen' : '';
   }
@@ -108,6 +119,12 @@
     border-color: var(--ok);
     background: #a5d6a7;
     color: #1b5e20;
+  }
+  .slot.wrong {
+    border-style: solid;
+    border-color: var(--wrong);
+    background: #ef9a9a;
+    color: #b71c1c;
   }
   .slot.expected {
     border-style: solid;
