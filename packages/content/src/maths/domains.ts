@@ -516,4 +516,82 @@ export const notions: Notion[] = [
       },
     ],
   },
+  {
+    id: 'maths.problemes.analyser',
+    domain: 'maths.problemes',
+    title: 'L’énoncé, la question et la phrase-réponse',
+    grades: ['CE1'],
+    competence: 'Repérer l’énoncé et la question d’un problème, et choisir la phrase-réponse.',
+    lesson: [
+      'Un problème a deux parties :',
+      {
+        kind: 'list',
+        items: [
+          'l’**énoncé** : ce que je **sais** ;',
+          'la **question** : ce que je **cherche**. Elle finit par un point d’interrogation (?).',
+        ],
+      },
+      {
+        kind: 'example',
+        lines: [
+          'Dans un aquarium, il y a 26 poissons rouges et 13 poissons noirs. → *l’énoncé*',
+          '__Combien de poissons y a-t-il en tout ?__ → *la question*',
+        ],
+      },
+      'Après le calcul, j’écris la **phrase-réponse** : je reprends les **mots de la question**.',
+      { kind: 'example', lines: ['26 + 13 = 39', '**Il y a 39 poissons en tout.**'] },
+    ],
+  },
+  {
+    id: 'maths.problemes.regrouper',
+    domain: 'maths.problemes',
+    title: 'Le mot qui regroupe',
+    grades: ['CE1'],
+    competence: 'Utiliser les termes génériques, créer des regroupements.',
+    lesson: [
+      'Les tulipes et les roses sont des **fleurs** : « fleurs » est le **mot qui regroupe** les tulipes et les roses.',
+      {
+        kind: 'table',
+        columns: [
+          { title: 'fleurs', cells: ['tulipes', 'roses', 'marguerites'] },
+          { title: 'jouets', cells: ['poupées', 'ballons', 'robots'] },
+          { title: 'animaux', cells: ['vaches', 'moutons', 'poules'] },
+        ],
+      },
+      'Dans un problème, je cherche le mot qui regroupe, et le lieu :',
+      {
+        kind: 'example',
+        lines: [
+          'Dans le jardin, il y a 49 tulipes et 60 roses.',
+          'Parmi les **fleurs** du **jardin**, il y a 49 tulipes et 60 roses.',
+        ],
+      },
+      'Il m’aide à poser la question : « Combien y a-t-il de **fleurs** dans le jardin ? »',
+    ],
+  },
+  {
+    id: 'maths.problemes.resoudre',
+    domain: 'maths.problemes',
+    title: 'Résoudre un problème',
+    grades: ['CE1'],
+    competence: 'Résoudre un problème de composition : trouver le tout ou une partie.',
+    lesson: [
+      'Je lis l’énoncé et la question. Est-ce que je cherche **le tout**, ou **une partie** ?',
+      {
+        kind: 'example',
+        lines: [
+          'Il y a 49 tulipes et 60 roses. Combien y a-t-il de **fleurs** ?',
+          'Je cherche **le tout** : j’**additionne**. 49 + 60 = 109',
+        ],
+      },
+      {
+        kind: 'example',
+        lines: [
+          'Il y a 32 élèves. 16 sont des filles. Combien y a-t-il de **garçons** ?',
+          'Je cherche **une partie** : je **soustrais**. 32 − 16 = 16',
+        ],
+      },
+      'Je finis par la phrase-réponse : « Il y a 16 garçons. »',
+    ],
+  },
 ];
