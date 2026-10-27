@@ -3,6 +3,7 @@
   import Effects from './components/Effects.svelte';
   import { errorMessage } from './lib/api';
   import { mixNotions } from './lib/notions';
+  import { pwa, startPwa } from './lib/pwa.svelte';
   import { navigate, route } from './lib/router.svelte';
   import { activeChild, loadChildState, refreshMe, session } from './lib/session.svelte';
   import Badges from './screens/Badges.svelte';
@@ -19,8 +20,14 @@
 
   let fatal = $state<string | null>(null);
 
+  // Pendant un exercice ou dans l'espace parent, on ne recharge pas l'app sans prévenir.
+  const BUSY_SCREENS = new Set(['exercise', 'mix', 'daily', 'review', 'homework', 'evaluation']);
+
   onMount(() => {
     refreshMe().catch((e) => (fatal = errorMessage(e)));
+    startPwa(() => {
+      if (!BUSY_SCREENS.has(view) && view !== 'parent') location.reload();
+    });
   });
 
   // Écrans qui demandent un profil enfant actif.
@@ -64,8 +71,22 @@
   });
 </script>
 
+{#if !pwa.online}
+  <p class="banner" role="status">
+    📡 Pas de connexion à Internet : tes réponses ne peuvent pas être envoyées.
+  </p>
+{:else if pwa.updateReady}
+  <p class="banner" role="status">
+    ✨ Une nouvelle version de l’app est prête.
+    <button class="btn small" onclick={() => location.reload()}>Recharger</button>
+  </p>
+{/if}
+
 {#if fatal}
-  <div class="screen"><p class="error-msg">{fatal}</p></div>
+  <div class="screen">
+    <p class="error-msg">{fatal}</p>
+    <button class="btn" onclick={() => location.reload()}>Réessayer</button>
+  </div>
 {:else if view === 'loading'}
   <div class="screen loading">⏳</div>
 {:else if view === 'login'}
@@ -111,6 +132,24 @@
 <Effects />
 
 <style>
+  .banner {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 12px;
+    margin: 0;
+    padding: max(8px, env(safe-area-inset-top)) 16px 8px;
+    background: #fff8e1;
+    color: #4e342e;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 15%);
+  }
+
   .loading {
     justify-content: center;
     font-size: 3rem;

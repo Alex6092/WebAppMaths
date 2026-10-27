@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 const PORT = 3100;
 
 // Lance le serveur construit (npm run build avant) sur une base vide, puis joue les parcours
-// en vue PC et en vue tablette tactile.
+// en vue PC (Chrome), tablette Android et iPad (WebKit, le moteur de Safari).
 export default defineConfig({
   testDir: 'e2e',
   timeout: 30_000,
@@ -18,6 +18,7 @@ export default defineConfig({
     { name: 'preparation', testMatch: /preparation\.setup\.ts/ },
     { name: 'pc', use: { ...devices['Desktop Chrome'] }, dependencies: ['preparation'] },
     { name: 'tablette', use: { ...devices['Galaxy Tab S4'] }, dependencies: ['preparation'] },
+    { name: 'ipad', use: { ...devices['iPad (gen 7)'] }, dependencies: ['preparation'] },
   ],
   webServer: {
     command: `node -e "require('fs').rmSync('build/e2e-data',{recursive:true,force:true})" && node apps/server/dist/index.js`,

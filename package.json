@@ -26,7 +26,8 @@
     "typecheck": "tsc -p tsconfig.json && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "gen:icons": "tsx scripts/gen-icons.ts"
   },
   "overrides": {
     "light-my-request": "6.6.0"
