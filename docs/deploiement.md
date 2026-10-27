@@ -103,6 +103,29 @@ docker exec webappmaths node apps/server/dist/cli.js invite --admin             
 DATA_DIR=/opt/webappmaths/data node /opt/webappmaths/current/apps/server/dist/cli.js invite   # systemd
 ```
 
+## La voix du serveur (Piper)
+
+Les consignes, les dictées et l'anglais sont lus par [Piper](https://github.com/rhasspy/piper)
+sur le serveur : la même voix sur tous les appareils, sans dépendre des voix de la tablette.
+
+- **Installation :** chaque déploiement lance `deploy/piper.sh`. Il télécharge Piper et deux voix
+  (siwis en français, alba en anglais britannique, données sous licence CC BY 4.0) dans
+  `/opt/webappmaths/piper`, et vérifie leur empreinte SHA-256 (`deploy/piper.lock`). Il ne
+  retélécharge rien tant que `piper.lock` ne change pas. Il faut un accès sortant à github.com et
+  huggingface.co (environ 130 Mo la première fois).
+- **Sans réseau ou si l'installation échoue :** le déploiement continue et l'app garde la voix du
+  navigateur. `GET /api/health` indique `"tts": "on"` ou `"off"`.
+- **Charge :** `TTS_WORKERS` phrases fabriquées en même temps (par défaut le nombre de cœurs − 1,
+  3 au plus). Une consigne prend environ 0,3 s sur un cœur. Au-delà de 50 phrases en attente, le
+  serveur répond 503 et l'app passe à la voix du navigateur.
+- **Cache :** les phrases déjà fabriquées sont gardées dans `data/tts/cache` (`TTS_CACHE_MB`,
+  500 Mo par défaut ; les moins écoutées sont effacées).
+- **Processeur :** sous Proxmox, le type de processeur `host` (ou `x86-64-v3`) donne les
+  instructions AVX2 : Piper va deux fois plus vite qu'avec le type générique.
+- **En développement :** dépose Piper pour ta plateforme dans `piper/piper/` et les voix dans
+  `piper/voices/` à la racine du dépôt (dossier ignoré par git), ou indique un autre dossier avec
+  `TTS_DIR`.
+
 ## Sauvegardes et restauration
 
 - Une sauvegarde **quotidienne** est faite par le serveur (`data/backups/app-…-daily.db`, 14

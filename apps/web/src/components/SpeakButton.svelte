@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { speak, ttsAvailable } from '../lib/tts';
+  import { prepareSpeech, speak, ttsAvailable } from '../lib/tts';
 
   interface Props {
     text: string;
     lang?: string;
   }
   let { text, lang = 'fr-FR' }: Props = $props();
+
+  // La voix du serveur prépare le son dès l'affichage : le bouton répond aussitôt.
+  $effect(() => prepareSpeech(text, lang));
 </script>
 
 {#if ttsAvailable()}

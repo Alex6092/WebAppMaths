@@ -8,6 +8,8 @@
 # Variables (avec leurs valeurs par défaut) :
 #   APP_HOME=/opt/webappmaths   DEPLOY_MODE=docker|systemd   SERVICE_NAME=webappmaths
 #   HEALTH_URL=http://127.0.0.1:3000/api/health   KEEP_RELEASES=5
+#
+# La voix du serveur (Piper) est installée dans $APP_HOME/piper par piper.sh, hors des versions.
 set -euo pipefail
 
 TARBALL="${1:?usage: deploy.sh <release.tar.gz> <sha>}"
@@ -95,7 +97,10 @@ if [ -f "$DATA/app.db" ]; then
   log "Sauvegarde : $BACKUP"
 fi
 
-# 2. Bascule et contrôle de santé.
+# 2. La voix du serveur. Sans elle, l'app marche quand même (voix du navigateur).
+bash "$NEW/deploy/piper.sh" "$APP_HOME/piper" || log "Voix du serveur non installée : l'app garde la voix du navigateur."
+
+# 3. Bascule et contrôle de santé.
 start "$SHORT"
 if healthy; then
   log "OK : la version $SHORT est en ligne."
@@ -114,7 +119,7 @@ else
   exit 1
 fi
 
-# 3. Ménage : on garde les KEEP dernières versions (et leurs images Docker).
+# 4. Ménage : on garde les KEEP dernières versions (et leurs images Docker).
 mapfile -t KEPT < <(ls -1t "$RELEASES")
 for old in "${KEPT[@]:$KEEP}"; do
   log "Suppression de l'ancienne version $old"

@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { cpus } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -20,6 +21,12 @@ export interface Config {
   adminInviteCode: string | null;
   backupKeep: number;
   logLevel: string;
+  /** Piper et ses voix (deploy/piper.sh) : piper/ et voices/. À côté de data/ par défaut. */
+  ttsDir: string;
+  /** Le nombre de phrases fabriquées en même temps (un cœur chacune). */
+  ttsWorkers: number;
+  /** La taille du cache des phrases, en Mo. */
+  ttsCacheMb: number;
 }
 
 export function normalizeBasePath(raw: string | undefined): string {
@@ -51,10 +58,11 @@ function findWebDist(): string | null {
 
 export function loadConfig(env = process.env): Config {
   const production = env.NODE_ENV === 'production';
+  const dataDir = resolve(env.DATA_DIR ?? 'data');
   return {
     port: Number(env.PORT ?? 3000),
     host: env.HOST ?? '127.0.0.1',
-    dataDir: resolve(env.DATA_DIR ?? 'data'),
+    dataDir,
     basePath: normalizeBasePath(env.BASE_PATH),
     publicUrl: env.PUBLIC_URL ? new URL(env.PUBLIC_URL).origin : null,
     trustProxy: parseTrustProxy(env.TRUST_PROXY),
@@ -64,5 +72,9 @@ export function loadConfig(env = process.env): Config {
     adminInviteCode: env.ADMIN_INVITE_CODE ?? null,
     backupKeep: Number(env.BACKUP_KEEP ?? 14),
     logLevel: env.LOG_LEVEL ?? 'info',
+    ttsDir: resolve(env.TTS_DIR ?? join(dataDir, '..', 'piper')),
+    // Un cœur pour l'app, les autres pour les voix (3 au plus).
+    ttsWorkers: Number(env.TTS_WORKERS ?? Math.max(1, Math.min(3, cpus().length - 1))),
+    ttsCacheMb: Number(env.TTS_CACHE_MB ?? 500),
   };
 }
