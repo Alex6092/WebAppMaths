@@ -1,13 +1,14 @@
 import type { CheckResult, Mark, OrderAnswer, OrderQuestion } from '../question';
 import type { WidgetDef } from './types';
 
-/** Le texte reconstitué : les étiquettes dans l'ordre, la ponctuation collée. */
+/** Le texte reconstitué : les étiquettes dans l'ordre, la ponctuation collée (ou des virgules). */
 export function orderText(q: OrderQuestion, order: readonly number[]): string {
+  const gap = q.list ? ', ' : ' ';
   return order
     .map((index, i) => {
       const tile = q.tiles[index];
       if (!tile) return '';
-      return (i > 0 && !tile.glue ? ' ' : '') + tile.text;
+      return (i > 0 && !tile.glue ? gap : '') + tile.text;
     })
     .join('');
 }

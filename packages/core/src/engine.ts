@@ -92,5 +92,5 @@ export function questionSignature(plugin: AnyPlugin, q: PluginQuestion): string 
 export function questionSpeech(q: PluginQuestion): string {
   if (q.speech) return q.speech;
   const body = getWidget(q.widget).speech(q as never);
-  return [mathToSpeech(q.instruction), q.text, body].filter(Boolean).join('. ');
+  return [mathToSpeech(q.instruction), q.listen, q.text, body].filter(Boolean).join('. ');
 }

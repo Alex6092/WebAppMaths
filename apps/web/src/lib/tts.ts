@@ -19,13 +19,14 @@ function pickVoice(lang: string): SpeechSynthesisVoice | null {
   );
 }
 
-export function speak(text: string, lang = 'fr-FR'): void {
+/** rate : la vitesse (0,9 d'ordinaire ; plus lent pour une dictée). */
+export function speak(text: string, lang = 'fr-FR', rate = 0.9): void {
   if (!ttsAvailable() || !text) return;
   speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
   utterance.voice = pickVoice(lang);
-  utterance.rate = 0.9;
+  utterance.rate = rate;
   speechSynthesis.speak(utterance);
 }
 

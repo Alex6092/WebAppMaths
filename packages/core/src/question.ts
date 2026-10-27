@@ -10,6 +10,8 @@ export interface QuestionBase {
   speech?: string;
   /** Un texte à lire avant de répondre, sous la consigne : l'énoncé d'un problème. */
   text?: string;
+  /** Ce qu'il faut écouter pour répondre (la dictée) : lu à voix haute, il ne s'affiche pas. */
+  listen?: string;
 }
 
 /** Point d'une figure. Les coordonnées sont en centimètres, origine en haut à gauche. */
@@ -232,6 +234,8 @@ export interface OrderQuestion extends QuestionBase {
   widget: 'order';
   /** Les étiquettes, dans l'ordre où elles sont montrées (mélangé). */
   tiles: OrderTile[];
+  /** Une liste de mots (l'ordre alphabétique), pas une phrase : on l'écrit avec des virgules. */
+  list?: boolean;
 }
 export interface OrderAnswer {
   /** Numéros des étiquettes posées, dans l'ordre. */

@@ -1,7 +1,9 @@
 import type { Domain, LessonBlock, Notion } from '@app/core';
 import { MOMENT_LABEL, MOMENTS } from './lib/conjugaison';
 import { MOMENT_COLOR, PINK } from './lib/couleurs';
-import { indicatorsOf } from './lib/indicateurs';
+import { PAIRS, type HomophonePair } from './lib/homophones';
+import { capitalize, indicatorsOf } from './lib/indicateurs';
+import { RULE_TEXT } from './lib/pluriel';
 
 export const domains: Domain[] = [
   { id: 'francais.conjugaison', subject: 'francais', title: 'Conjugaison', icon: '⏳', order: 1 },
@@ -116,6 +118,106 @@ const FAMILLES_LESSON: LessonBlock[] = [
   },
 ];
 
+/** La leçon d'une paire d'homophones : l'astuce de chaque mot, et un exemple de chacun. */
+function homophoneLesson(pair: HomophonePair): LessonBlock[] {
+  const [a, b] = pair.words;
+  const example = (word: 0 | 1) => {
+    const sentence = pair.sentences[word][0]!.replace('{N}', 'Léa').replace('{M}', 'Tom');
+    const form = sentence.startsWith('___') ? capitalize(pair.words[word]) : pair.words[word];
+    return sentence.replace('___', `**${form}**`);
+  };
+  return [
+    `« ${a} » et « ${b} » se disent pareil, mais ne s’écrivent pas pareil. Pour choisir, j’essaie de remplacer par un autre mot :`,
+    { kind: 'list', items: [...pair.tips] },
+    { kind: 'example', lines: [example(0), example(1)] },
+  ];
+}
+
+const homophoneNotion = (pair: HomophonePair): Notion => ({
+  id: `francais.orthographe.${pair.id}`,
+  domain: 'francais.orthographe',
+  title: `« ${pair.words[0]} » ou « ${pair.words[1]} »`,
+  grades: ['CE1'],
+  competence: `Choisir entre « ${pair.words[0]} » et « ${pair.words[1]} ».`,
+  lesson: homophoneLesson(pair),
+});
+
+const PLURIEL_LESSON: LessonBlock[] = [
+  'Le **singulier**, c’est **un seul** : un chat, la fleur. Le **pluriel**, c’est **plusieurs** : des chats, les fleurs.',
+  'Le petit mot devant le nom m’aide : un, une, le, la, mon… pour un seul ; des, les, mes, deux… pour plusieurs.',
+  {
+    kind: 'table',
+    columns: [
+      { title: 'singulier', color: '#e3f2fd', cells: ['un chat', 'un gâteau', 'une souris'] },
+      {
+        title: 'pluriel',
+        color: '#fce4ec',
+        cells: ['des chat**s**', 'des gâteau**x**', 'des souris'],
+      },
+    ],
+  },
+  { kind: 'list', items: [RULE_TEXT.s, RULE_TEXT.x, RULE_TEXT.same] },
+  `Au CE2 : ${RULE_TEXT.aux.charAt(0).toLowerCase()}${RULE_TEXT.aux.slice(1)} (un cheval → des chevaux)`,
+];
+
+const ACCORD_LESSON: LessonBlock[] = [
+  'Dans un groupe de mots, le petit mot, le nom et l’adjectif **vont ensemble**.',
+  'S’il y en a **plusieurs**, ils prennent tous la marque du pluriel :',
+  {
+    kind: 'example',
+    lines: [
+      'un ballon rouge → des ballon**s** rouge**s**',
+      'une petite fleur → les petite**s** fleur**s**',
+    ],
+  },
+];
+
+const DICTEE_LESSON: LessonBlock[] = [
+  'Pour bien écrire sous la dictée :',
+  {
+    kind: 'list',
+    ordered: true,
+    items: [
+      'j’**écoute** le mot ou la phrase (je peux réécouter) ;',
+      'je le **redis** dans ma tête et j’écoute **chaque son** : [ou], [on], [an], [oi]… ;',
+      'j’**écris** un mot dans chaque case ;',
+      'je **relis** : les accents, la majuscule au début de la phrase.',
+    ],
+  },
+  {
+    kind: 'example',
+    lines: ['[on] : un ball**on**, un bonb**on**', '[oi] : un r**oi**, une ét**oi**le'],
+  },
+];
+
+const ALPHABET_LESSON: LessonBlock[] = [
+  'Dans le dictionnaire, les mots sont rangés dans l’**ordre alphabétique** : a b c d e f g h i j k l m n o p q r s t u v w x y z.',
+  'Je regarde la **1re lettre** : *chat* est avant *lapin*, car c est avant l.',
+  'Si la 1re lettre est la même, je regarde la **2e lettre** : *balle* est avant *bille*, car a est avant i.',
+  { kind: 'example', lines: ['avion – chat – lapin – zèbre', 'balle – bébé – bille – bol'] },
+];
+
+const SYNONYMES_LESSON: LessonBlock[] = [
+  'Des **synonymes** sont des mots qui veulent dire **presque la même chose**. Je peux remplacer l’un par l’autre dans une phrase.',
+  {
+    kind: 'example',
+    lines: [
+      'Léa est **contente**. → Léa est **heureuse**.',
+      'une voiture = une auto ; finir = terminer',
+    ],
+  },
+];
+
+const CONTRAIRES_LESSON: LessonBlock[] = [
+  'Des **contraires** sont des mots qui veulent dire **l’inverse**.',
+  { kind: 'example', lines: ['chaud ≠ froid ; ouvrir ≠ fermer ; le jour ≠ la nuit'] },
+  'Parfois, on fait le contraire en ajoutant un petit mot devant : **in**-, **im**- (devant p, b, m), **dé**-, **mal**-, **mé**-.',
+  {
+    kind: 'example',
+    lines: ['possible → **im**possible ; faire → **dé**faire ; heureux → **mal**heureux'],
+  },
+];
+
 export const notions: Notion[] = [
   {
     id: 'francais.conjugaison.infinitif-conjugue',
@@ -204,5 +306,54 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Trouver les mots d’une même famille.',
     lesson: FAMILLES_LESSON,
+  },
+  ...Object.values(PAIRS).map(homophoneNotion),
+  {
+    id: 'francais.orthographe.pluriel',
+    domain: 'francais.orthographe',
+    title: 'Le singulier et le pluriel',
+    grades: ['CE1'],
+    competence: 'Distinguer le singulier et le pluriel, et écrire un nom au pluriel.',
+    lesson: PLURIEL_LESSON,
+  },
+  {
+    id: 'francais.orthographe.accord',
+    domain: 'francais.orthographe',
+    title: 'L’accord dans le groupe de mots',
+    grades: ['CE1'],
+    competence: 'Accorder le nom et l’adjectif dans le groupe nominal.',
+    lesson: ACCORD_LESSON,
+  },
+  {
+    id: 'francais.orthographe.dictee',
+    domain: 'francais.orthographe',
+    title: 'La dictée',
+    grades: ['CE1'],
+    competence: 'Écrire sous la dictée des mots et des phrases courtes.',
+    lesson: DICTEE_LESSON,
+  },
+  {
+    id: 'francais.vocabulaire.ordre-alphabetique',
+    domain: 'francais.vocabulaire',
+    title: 'L’ordre alphabétique',
+    grades: ['CE1'],
+    competence: 'Ranger des mots dans l’ordre alphabétique.',
+    lesson: ALPHABET_LESSON,
+  },
+  {
+    id: 'francais.vocabulaire.synonymes',
+    domain: 'francais.vocabulaire',
+    title: 'Les synonymes',
+    grades: ['CE1'],
+    competence: 'Trouver un mot qui veut dire presque la même chose.',
+    lesson: SYNONYMES_LESSON,
+  },
+  {
+    id: 'francais.vocabulaire.contraires',
+    domain: 'francais.vocabulaire',
+    title: 'Les contraires',
+    grades: ['CE1'],
+    competence: 'Trouver le contraire d’un mot.',
+    lesson: CONTRAIRES_LESSON,
   },
 ];
