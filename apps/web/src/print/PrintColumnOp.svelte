@@ -15,11 +15,15 @@
     const offset = i - (layout.cols - digits.length);
     return offset >= 0 ? digits[offset]! : '';
   }
+  // Soustraction : pas de ligne de retenues en haut, le corrigé les note comme la leçon
+  // (le 1 devant le chiffre du haut, le +1 sous la colonne suivante).
+  const subtraction = $derived(question.op === '-');
+  const borrowed = (i: number) => !!solution && (solution.carries[i] ?? 0) > 0;
 </script>
 
 <table class="column-op">
   <tbody>
-    {#if question.showCarries}
+    {#if question.showCarries && !subtraction}
       <tr class="carries">
         <td></td>
         {#each { length: layout.cols } as _, i (i)}
@@ -33,7 +37,12 @@
       <tr>
         <td class="sign">{row === question.operands.length - 1 ? sign : ''}</td>
         {#each { length: layout.cols } as _, i (i)}
-          <td class="digit">{digitOf(operand, i)}</td>
+          <td class="digit"
+            >{#if subtraction && row === 0 && borrowed(i - 1)}<span class="key ten">1</span
+              >{/if}{digitOf(operand, i)}{#if subtraction && row === 1 && borrowed(i)}<span
+                class="key plus">+1</span
+              >{/if}</td
+          >
         {/each}
       </tr>
     {/each}
@@ -81,5 +90,21 @@
   .key {
     color: #d32f2f;
     font-weight: 700;
+  }
+  .digit {
+    position: relative;
+  }
+  .ten,
+  .plus {
+    position: absolute;
+    font-size: 9pt;
+  }
+  .ten {
+    left: 0.05cm;
+    top: 0;
+  }
+  .plus {
+    right: -0.15cm;
+    bottom: 0;
   }
 </style>

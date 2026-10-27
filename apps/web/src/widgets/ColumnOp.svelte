@@ -64,6 +64,28 @@
     answer.carries[i] = ((answer.carries[i] ?? 0) + 1) % (maxCarry + 1);
   }
 
+  /**
+   * Soustraction, comme dans la leçon : la retenue reçue par la colonne j se lit à deux endroits,
+   * le 1 devant le chiffre du haut de la colonne j + 1 (« j'ajoute 10 ») et le +1 sous la colonne j.
+   * Il faut un chiffre en haut des deux côtés.
+   */
+  const subtraction = $derived(question.op === '-' && question.showCarries);
+  const canBorrow = (j: number) =>
+    j >= 0 &&
+    j < layout.cols - 1 &&
+    digitOf(question.operands[0] ?? 0, j) !== '' &&
+    digitOf(question.operands[0] ?? 0, j + 1) !== '';
+  /** Colonne dont la retenue s'affiche dans la case (ligne, colonne), ou -1. */
+  function borrowColumn(row: number, i: number): number {
+    if (!subtraction) return -1;
+    const j = row === 0 ? i - 1 : row === 1 ? i : -1;
+    return canBorrow(j) ? j : -1;
+  }
+  const borrowHint = (j: number) =>
+    phase === 'retry' &&
+    (solution?.carries[j] ?? 0) > 0 &&
+    answer.carries[j] !== solution?.carries[j];
+
   function move(step: number) {
     let i = selected < 0 ? layout.cols : selected;
     do i += step;
@@ -109,7 +131,7 @@
 <svelte:window {onkeydown} />
 
 <div class="grid" data-operands={question.operands.join(',')} data-op={question.op}>
-  {#if question.showCarries}
+  {#if question.showCarries && !subtraction}
     <div class="row">
       <span class="sign"></span>
       {#each { length: layout.cols } as _, i (i)}
@@ -135,7 +157,29 @@
     <div class="row">
       <span class="sign">{row === question.operands.length - 1 ? sign : ''}</span>
       {#each { length: layout.cols } as _, i (i)}
-        <span class="digit" class:second={row > 0}>{digitOf(operand, i)}</span>
+        {@const j = borrowColumn(row, i)}
+        {#if j >= 0}
+          {@const has = (shownCarries[j] ?? 0) > 0}
+          <button
+            class="digit borrow"
+            class:second={row > 0}
+            class:blank={digitOf(operand, i) === ''}
+            disabled={locked}
+            onclick={() => toggleCarry(j)}
+            aria-label={row === 0
+              ? `Ajouter 10 aux ${placeName(i)}`
+              : `Retenue sous les ${placeName(i)}`}
+            aria-pressed={has}
+            data-testid={row === 0 ? 'borrow-ten' : 'borrow-plus'}
+          >
+            {digitOf(operand, i)}
+            <span class="mark {row === 0 ? 'ten' : 'plus'}" class:has class:hint={borrowHint(j)}
+              >{has ? (row === 0 ? '1' : '+1') : ''}</span
+            >
+          </button>
+        {:else}
+          <span class="digit" class:second={row > 0}>{digitOf(operand, i)}</span>
+        {/if}
       {/each}
     </div>
   {/each}
@@ -211,6 +255,48 @@
     background: #e3f2fd;
     border-color: #90caf9;
     color: #0d47a1;
+  }
+  .borrow {
+    position: relative;
+    padding: 0;
+    font-family: inherit;
+  }
+  .borrow.blank {
+    border: 3px solid transparent;
+    background: transparent;
+  }
+  .mark {
+    position: absolute;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #ffb74d;
+    border-radius: 7px;
+    background: #fff8e1;
+    color: #d32f2f;
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .mark.ten {
+    top: -4px;
+    left: -6px;
+  }
+  .mark.plus {
+    bottom: -6px;
+    right: -8px;
+  }
+  .mark.has {
+    border: none;
+    background: transparent;
+    font-size: 1.35rem;
+    font-weight: 800;
+  }
+  .mark.hint {
+    background: #ffe082;
+    border-color: var(--accent);
   }
   .carry {
     height: 28px;
