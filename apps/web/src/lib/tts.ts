@@ -32,6 +32,9 @@ function serverVoice(lang: string): ServerVoice | null {
 }
 
 async function fetchSound(voice: ServerVoice, text: string): Promise<Blob | null> {
+  // Pas d'AbortSignal.timeout : Safari ne l'a que depuis la version 16.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SERVER_TIMEOUT_MS);
   try {
     // Chemin relatif : fonctionne sous n'importe quel sous-chemin (BASE_PATH).
     const res = await fetch('api/tts', {
@@ -39,7 +42,7 @@ async function fetchSound(voice: ServerVoice, text: string): Promise<Blob | null
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ voice, text }),
       credentials: 'same-origin',
-      signal: AbortSignal.timeout(SERVER_TIMEOUT_MS),
+      signal: controller.signal,
     });
     if (res.ok) return await res.blob();
     // 401 : pas encore connecté ; 503 : pas de voix ou trop de monde. On réessaiera plus tard.
@@ -48,6 +51,8 @@ async function fetchSound(voice: ServerVoice, text: string): Promise<Blob | null
   } catch {
     serverDownUntil = Date.now() + SERVER_RETRY_MS;
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -117,7 +122,8 @@ async function browserSpeak(text: string, lang: string, rate: number, id: number
 export function chunks(text: string): string[] {
   const out: string[] = [];
   let part = '';
-  for (const sentence of text.split(/(?<=[.!?:;…])\s+/)) {
+  // Coupure après la ponctuation, sans « (?<= » que Safari ne connaît que depuis la 16.4.
+  for (const sentence of text.replace(/([.!?:;…])\s+/g, '$1\u0000').split('\u0000')) {
     // Une phrase trop longue à elle seule est coupée entre deux mots.
     const pieces =
       sentence.length > CHUNK ? (sentence.match(/.{1,300}(\s|$)/g) ?? [sentence]) : [sentence];
@@ -133,19 +139,81 @@ export function chunks(text: string): string[] {
   return out;
 }
 
-function play(blob: Blob, rate: number, fallback: () => void, then?: () => void): void {
-  const url = URL.createObjectURL(blob);
-  const sound = new Audio(url);
+/**
+ * Un seul lecteur pour toute l'app. Safari (iPad) ne laisse jouer un son que pendant un toucher,
+ * or la phrase arrive du serveur après coup : on débloque ce lecteur au premier toucher, en lui
+ * faisant jouer un silence, et il peut ensuite jouer chaque phrase.
+ */
+function player(): HTMLAudioElement {
+  audio ??= new Audio();
+  return audio;
+}
+
+/** Un dixième de seconde de silence (WAV 8 bits, 8 kHz), fabriqué en mémoire. */
+function silence(): Blob {
+  const samples = 800;
+  const view = new DataView(new ArrayBuffer(44 + samples));
+  const text = (at: number, s: string) =>
+    [...s].forEach((c, i) => view.setUint8(at + i, c.charCodeAt(0)));
+  text(0, 'RIFF');
+  view.setUint32(4, 36 + samples, true);
+  text(8, 'WAVEfmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, 8000, true);
+  view.setUint32(28, 8000, true);
+  view.setUint16(32, 1, true);
+  view.setUint16(34, 8, true);
+  text(36, 'data');
+  view.setUint32(40, samples, true);
+  for (let i = 0; i < samples; i++) view.setUint8(44 + i, 128);
+  return new Blob([view.buffer], { type: 'audio/wav' });
+}
+
+let playerUrl: string | null = null;
+
+function load(sound: HTMLAudioElement, blob: Blob): void {
+  if (playerUrl) URL.revokeObjectURL(playerUrl);
+  playerUrl = URL.createObjectURL(blob);
+  sound.src = playerUrl;
+}
+
+let unlocked = false;
+const GESTURES = ['pointerup', 'touchend', 'keydown', 'click'] as const;
+
+/** Au premier toucher : le lecteur joue un silence et la voix du navigateur dit « rien ». */
+export function unlockAudio(): void {
+  if (unlocked) return;
+  unlocked = true;
+  for (const type of GESTURES) window.removeEventListener(type, unlockAudio, true);
+  const sound = player();
+  if (sound.paused) {
+    load(sound, silence());
+    sound.play().catch(() => {});
+  }
+  if ('speechSynthesis' in window) {
+    const nothing = new SpeechSynthesisUtterance('');
+    nothing.volume = 0;
+    speechSynthesis.speak(nothing);
+  }
+}
+
+function play(blob: Blob, rate: number, id: number, fallback: () => void, then?: () => void) {
+  const sound = player();
+  load(sound, blob);
   // La voix du serveur parle à vitesse normale : 0,9 (d'ordinaire) la garde telle quelle.
-  sound.playbackRate = Math.min(1.3, Math.max(0.6, rate / 0.9));
+  // Changer de son remet la vitesse à defaultPlaybackRate : on règle les deux.
+  const speed = Math.min(1.3, Math.max(0.6, rate / 0.9));
+  sound.defaultPlaybackRate = speed;
+  sound.playbackRate = speed;
   sound.onended = () => {
-    URL.revokeObjectURL(url);
-    if (audio === sound) then?.();
+    if (id === current) then?.();
   };
-  audio = sound;
-  sound.play().catch(() => {
-    URL.revokeObjectURL(url);
-    if (audio === sound) fallback();
+  sound.play().catch((error: unknown) => {
+    // AbortError : une phrase plus récente a pris le lecteur. Sinon (Safari a refusé, son
+    // illisible), la voix du navigateur lit la phrase : l'enfant n'est jamais sans son.
+    if (id === current && (error as Error)?.name !== 'AbortError') fallback();
   });
 }
 
@@ -165,7 +233,7 @@ export function speak(text: string, lang = 'fr-FR', rate = 0.9): void {
     void sounds[i]!.then((blob) => {
       if (id !== current) return;
       const rest = () => void browserSpeak(parts.slice(i).join(' '), lang, rate, id);
-      if (blob) play(blob, rate, rest, () => next(i + 1));
+      if (blob) play(blob, rate, id, rest, () => next(i + 1));
       else rest();
     });
   };
@@ -175,8 +243,10 @@ export function speak(text: string, lang = 'fr-FR', rate = 0.9): void {
 export function stopSpeaking(): void {
   current++;
   audio?.pause();
-  audio = null;
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) speechSynthesis.cancel();
 }
 
-if (typeof window !== 'undefined' && 'speechSynthesis' in window) speechSynthesis.getVoices();
+if (typeof window !== 'undefined') {
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();
+  for (const type of GESTURES) window.addEventListener(type, unlockAudio, true);
+}

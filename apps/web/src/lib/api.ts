@@ -12,12 +12,22 @@ export class ApiError extends Error {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   // Chemin relatif : fonctionne sous n'importe quel sous-chemin (BASE_PATH).
-  const res = await fetch(`api/${path}`, {
-    method,
-    credentials: 'same-origin',
-    headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`api/${path}`, {
+      method,
+      credentials: 'same-origin',
+      headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  } catch {
+    // Wi-Fi coupé, tablette hors réseau : un message que l'enfant (ou le parent) comprend.
+    throw new ApiError(
+      0,
+      'offline',
+      'Pas de connexion à Internet. Vérifie le Wi-Fi puis réessaie.',
+    );
+  }
   const data = (await res.json().catch(() => ({}))) as Partial<ApiErrorBody>;
   if (!res.ok) {
     throw new ApiError(

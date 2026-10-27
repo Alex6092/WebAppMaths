@@ -126,6 +126,40 @@ sur le serveur : la même voix sur tous les appareils, sans dépendre des voix d
   `piper/voices/` à la racine du dépôt (dossier ignoré par git), ou indique un autre dossier avec
   `TTS_DIR`.
 
+## L'app installée (PWA) et les appareils
+
+L'app s'installe sur l'écran d'accueil (manifeste `manifest.webmanifest`, icônes dans `icons/`,
+générées depuis `apps/web/icons/icon.svg` par `npm run gen:icons`). L'espace parent explique comment
+faire sur chaque appareil. L'installation demande le **HTTPS** du reverse proxy.
+
+- **Service worker (`sw.js`) :** il garde en cache les fichiers de `assets/` et `icons/` (noms à
+  empreinte) pour un démarrage rapide. La page passe toujours par le réseau d'abord : un nouveau
+  déploiement est pris au chargement suivant. `api/` n'est jamais en cache. Sans connexion, l'app
+  s'ouvre depuis le cache et affiche « Pas de connexion » ; les réponses ne sont pas mises en
+  attente (pas de mode hors ligne).
+- **Nouvelle version :** quand l'app revient au premier plan, elle compare la version de
+  `/api/health` à celle de son chargement. Si elle a changé, elle se recharge seule (sauf pendant
+  un exercice ou dans l'espace parent, où un bandeau propose « Recharger »).
+- **`sw.js` et `index.html`** sont servis en `Cache-Control: no-cache` : le proxy ne doit pas les
+  garder en cache plus longtemps.
+- **Navigateurs visés :** Chrome 109 (dernier sur Windows 8.1) et Safari 15.4 / iPadOS 15.4. Le
+  build vise ces versions (`apps/web/vite.config.ts`) et `scripts/compat.test.ts` refuse ce
+  qu'ils ne connaissent pas (par exemple le regard en arrière `(?<=` dans une expression régulière,
+  qui ferait planter toute l'app sur un iPad plus ancien).
+- **Son sur iPad :** Safari ne joue un son que pendant un toucher ; l'app débloque son lecteur
+  audio au premier toucher, et passe à la voix du navigateur si le son est quand même refusé.
+
+### À vérifier à la main sur les vrais appareils (après un déploiement)
+
+|                                                                                 | Acer (Chrome 109) | Android | iPad |
+| ------------------------------------------------------------------------------- | ----------------- | ------- | ---- |
+| Installer l'app depuis l'espace parent, l'ouvrir depuis son icône (plein écran) | ☐                 | ☐       | ☐    |
+| 🔊 sur une consigne, juste après l'ouverture de l'app                           | ☐                 | ☐       | ☐    |
+| Écoute d'un mot d'anglais (voix anglaise) et dictée (lente)                     | ☐                 | ☐       | ☐    |
+| Tracer un segment au doigt en géométrie, règle virtuelle                        | ☐                 | ☐       | ☐    |
+| Après un déploiement : l'app revenue au premier plan prend la nouvelle version  | ☐                 | ☐       | ☐    |
+| Wi-Fi coupé : l'app s'ouvre et affiche « Pas de connexion »                     | ☐                 | ☐       | ☐    |
+
 ## Sauvegardes et restauration
 
 - Une sauvegarde **quotidienne** est faite par le serveur (`data/backups/app-…-daily.db`, 14

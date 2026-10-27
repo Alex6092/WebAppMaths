@@ -9,5 +9,6 @@ export default defineConfig({
     port: 5173,
     proxy: { '/api': 'http://127.0.0.1:3000' },
   },
-  build: { target: 'es2022', sourcemap: true },
+  // Les appareils d'Océane : Chrome 109 (dernier sur Windows 8.1) et Safari 15.4 (iPad).
+  build: { target: ['chrome109', 'safari15.4'], sourcemap: true },
 });

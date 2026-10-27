@@ -11,6 +11,7 @@
   import ChildReport from '../components/parent/ChildReport.svelte';
   import Evaluations from '../components/parent/Evaluations.svelte';
   import Homework from '../components/parent/Homework.svelte';
+  import InstallHelp from '../components/parent/InstallHelp.svelte';
   import Worksheets from '../components/parent/Worksheets.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
   import { toast } from '../lib/effects.svelte';
@@ -339,6 +340,8 @@
         </p>
       {/if}
     </section>
+
+    <InstallHelp />
 
     <section class="card">
       <h2>🔒 Données de la famille</h2>

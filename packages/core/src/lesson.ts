@@ -92,12 +92,13 @@ export function plainText(text: string): string {
 
 /** Les signes dits avec des mots, pour la lecture à voix haute. */
 function spoken(text: string): string {
-  // Seulement entre deux nombres : « le signe < se lit… » garde son signe.
+  // Seulement entre deux nombres : « le signe < se lit… » garde son signe. Pas de « (?<= » :
+  // Safari ne le connaît que depuis la version 16.4, et toute l’app planterait sur un iPad plus ancien.
   return plainText(text)
-    .replaceAll(/(?<=\d) < (?=\d)/g, ' est plus petit que ')
-    .replaceAll(/(?<=\d) > (?=\d)/g, ' est plus grand que ')
-    .replaceAll(/(?<=\d) × (?=\d)/g, ' fois ')
-    .replaceAll(/(?<=\d) − (?=\d)/g, ' moins ')
+    .replaceAll(/(\d) < (?=\d)/g, '$1 est plus petit que ')
+    .replaceAll(/(\d) > (?=\d)/g, '$1 est plus grand que ')
+    .replaceAll(/(\d) × (?=\d)/g, '$1 fois ')
+    .replaceAll(/(\d) − (?=\d)/g, '$1 moins ')
     .replaceAll('→', ',');
 }
 

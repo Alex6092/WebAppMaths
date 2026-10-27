@@ -71,7 +71,9 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 16px 16px 40px;
+  /* Installée sur l'écran d'accueil, l'app ne passe pas sous les bords arrondis de l'iPad. */
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   min-height: 100vh;
   width: 100%;
   max-width: 900px;
