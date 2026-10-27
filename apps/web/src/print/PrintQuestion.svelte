@@ -5,6 +5,7 @@
   import PrintClock from './PrintClock.svelte';
   import PrintColumnOp from './PrintColumnOp.svelte';
   import PrintFillBlank from './PrintFillBlank.svelte';
+  import PrintMatch from './PrintMatch.svelte';
   import PrintMcq from './PrintMcq.svelte';
   import PrintMoney from './PrintMoney.svelte';
   import PrintNumber from './PrintNumber.svelte';
@@ -17,6 +18,8 @@
   // Chaque widget reçoit la réponse attendue de son propre type.
   const key = <Q extends Question>(_q: Q) => solution as AnswerOf<Q> | null;
 </script>
+
+{#if question.text}<p class="text">{question.text}</p>{/if}
 
 {#if question.widget === 'column-op'}
   <PrintColumnOp {question} solution={key(question)} />
@@ -38,4 +41,15 @@
   <PrintClock {question} solution={key(question)} />
 {:else if question.widget === 'money'}
   <PrintMoney {question} solution={key(question)} />
+{:else if question.widget === 'match'}
+  <PrintMatch {question} solution={key(question)} />
 {/if}
+
+<style>
+  .text {
+    margin: 0 0 0.1cm;
+    font-size: 13pt;
+    line-height: 1.4;
+    white-space: pre-line;
+  }
+</style>

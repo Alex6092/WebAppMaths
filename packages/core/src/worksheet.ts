@@ -20,6 +20,7 @@ export const SHEET_ITEMS: Record<WidgetId, number> = {
   order: 3,
   clock: 4,
   money: 2,
+  match: 1,
 };
 
 export type SheetLevel = 'current' | 'expected';

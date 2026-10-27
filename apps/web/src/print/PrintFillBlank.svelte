@@ -13,14 +13,23 @@
   }: { question: FillBlankQuestion; solution?: FillBlankAnswer | null } = $props();
 
   const lines = $derived(question.prompt.split('\n').map(blankParts));
-  /** Tous les trous proposent les mêmes mots (ranger des nombres) : on les donne une fois. */
+  /**
+   * Les mots à choisir, donnés une fois au-dessus du texte : quand tous les trous proposent les
+   * mêmes (ranger des nombres), ou dès trois trous à choix (« Parmi les … du … ») : une banque de
+   * mots se lit mieux que des parenthèses après chaque trou.
+   */
   const shared = $derived.by(() => {
-    const [first, ...rest] = question.blanks;
-    if (first?.kind !== 'choice' || rest.length === 0) return null;
-    const key = [...first.options].sort().join('|');
-    return rest.every((b) => b.kind === 'choice' && [...b.options].sort().join('|') === key)
-      ? first.options
-      : null;
+    const choices = question.blanks.flatMap((b) => (b.kind === 'choice' ? [b.options] : []));
+    const [first, ...rest] = choices;
+    if (!first || rest.length === 0) return null;
+    const key = [...first].sort().join('|');
+    if (
+      choices.length === question.blanks.length &&
+      rest.every((options) => [...options].sort().join('|') === key)
+    )
+      return first;
+    if (choices.length < 3) return null;
+    return [...new Set(choices.flat())].sort((a, b) => a.localeCompare(b, 'fr'));
   });
 </script>
 

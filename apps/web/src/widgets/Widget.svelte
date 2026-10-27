@@ -5,6 +5,7 @@
   import ColumnOp from './ColumnOp.svelte';
   import FillBlank from './FillBlank.svelte';
   import Geometry from './Geometry.svelte';
+  import Match from './Match.svelte';
   import Mcq from './Mcq.svelte';
   import Money from './Money.svelte';
   import NumberInput from './NumberInput.svelte';
@@ -23,6 +24,10 @@
   }
   let { question, answer = $bindable(), phase, marks, solution, onvalidate }: Props = $props();
 </script>
+
+{#if question.text}
+  <p class="text">{question.text}</p>
+{/if}
 
 {#if question.widget === 'column-op'}
   <ColumnOp {question} bind:answer {phase} {marks} {solution} {onvalidate} />
@@ -44,4 +49,27 @@
   <Clock {question} bind:answer {phase} {marks} {solution} />
 {:else if question.widget === 'money'}
   <Money {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'match'}
+  <Match {question} bind:answer {phase} {marks} {solution} />
 {/if}
+
+<style>
+  /* L'énoncé d'un problème : à lire tranquillement, plus petit que la question. */
+  .text {
+    margin: 0;
+    max-width: 760px;
+    padding: 16px 24px;
+    border-radius: 20px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    font-size: 1.45rem;
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+  @media (max-width: 520px) {
+    .text {
+      font-size: 1.15rem;
+      padding: 12px 16px;
+    }
+  }
+</style>

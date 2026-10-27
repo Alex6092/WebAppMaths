@@ -8,6 +8,8 @@ export interface QuestionBase {
   instruction: string;
   /** Texte lu à voix haute à la place de la consigne et de l'énoncé. */
   speech?: string;
+  /** Un texte à lire avant de répondre, sous la consigne : l'énoncé d'un problème. */
+  text?: string;
 }
 
 /** Point d'une figure. Les coordonnées sont en centimètres, origine en haut à gauche. */
@@ -58,7 +60,10 @@ export interface Figure {
   ruler?: boolean;
 }
 
-/** Une image à regarder avec l'énoncé : une horloge à aiguilles, des pièces et des billets. */
+/**
+ * Une image à regarder avec l'énoncé : une horloge à aiguilles, des pièces et des billets,
+ * ou des objets à compter dans un cadre (les fruits d'un panier).
+ */
 export type Picture =
   | {
       kind: 'clock';
@@ -68,7 +73,9 @@ export type Picture =
       minuteLabels?: boolean;
     }
   /** Valeurs en centimes : 50 pour la pièce de 50 c, 1000 pour le billet de 10 €. */
-  | { kind: 'money'; values: number[] };
+  | { kind: 'money'; values: number[] }
+  /** Des emoji, dans l'ordre où ils sont rangés dans le cadre. */
+  | { kind: 'icons'; icons: string[] };
 
 /** Opération posée en colonnes, avec cases de retenue. */
 export interface ColumnOpQuestion extends QuestionBase {
@@ -262,6 +269,30 @@ export interface MoneyAnswer {
   picked: number[];
 }
 
+/** Une carte à relier : un texte (un énoncé, une fin de phrase…), parfois avec une image. */
+export interface MatchCard {
+  text: string;
+  icon?: string;
+}
+export interface MatchColumn {
+  /** « énoncés », « questions », « phrases-réponses ». */
+  title?: string;
+  cards: MatchCard[];
+}
+/**
+ * Relier : des colonnes de cartes côte à côte. Chaque carte se relie par un trait à une carte
+ * de la colonne suivante (l'énoncé à sa question, la question à sa phrase-réponse).
+ */
+export interface MatchQuestion extends QuestionBase {
+  widget: 'match';
+  /** 2 ou 3 colonnes, avec autant de cartes chacune, dans l'ordre affiché (mélangé). */
+  columns: MatchColumn[];
+}
+export interface MatchAnswer {
+  /** links[c][i] : la carte de la colonne c + 1 reliée à la carte i de la colonne c (null : aucune). */
+  links: (number | null)[][];
+}
+
 export type Question =
   | ColumnOpQuestion
   | NumberInputQuestion
@@ -272,7 +303,8 @@ export type Question =
   | GeometryQuestion
   | OrderQuestion
   | ClockQuestion
-  | MoneyQuestion;
+  | MoneyQuestion
+  | MatchQuestion;
 export type WidgetId = Question['widget'];
 
 export interface AnswerMap {
@@ -286,6 +318,7 @@ export interface AnswerMap {
   order: OrderAnswer;
   clock: ClockAnswer;
   money: MoneyAnswer;
+  match: MatchAnswer;
 }
 
 export type QuestionOf<W extends WidgetId> = Extract<Question, { widget: W }>;
