@@ -21,70 +21,74 @@ import plugin16 from './francais/grammaire/remets-ordre/plugin';
 import plugin17 from './francais/grammaire/type-phrase/plugin';
 import plugin18 from './francais/orthographe/a-a/plugin';
 import plugin19 from './francais/orthographe/accorde/plugin';
-import plugin20 from './francais/orthographe/dictee-mots/plugin';
-import plugin21 from './francais/orthographe/dictee-phrases/plugin';
-import plugin22 from './francais/orthographe/ecris-pluriel/plugin';
-import plugin23 from './francais/orthographe/et-est/plugin';
-import plugin24 from './francais/orthographe/on-ont/plugin';
-import plugin25 from './francais/orthographe/singulier-pluriel/plugin';
-import plugin26 from './francais/orthographe/son-sont/plugin';
-import plugin27 from './francais/vocabulaire/avant-apres/plugin';
-import plugin28 from './francais/vocabulaire/classe-familles/plugin';
-import plugin29 from './francais/vocabulaire/contraire-prefixe/plugin';
-import plugin30 from './francais/vocabulaire/intrus-famille/plugin';
-import plugin31 from './francais/vocabulaire/meme-famille/plugin';
-import plugin32 from './francais/vocabulaire/range-alphabetique/plugin';
-import plugin33 from './francais/vocabulaire/relie-contraires/plugin';
-import plugin34 from './francais/vocabulaire/relie-synonymes/plugin';
-import plugin35 from './francais/vocabulaire/trouve-contraire/plugin';
-import plugin36 from './francais/vocabulaire/trouve-synonyme/plugin';
-import plugin37 from './maths/calcul/addition-posee/plugin';
-import plugin38 from './maths/calcul/calcul-mental/plugin';
-import plugin39 from './maths/calcul/soustraction-posee/plugin';
-import plugin40 from './maths/calcul/tables/plugin';
-import plugin41 from './maths/geometrie/alignes-oui-non/plugin';
-import plugin42 from './maths/geometrie/entoure-milieu/plugin';
-import plugin43 from './maths/geometrie/entoure-segments/plugin';
-import plugin44 from './maths/geometrie/longueurs-milieu/plugin';
-import plugin45 from './maths/geometrie/milieu-oui-non/plugin';
-import plugin46 from './maths/geometrie/nomme-segment/plugin';
-import plugin47 from './maths/geometrie/place-alignes/plugin';
-import plugin48 from './maths/geometrie/place-milieu/plugin';
-import plugin49 from './maths/geometrie/relie-alignes/plugin';
-import plugin50 from './maths/geometrie/trace-alignes/plugin';
-import plugin51 from './maths/geometrie/trace-segment-milieu/plugin';
-import plugin52 from './maths/geometrie/vocabulaire-segment/plugin';
-import plugin53 from './maths/mesures/compte-argent/plugin';
-import plugin54 from './maths/mesures/dans-combien/plugin';
-import plugin55 from './maths/mesures/heure-en-mots/plugin';
-import plugin56 from './maths/mesures/lis-heure/plugin';
-import plugin57 from './maths/mesures/mesure-segment/plugin';
-import plugin58 from './maths/mesures/moins-de-pieces/plugin';
-import plugin59 from './maths/mesures/paie/plugin';
-import plugin60 from './maths/mesures/quelle-horloge/plugin';
-import plugin61 from './maths/mesures/qui-a-le-plus/plugin';
-import plugin62 from './maths/mesures/regle-horloge/plugin';
-import plugin63 from './maths/mesures/rendre-monnaie/plugin';
-import plugin64 from './maths/mesures/unites-duree/plugin';
-import plugin65 from './maths/nombres/comparer-signe/plugin';
-import plugin66 from './maths/nombres/decomposer/plugin';
-import plugin67 from './maths/nombres/ecrire-chiffres/plugin';
-import plugin68 from './maths/nombres/ecrire-lettres/plugin';
-import plugin69 from './maths/nombres/encadrer/plugin';
-import plugin70 from './maths/nombres/lire-nombre/plugin';
-import plugin71 from './maths/nombres/ranger/plugin';
-import plugin72 from './maths/problemes/enonce-question/plugin';
-import plugin73 from './maths/problemes/mot-qui-regroupe/plugin';
-import plugin74 from './maths/problemes/parmi-les/plugin';
-import plugin75 from './maths/problemes/phrase-reponse/plugin';
-import plugin76 from './maths/problemes/quelle-operation/plugin';
-import plugin77 from './maths/problemes/relie-enonce/plugin';
-import plugin78 from './maths/problemes/resous-probleme/plugin';
-import plugin79 from './qlm/vivant/aliments-transformes/plugin';
-import plugin80 from './qlm/vivant/classe-familles-aliments/plugin';
-import plugin81 from './qlm/vivant/famille-aliment/plugin';
-import plugin82 from './qlm/vivant/origine-aliments/plugin';
-import plugin83 from './qlm/vivant/provenance-aliments/plugin';
+import plugin20 from './francais/orthographe/dictee-4/plugin';
+import plugin21 from './francais/orthographe/dictee-mots/plugin';
+import plugin22 from './francais/orthographe/dictee-phrases/plugin';
+import plugin23 from './francais/orthographe/ecris-pluriel/plugin';
+import plugin24 from './francais/orthographe/et-est/plugin';
+import plugin25 from './francais/orthographe/lettre-t-classe/plugin';
+import plugin26 from './francais/orthographe/lettre-t-colorie/plugin';
+import plugin27 from './francais/orthographe/on-ont/plugin';
+import plugin28 from './francais/orthographe/singulier-pluriel/plugin';
+import plugin29 from './francais/orthographe/son-sont/plugin';
+import plugin30 from './francais/orthographe/t-muet/plugin';
+import plugin31 from './francais/vocabulaire/avant-apres/plugin';
+import plugin32 from './francais/vocabulaire/classe-familles/plugin';
+import plugin33 from './francais/vocabulaire/contraire-prefixe/plugin';
+import plugin34 from './francais/vocabulaire/intrus-famille/plugin';
+import plugin35 from './francais/vocabulaire/meme-famille/plugin';
+import plugin36 from './francais/vocabulaire/range-alphabetique/plugin';
+import plugin37 from './francais/vocabulaire/relie-contraires/plugin';
+import plugin38 from './francais/vocabulaire/relie-synonymes/plugin';
+import plugin39 from './francais/vocabulaire/trouve-contraire/plugin';
+import plugin40 from './francais/vocabulaire/trouve-synonyme/plugin';
+import plugin41 from './maths/calcul/addition-posee/plugin';
+import plugin42 from './maths/calcul/calcul-mental/plugin';
+import plugin43 from './maths/calcul/soustraction-posee/plugin';
+import plugin44 from './maths/calcul/tables/plugin';
+import plugin45 from './maths/geometrie/alignes-oui-non/plugin';
+import plugin46 from './maths/geometrie/entoure-milieu/plugin';
+import plugin47 from './maths/geometrie/entoure-segments/plugin';
+import plugin48 from './maths/geometrie/longueurs-milieu/plugin';
+import plugin49 from './maths/geometrie/milieu-oui-non/plugin';
+import plugin50 from './maths/geometrie/nomme-segment/plugin';
+import plugin51 from './maths/geometrie/place-alignes/plugin';
+import plugin52 from './maths/geometrie/place-milieu/plugin';
+import plugin53 from './maths/geometrie/relie-alignes/plugin';
+import plugin54 from './maths/geometrie/trace-alignes/plugin';
+import plugin55 from './maths/geometrie/trace-segment-milieu/plugin';
+import plugin56 from './maths/geometrie/vocabulaire-segment/plugin';
+import plugin57 from './maths/mesures/compte-argent/plugin';
+import plugin58 from './maths/mesures/dans-combien/plugin';
+import plugin59 from './maths/mesures/heure-en-mots/plugin';
+import plugin60 from './maths/mesures/lis-heure/plugin';
+import plugin61 from './maths/mesures/mesure-segment/plugin';
+import plugin62 from './maths/mesures/moins-de-pieces/plugin';
+import plugin63 from './maths/mesures/paie/plugin';
+import plugin64 from './maths/mesures/quelle-horloge/plugin';
+import plugin65 from './maths/mesures/qui-a-le-plus/plugin';
+import plugin66 from './maths/mesures/regle-horloge/plugin';
+import plugin67 from './maths/mesures/rendre-monnaie/plugin';
+import plugin68 from './maths/mesures/unites-duree/plugin';
+import plugin69 from './maths/nombres/comparer-signe/plugin';
+import plugin70 from './maths/nombres/decomposer/plugin';
+import plugin71 from './maths/nombres/ecrire-chiffres/plugin';
+import plugin72 from './maths/nombres/ecrire-lettres/plugin';
+import plugin73 from './maths/nombres/encadrer/plugin';
+import plugin74 from './maths/nombres/lire-nombre/plugin';
+import plugin75 from './maths/nombres/ranger/plugin';
+import plugin76 from './maths/problemes/enonce-question/plugin';
+import plugin77 from './maths/problemes/mot-qui-regroupe/plugin';
+import plugin78 from './maths/problemes/parmi-les/plugin';
+import plugin79 from './maths/problemes/phrase-reponse/plugin';
+import plugin80 from './maths/problemes/quelle-operation/plugin';
+import plugin81 from './maths/problemes/relie-enonce/plugin';
+import plugin82 from './maths/problemes/resous-probleme/plugin';
+import plugin83 from './qlm/vivant/aliments-transformes/plugin';
+import plugin84 from './qlm/vivant/classe-familles-aliments/plugin';
+import plugin85 from './qlm/vivant/famille-aliment/plugin';
+import plugin86 from './qlm/vivant/origine-aliments/plugin';
+import plugin87 from './qlm/vivant/provenance-aliments/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
@@ -175,6 +179,10 @@ export const plugins: AnyPlugin[] = [
   plugin81,
   plugin82,
   plugin83,
+  plugin84,
+  plugin85,
+  plugin86,
+  plugin87,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -199,13 +207,17 @@ export const pluginPathIds: string[] = [
   'francais.grammaire.type-phrase',
   'francais.orthographe.a-a',
   'francais.orthographe.accorde',
+  'francais.orthographe.dictee-4',
   'francais.orthographe.dictee-mots',
   'francais.orthographe.dictee-phrases',
   'francais.orthographe.ecris-pluriel',
   'francais.orthographe.et-est',
+  'francais.orthographe.lettre-t-classe',
+  'francais.orthographe.lettre-t-colorie',
   'francais.orthographe.on-ont',
   'francais.orthographe.singulier-pluriel',
   'francais.orthographe.son-sont',
+  'francais.orthographe.t-muet',
   'francais.vocabulaire.avant-apres',
   'francais.vocabulaire.classe-familles',
   'francais.vocabulaire.contraire-prefixe',

@@ -1,6 +1,7 @@
 import type { Domain, LessonBlock, Notion } from '@app/core';
 import { MOMENT_LABEL, MOMENTS } from './lib/conjugaison';
 import { MOMENT_COLOR, PINK } from './lib/couleurs';
+import { CLASS_DICTATIONS, classDictationNotion } from './lib/dictee-classe';
 import { PAIRS, type HomophonePair } from './lib/homophones';
 import { capitalize, indicatorsOf } from './lib/indicateurs';
 import { RULE_TEXT } from './lib/pluriel';
@@ -208,6 +209,28 @@ const SYNONYMES_LESSON: LessonBlock[] = [
   },
 ];
 
+// La lettre T, d'après la fiche de la dictée 4 de la classe.
+const LETTRE_T_LESSON: LessonBlock[] = [
+  'La lettre **t** ne se prononce pas toujours de la même façon :',
+  {
+    kind: 'table',
+    columns: [
+      { title: 'j’entends [t]', color: '#e3f2fd', cells: ['une car**t**e', 'l’his**t**oire'] },
+      { title: 'j’entends [s]', color: '#fce4ec', cells: ['la pollu**t**ion', 'spa**t**ial'] },
+      { title: 'je ne l’entends pas', color: '#eeeeee', cells: ['souven**t**', 'le spor**t**'] },
+    ],
+  },
+  'Devant **-ion**, **-ie**, **-iel**, **-ial**, le t se dit souvent [s] : une émotion, la patience.',
+  'À la fin d’un mot, le t est souvent **muet**. Pour le trouver, je cherche un mot de la même famille, ou le féminin :',
+  {
+    kind: 'example',
+    lines: [
+      'sauter → un sau**t** ; chanter → un chan**t**',
+      'petite → peti**t** ; forte → for**t**',
+    ],
+  },
+];
+
 const CONTRAIRES_LESSON: LessonBlock[] = [
   'Des **contraires** sont des mots qui veulent dire **l’inverse**.',
   { kind: 'example', lines: ['chaud ≠ froid ; ouvrir ≠ fermer ; le jour ≠ la nuit'] },
@@ -356,4 +379,13 @@ export const notions: Notion[] = [
     competence: 'Trouver le contraire d’un mot.',
     lesson: CONTRAIRES_LESSON,
   },
+  {
+    id: 'francais.orthographe.lettre-t',
+    domain: 'francais.orthographe',
+    title: 'La lettre t',
+    grades: ['CE1'],
+    competence: 'Savoir que la lettre t fait [t], [s], ou ne s’entend pas.',
+    lesson: LETTRE_T_LESSON,
+  },
+  ...CLASS_DICTATIONS.map(classDictationNotion),
 ];
