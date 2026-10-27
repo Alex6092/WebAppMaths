@@ -132,6 +132,9 @@
     width: 21cm;
     max-width: 100%;
     min-height: 29.7cm;
+    /* Dans l'aperçu (colonne flex de hauteur fixe), une page longue ne doit pas être écrasée à
+       29,7 cm : elle s'allonge, sinon son contenu déborde sur la page suivante. */
+    flex-shrink: 0;
     padding: 1.2cm 1.4cm;
     box-shadow: 0 2px 14px rgba(0, 0, 0, 0.25);
     display: flex;
