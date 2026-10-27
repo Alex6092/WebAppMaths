@@ -35,20 +35,23 @@ test('le 🔊 lit toujours la consigne, par le serveur ou par la voix du navigat
       said.push(`audio:${this.src.startsWith('blob:') ? 'blob' : this.src}`);
       return Promise.resolve();
     };
-    // Le WebKit de Playwright n'a pas de synthèse vocale ; Safari sur iPad en a une.
-    if (!('speechSynthesis' in window)) {
-      const w = window as unknown as Record<string, unknown>;
-      w.SpeechSynthesisUtterance = class {
+    // Une synthèse vocale de test, la même partout : le WebKit de Playwright n'en a pas sous
+    // Windows, et celle de Linux (CI) ne répond pas comme celle de Safari sur iPad.
+    const fake = {
+      SpeechSynthesisUtterance: class {
         constructor(readonly text: string) {}
-      };
-      w.speechSynthesis = {
-        getVoices: () => [],
+      },
+      speechSynthesis: {
+        getVoices: () => [{ name: 'Test', lang: 'fr-FR', localService: true }],
+        speak: (u: { text: string }) => void said.push(`navigateur:${u.text}`),
         cancel() {},
         addEventListener() {},
         removeEventListener() {},
-      };
+      },
+    };
+    for (const [name, value] of Object.entries(fake)) {
+      Object.defineProperty(window, name, { value, configurable: true, writable: true });
     }
-    speechSynthesis.speak = (u) => void said.push(`navigateur:${u.text}`);
   });
   await login(page);
   await page.getByRole('button', { name: /Mathématiques/ }).click();
