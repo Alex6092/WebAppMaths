@@ -20,6 +20,8 @@
 </script>
 
 {#if question.text}<p class="text">{question.text}</p>{/if}
+<!-- Une dictée : l'adulte lit ce qui est écrit sur le corrigé. -->
+{#if question.listen && solution}<p class="listen">🔊 à lire : « {question.listen} »</p>{/if}
 
 {#if question.widget === 'column-op'}
   <PrintColumnOp {question} solution={key(question)} />
@@ -51,5 +53,10 @@
     font-size: 13pt;
     line-height: 1.4;
     white-space: pre-line;
+  }
+  .listen {
+    margin: 0 0 0.1cm;
+    font-size: 11pt;
+    color: #d32f2f;
   }
 </style>

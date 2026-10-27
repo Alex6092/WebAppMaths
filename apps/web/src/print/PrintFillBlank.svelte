@@ -16,12 +16,18 @@
   /**
    * Les mots à choisir, donnés une fois au-dessus du texte : quand tous les trous proposent les
    * mêmes (ranger des nombres), ou dès trois trous à choix (« Parmi les … du … ») : une banque de
-   * mots se lit mieux que des parenthèses après chaque trou.
+   * mots se lit mieux que des parenthèses après chaque trou. Un trou collé au mot qui suit
+   * (« ___possible ») ne peut pas non plus avoir ses parenthèses entre les deux.
    */
+  const glued = $derived(
+    lines.some((parts) =>
+      parts.some((p, i) => typeof p === 'number' && /^\p{L}/u.test(String(parts[i + 1] ?? ''))),
+    ),
+  );
   const shared = $derived.by(() => {
     const choices = question.blanks.flatMap((b) => (b.kind === 'choice' ? [b.options] : []));
     const [first, ...rest] = choices;
-    if (!first || rest.length === 0) return null;
+    if (!first || (rest.length === 0 && !glued)) return null;
     const key = [...first].sort().join('|');
     if (
       choices.length === question.blanks.length &&

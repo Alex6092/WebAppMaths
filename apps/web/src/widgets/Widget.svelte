@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Mark, PluginQuestion } from '@app/core';
+  import { untrack } from 'svelte';
+  import { speak, ttsAvailable } from '../lib/tts';
   import Classify from './Classify.svelte';
   import Clock from './Clock.svelte';
   import ColumnOp from './ColumnOp.svelte';
@@ -23,7 +25,24 @@
     onvalidate: () => void;
   }
   let { question, answer = $bindable(), phase, marks, solution, onvalidate }: Props = $props();
+
+  // La dictée se lit toute seule quand la question arrive (pas quand le parent la revoit).
+  const DICTATION_RATE = 0.7;
+  $effect(() => {
+    const listen = question.listen;
+    if (listen && untrack(() => phase) === 'answering') speak(listen, 'fr-FR', DICTATION_RATE);
+  });
 </script>
+
+{#if question.listen && ttsAvailable()}
+  <button
+    class="listen"
+    data-testid="listen"
+    onclick={() => speak(question.listen ?? '', 'fr-FR', DICTATION_RATE)}
+  >
+    <span aria-hidden="true">🔊</span> Écoute
+  </button>
+{/if}
 
 {#if question.text}
   <p class="text">{question.text}</p>
@@ -54,6 +73,26 @@
 {/if}
 
 <style>
+  /* Le gros bouton de la dictée : on réécoute autant qu'on veut. */
+  .listen {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 32px;
+    border-radius: 24px;
+    border: 3px solid var(--primary-soft);
+    background: white;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    box-shadow: var(--shadow);
+  }
+  .listen span {
+    font-size: 2.2rem;
+  }
+  .listen:active {
+    transform: translateY(2px);
+  }
   /* L'énoncé d'un problème : à lire tranquillement, plus petit que la question. */
   .text {
     margin: 0;
