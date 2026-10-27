@@ -1,5 +1,6 @@
 export * from './api';
 export * from './badges';
+export * from './calendar';
 export * from './catalog';
 export * from './clock';
 export * from './contract';

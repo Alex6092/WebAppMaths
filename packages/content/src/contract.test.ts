@@ -11,6 +11,12 @@ describe('catalogue', () => {
     const orphans = registry.notions.filter((n) => registry.pluginsOfNotion(n.id).length === 0);
     expect(orphans.map((n) => n.id)).toEqual([]);
   });
+
+  // Le parent choisit les notions par leur titre (fiches, devoirs) : deux titres pareils se confondent.
+  it('donne un titre différent à chaque notion', () => {
+    const titles = registry.notions.map((n) => n.title);
+    expect(titles.filter((t, i) => titles.indexOf(t) !== i)).toEqual([]);
+  });
 });
 
 // Le test de contrat s'applique tout seul à chaque plugin du registre.

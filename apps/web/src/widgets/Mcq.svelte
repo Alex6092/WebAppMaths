@@ -76,7 +76,11 @@
   <div class="prompt">{question.prompt}</div>
 {/if}
 
-<div class="choices {question.layout ?? 'grid'}" role={question.multiple ? 'group' : 'radiogroup'}>
+<div
+  class="choices {question.layout ?? 'grid'}"
+  class:pairs={question.choices.length === 4}
+  role={question.multiple ? 'group' : 'radiogroup'}
+>
   {#each question.choices as choice (choice.id)}
     <button
       class="choice {choiceState(choice.id)}"
@@ -149,6 +153,10 @@
   }
   .choices.grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+  /* Quatre choix : deux lignes de deux plutôt que trois et un tout seul. */
+  .choices.grid.pairs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .choices.list {
     grid-template-columns: 1fr;

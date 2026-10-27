@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { LessonBlock } from '@app/core';
   import FigureView from '../../geometry/FigureView.svelte';
+  import { speak, ttsAvailable } from '../../lib/tts';
   import BaseTen from './BaseTen.svelte';
   import PictureView from '../../pictures/PictureView.svelte';
   import DotArray from './DotArray.svelte';
@@ -80,6 +81,28 @@
       <PictureView picture={{ kind: 'money', values: block.values }} />
       {#if block.caption}<figcaption><RichText text={block.caption} /></figcaption>{/if}
     </figure>
+  {:else if block.kind === 'calendar'}
+    <figure>
+      <PictureView
+        picture={{ kind: 'calendar', year: block.year, month: block.month, marks: block.marks }}
+      />
+      {#if block.caption}<figcaption><RichText text={block.caption} /></figcaption>{/if}
+    </figure>
+  {:else if block.kind === 'words'}
+    <!-- Les mots d'anglais : on touche une carte pour l'entendre. -->
+    <div class="words">
+      {#each block.items as item, i (i)}
+        <button
+          class="word"
+          disabled={!ttsAvailable()}
+          onclick={() => speak(item.word, block.lang, 0.8)}
+        >
+          {#if item.icon}<span class="word-icon" aria-hidden="true">{item.icon}</span>{/if}
+          <span class="word-text">{item.word}</span>
+          <span class="word-meaning">{item.meaning}</span>
+        </button>
+      {/each}
+    </div>
   {/if}
 {/each}
 
@@ -196,6 +219,41 @@
   .clocks figcaption {
     font-weight: 700;
     color: var(--text);
+  }
+  .words {
+    align-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+  }
+  .word {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 6px;
+    border: 2px solid var(--primary-soft);
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.1);
+  }
+  .word:active {
+    transform: translateY(2px);
+  }
+  .word:disabled {
+    color: inherit;
+  }
+  .word-icon {
+    font-size: 2rem;
+  }
+  .word-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .word-meaning {
+    font-size: 0.95rem;
+    color: var(--text-soft);
   }
   @media (max-width: 520px) {
     .timeline {

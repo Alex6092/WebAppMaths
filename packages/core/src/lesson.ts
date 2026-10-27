@@ -42,7 +42,19 @@ export type LessonBlock =
   /** Des horloges côte à côte, chacune avec sa légende (« 3 h 30 »). */
   | { kind: 'clocks'; items: { minutes: number; caption: string }[]; minuteLabels?: boolean }
   /** Des pièces et des billets (en centimes), avec une légende. */
-  | { kind: 'money'; values: number[]; caption?: string };
+  | { kind: 'money'; values: number[]; caption?: string }
+  /** La page d'un mois (1 à 12), des jours entourés. */
+  | { kind: 'calendar'; year: number; month: number; marks?: number[]; caption?: string }
+  /** Des mots d'une autre langue, chacun avec son sens et sa voix : on touche pour écouter. */
+  | { kind: 'words'; lang: string; items: LessonWord[] };
+
+export interface LessonWord {
+  /** Le mot dans la langue apprise : « red ». */
+  word: string;
+  /** Son sens en français : « rouge ». */
+  meaning: string;
+  icon?: string;
+}
 
 export interface LessonColumn {
   title: string;
@@ -107,6 +119,7 @@ export function lessonSpeech(blocks: readonly LessonBlock[]): string {
       case 'figure':
       case 'array':
       case 'money':
+      case 'calendar':
         return block.caption ? [block.caption] : [];
       case 'clocks':
         return block.items.map((c) => c.caption);
@@ -166,6 +179,8 @@ export function lessonErrors(blocks: readonly LessonBlock[]): string[] {
       errors.push(
         `monnaie : ${block.values.join(', ')} n’est pas une suite de pièces et de billets`,
       );
+    if (block.kind === 'calendar' && !(block.month >= 1 && block.month <= 12))
+      errors.push(`calendrier : le mois ${block.month} n’est pas entre 1 et 12`);
     if (block.kind === 'base-ten' && (block.value < 1 || block.value > 999))
       errors.push(`matériel de numération : ${block.value} n’est pas entre 1 et 999`);
   }
