@@ -1,0 +1,8 @@
+# Piper et ses voix, installés par deploy/piper.sh dans $APP_HOME/piper.
+# Une ligne par fichier : empreinte SHA-256, adresse, destination (piper/ : l'archive est dépliée).
+# Voix : siwis (fr_FR) et alba (en_GB), qualité medium, données sous licence CC BY 4.0.
+a50cb45f355b7af1f6d758c1b360717877ba0a398cc8cbe6d2a7a3a26e225992 https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz piper/
+641d1ab097da2b81128c076810edb052b385decc8be3381814802a64a73baf99 https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx voices/fr_FR-siwis-medium.onnx
+39479916c2db192b5ac9764daddd0c744d83e023ad890c6976c0633ae4df8959 https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/fr/fr_FR/siwis/medium/fr_FR-siwis-medium.onnx.json voices/fr_FR-siwis-medium.onnx.json
+401369c4a81d09fdd86c32c5c864440811dbdcc66466cde2d64f7133a66ad03b https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/alba/medium/en_GB-alba-medium.onnx voices/en_GB-alba-medium.onnx
+aa965a2f02ecced632c2694e1fc72bbff6d65f265fab567ca945918c73dd89f4 https://huggingface.co/rhasspy/piper-voices/resolve/5041a7a49ae5b3a0f30e6837769eb03fdbb231bd/en/en_GB/alba/medium/en_GB-alba-medium.onnx.json voices/en_GB-alba-medium.onnx.json

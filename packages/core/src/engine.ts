@@ -94,5 +94,9 @@ export function questionSpeech(q: PluginQuestion): string {
   const body = getWidget(q.widget).speech(q as never);
   // Ce qu'il faut écouter dans une autre langue a sa propre voix (le bouton Écoute).
   const listen = q.listenLang ? undefined : q.listen;
-  return [mathToSpeech(q.instruction), listen, q.text, body].filter(Boolean).join('. ');
+  // Pas de point en trop après une phrase qui finit déjà (« COCHE la bonne image. », « … ? »).
+  return [mathToSpeech(q.instruction), listen, q.text, body]
+    .filter(Boolean)
+    .join('. ')
+    .replace(/([.!?…:])\.(?=\s|$)/g, '$1');
 }

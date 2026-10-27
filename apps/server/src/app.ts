@@ -13,10 +13,18 @@ import { authRoutes } from './routes/auth';
 import { childRoutes } from './routes/child';
 import type { Deps } from './routes/deps';
 import { familyRoutes } from './routes/family';
+import { ttsRoutes } from './routes/tts';
+import { createTts, type TtsService } from './tts/service';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
-export async function buildApp(config: Config, db: Db, options: { logger?: boolean } = {}) {
+export interface AppOptions {
+  logger?: boolean;
+  /** La voix du serveur ; par défaut, celle installée dans config.ttsDir (s'il y en a une). */
+  tts?: TtsService | null;
+}
+
+export async function buildApp(config: Config, db: Db, options: AppOptions = {}) {
   const app = Fastify({
     logger: options.logger === false ? false : { level: config.logLevel },
     trustProxy: config.trustProxy,
@@ -32,6 +40,8 @@ export async function buildApp(config: Config, db: Db, options: { logger?: boole
         imgSrc: ["'self'", 'data:'],
         fontSrc: ["'self'", 'data:'],
         connectSrc: ["'self'"],
+        // Les phrases lues par la voix du serveur sont jouées depuis une URL blob:.
+        mediaSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         frameAncestors: ["'none'"],
@@ -72,7 +82,9 @@ export async function buildApp(config: Config, db: Db, options: { logger?: boole
   });
 
   const sessions = new SessionStore(db);
-  const deps: Deps = { db, config, sessions };
+  const tts = options.tts !== undefined ? options.tts : createTts(config, app.log);
+  app.addHook('onClose', async () => tts?.close());
+  const deps: Deps = { db, config, sessions, tts };
 
   await app.register(
     async (api) => {
@@ -95,13 +107,14 @@ export async function buildApp(config: Config, db: Db, options: { logger?: boole
 
       api.get('/health', async () => {
         db.get(sql`select 1`);
-        return { status: 'ok', version: config.version };
+        return { status: 'ok', version: config.version, tts: tts ? 'on' : 'off' };
       });
 
       authRoutes(api, deps);
       familyRoutes(api, deps);
       childRoutes(api, deps);
       adminRoutes(api, deps);
+      ttsRoutes(api, deps);
     },
     { prefix: `${config.basePath}api` },
   );

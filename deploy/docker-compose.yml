@@ -13,8 +13,11 @@ services:
       HOST: 0.0.0.0
       PORT: '3000'
       DATA_DIR: /data
+      TTS_DIR: /piper
     ports:
       # 127.0.0.1 si le reverse proxy est sur la même machine ; sinon l'adresse du réseau interne.
       - '${BIND_ADDRESS:-127.0.0.1}:${HOST_PORT:-3000}:3000'
     volumes:
       - ${APP_HOME:-/opt/webappmaths}/data:/data
+      # La voix du serveur, installée par deploy/piper.sh.
+      - ${APP_HOME:-/opt/webappmaths}/piper:/piper:ro
