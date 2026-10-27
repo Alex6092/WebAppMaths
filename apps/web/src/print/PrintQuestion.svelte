@@ -21,7 +21,9 @@
 
 {#if question.text}<p class="text">{question.text}</p>{/if}
 <!-- Une dictée : l'adulte lit ce qui est écrit sur le corrigé. -->
-{#if question.listen && solution}<p class="listen">🔊 à lire : « {question.listen} »</p>{/if}
+{#if question.listen && solution}<p class="listen">
+    🔊 à lire{question.listenLang?.startsWith('en') ? ' en anglais' : ''} : « {question.listen} »
+  </p>{/if}
 
 {#if question.widget === 'column-op'}
   <PrintColumnOp {question} solution={key(question)} />

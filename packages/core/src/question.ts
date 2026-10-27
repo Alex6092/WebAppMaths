@@ -12,6 +12,8 @@ export interface QuestionBase {
   text?: string;
   /** Ce qu'il faut écouter pour répondre (la dictée) : lu à voix haute, il ne s'affiche pas. */
   listen?: string;
+  /** La langue de ce qu'il faut écouter (« en-GB » pour l'anglais) ; le français sinon. */
+  listenLang?: string;
 }
 
 /** Point d'une figure. Les coordonnées sont en centimètres, origine en haut à gauche. */
@@ -77,7 +79,9 @@ export type Picture =
   /** Valeurs en centimes : 50 pour la pièce de 50 c, 1000 pour le billet de 10 €. */
   | { kind: 'money'; values: number[] }
   /** Des emoji, dans l'ordre où ils sont rangés dans le cadre. */
-  | { kind: 'icons'; icons: string[] };
+  | { kind: 'icons'; icons: string[] }
+  /** La page d'un mois (1 à 12) ; les jours de marks sont entourés (un anniversaire). */
+  | { kind: 'calendar'; year: number; month: number; marks?: number[] };
 
 /** Opération posée en colonnes, avec cases de retenue. */
 export interface ColumnOpQuestion extends QuestionBase {

@@ -10,7 +10,10 @@ export function ttsAvailable(): boolean {
 
 function pickVoice(lang: string): SpeechSynthesisVoice | null {
   const prefix = lang.slice(0, 2).toLowerCase();
-  const voices = speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith(prefix));
+  const all = speechSynthesis.getVoices();
+  // L'accent demandé d'abord (en-GB), sinon la même langue (en-US).
+  const exact = all.filter((v) => v.lang.replace('_', '-').toLowerCase() === lang.toLowerCase());
+  const voices = exact.length ? exact : all.filter((v) => v.lang.toLowerCase().startsWith(prefix));
   return (
     voices.find((v) => PREFERRED.test(v.name)) ??
     voices.find((v) => v.localService) ??

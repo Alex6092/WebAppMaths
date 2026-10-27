@@ -92,5 +92,7 @@ export function questionSignature(plugin: AnyPlugin, q: PluginQuestion): string 
 export function questionSpeech(q: PluginQuestion): string {
   if (q.speech) return q.speech;
   const body = getWidget(q.widget).speech(q as never);
-  return [mathToSpeech(q.instruction), q.listen, q.text, body].filter(Boolean).join('. ');
+  // Ce qu'il faut écouter dans une autre langue a sa propre voix (le bouton Écoute).
+  const listen = q.listenLang ? undefined : q.listen;
+  return [mathToSpeech(q.instruction), listen, q.text, body].filter(Boolean).join('. ');
 }

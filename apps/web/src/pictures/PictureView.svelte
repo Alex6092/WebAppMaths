@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { Picture } from '@app/core';
+  import Calendar from './Calendar.svelte';
   import Coin from './Coin.svelte';
   import Dial from './Dial.svelte';
 
-  /** Une image d'énoncé : une horloge, des pièces et des billets, ou des objets à compter. Avec paper, en centimètres. */
+  /** Une image d'énoncé : une horloge, des pièces et des billets, des objets à compter ou un calendrier. Avec paper, en centimètres. */
   let {
     picture,
     paper = false,
@@ -25,6 +26,8 @@
   >
     <Dial minutes={picture.minutes} minuteLabels={picture.minuteLabels} />
   </svg>
+{:else if picture.kind === 'calendar'}
+  <Calendar year={picture.year} month={picture.month} marks={picture.marks} {paper} />
 {:else if picture.kind === 'icons'}
   <div class="icons" class:paper role="img" aria-label="Des objets à compter">
     {#each picture.icons as icon, i (i)}<span>{icon}</span>{/each}

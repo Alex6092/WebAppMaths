@@ -1,4 +1,5 @@
 import type { Domain, Notion } from '@app/core';
+import { THEMES, themeNotion } from './lib/mots';
 
 export const domains: Domain[] = [
   { id: 'anglais.vocabulaire', subject: 'anglais', title: 'Vocabulaire', icon: '🎨', order: 1 },
@@ -11,4 +12,4 @@ export const domains: Domain[] = [
   },
 ];
 
-export const notions: Notion[] = [];
+export const notions: Notion[] = THEMES.map(themeNotion);

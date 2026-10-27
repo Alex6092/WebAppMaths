@@ -27,19 +27,17 @@
   let { question, answer = $bindable(), phase, marks, solution, onvalidate }: Props = $props();
 
   // La dictée se lit toute seule quand la question arrive (pas quand le parent la revoit).
-  const DICTATION_RATE = 0.7;
+  // Un mot d'anglais se dit un peu moins lentement qu'une dictée.
+  const lang = $derived(question.listenLang ?? 'fr-FR');
+  const rate = $derived(question.listenLang ? 0.8 : 0.7);
+  const hear = () => speak(question.listen ?? '', lang, rate);
   $effect(() => {
-    const listen = question.listen;
-    if (listen && untrack(() => phase) === 'answering') speak(listen, 'fr-FR', DICTATION_RATE);
+    if (question.listen && untrack(() => phase) === 'answering') untrack(hear);
   });
 </script>
 
 {#if question.listen && ttsAvailable()}
-  <button
-    class="listen"
-    data-testid="listen"
-    onclick={() => speak(question.listen ?? '', 'fr-FR', DICTATION_RATE)}
-  >
+  <button class="listen" data-testid="listen" onclick={hear}>
     <span aria-hidden="true">🔊</span> Écoute
   </button>
 {/if}
