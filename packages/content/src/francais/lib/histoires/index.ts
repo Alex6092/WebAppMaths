@@ -1,8 +1,28 @@
 import type { McqChoice } from '@app/core';
 import { blancheNeige } from './blanche-neige';
+import { bonhommeNeige } from './bonhomme-neige';
 import { boucleDor } from './boucle-d-or';
+import { cabaneOrage } from './cabane-orage';
+import { cendrillon } from './cendrillon';
 import { cerfVolant } from './cerf-volant';
+import { chaperonRouge } from './chaperon-rouge';
+import { chatBotte } from './chat-botte';
+import { doudou } from './doudou';
+import { gateauMamie } from './gateau-mamie';
+import { hanselGretel } from './hansel-gretel';
+import { lievreTortue } from './lievre-tortue';
+import { lionSouris } from './lion-souris';
+import { lumierePhare } from './lumiere-phare';
+import { moufle } from './moufle';
+import { musiciensBreme } from './musiciens-breme';
+import { petitDragon } from './petit-dragon';
 import { robePapillons } from './robe-papillons';
+import { robotSami } from './robot-sami';
+import { rouleGalette } from './roule-galette';
+import { septChevreaux } from './sept-chevreaux';
+import { troisPetitsCochons } from './trois-petits-cochons';
+import { veterinaire } from './veterinaire';
+import { vilainPetitCanard } from './vilain-petit-canard';
 
 /**
  * Les histoires à écouter (« Langage oral ») : des contes du domaine public racontés à notre
@@ -64,7 +84,40 @@ export const LEVEL_RULES: Record<
 /** Une phrase dite d'un coup par la voix du serveur (qui lit 300 caractères au plus d'un trait). */
 export const MAX_SENTENCE = 300;
 
-export const STORIES: Story[] = [cerfVolant, boucleDor, robePapillons, blancheNeige];
+// Par niveau, dans l'ordre où on les ajoute.
+export const STORIES: Story[] = [
+  // Niveau 1 : CP, des réponses en images.
+  cerfVolant,
+  rouleGalette,
+  moufle,
+  doudou,
+  gateauMamie,
+  bonhommeNeige,
+  // Niveau 2 : CP, des histoires et des contes un peu plus longs.
+  boucleDor,
+  troisPetitsCochons,
+  lievreTortue,
+  septChevreaux,
+  petitDragon,
+  veterinaire,
+  // Niveau 3 : CE1, avec des « pourquoi ? ».
+  robePapillons,
+  chaperonRouge,
+  musiciensBreme,
+  lionSouris,
+  robotSami,
+  cabaneOrage,
+  // Niveau 4 : CE2, des contes plus longs.
+  blancheNeige,
+  chatBotte,
+  hanselGretel,
+  vilainPetitCanard,
+  cendrillon,
+  lumierePhare,
+];
+
+/** Histoires différentes par niveau, au moins : une séance n'en raconte pas deux fois une. */
+export const MIN_STORIES_PER_LEVEL = 6;
 
 /**
  * Coupe un paragraphe en phrases : après . ! ? … (et le » qui suit), devant une majuscule ou

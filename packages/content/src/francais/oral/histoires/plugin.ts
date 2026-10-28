@@ -2,6 +2,7 @@ import { defineLevels, definePlugin, storySentences, type ComprehensionItem } fr
 import {
   isWhy,
   LEVEL_RULES,
+  MIN_STORIES_PER_LEVEL,
   proofSentences,
   STORIES,
   storyChoice,
@@ -30,7 +31,7 @@ const IDS = ['a', 'b', 'c'];
 
 export default definePlugin<'comprehension', Params, Data>('comprehension', {
   id: 'francais.oral.histoires',
-  version: 1,
+  version: 2,
   title: 'Écoute une histoire',
   description: 'Écoute l’histoire jusqu’au bout, puis réponds aux questions.',
   icon: '🎧',
@@ -116,5 +117,7 @@ export default definePlugin<'comprehension', Params, Data>('comprehension', {
     return undefined;
   },
 
-  signature: (q) => `${q.data.story}:${q.data.picked.join(',')}`,
+  // Une séance ne raconte pas deux fois la même histoire, même avec d'autres questions.
+  signature: (q) => q.data.story,
+  minVariety: MIN_STORIES_PER_LEVEL,
 });
