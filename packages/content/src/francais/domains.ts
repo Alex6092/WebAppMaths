@@ -11,7 +11,45 @@ export const domains: Domain[] = [
   { id: 'francais.grammaire', subject: 'francais', title: 'Grammaire', icon: '🧱', order: 2 },
   { id: 'francais.orthographe', subject: 'francais', title: 'Orthographe', icon: '✏️', order: 3 },
   { id: 'francais.vocabulaire', subject: 'francais', title: 'Vocabulaire', icon: '📚', order: 4 },
-  { id: 'francais.lecture', subject: 'francais', title: 'Lecture', icon: '👀', order: 5 },
+  { id: 'francais.oral', subject: 'francais', title: 'Langage oral', icon: '👂', order: 5 },
+  { id: 'francais.lecture', subject: 'francais', title: 'Lecture', icon: '👀', order: 6 },
+];
+
+// Langage oral : écouter une histoire lue, et la comprendre.
+const ECOUTE_LESSON: LessonBlock[] = [
+  'Pour bien comprendre une histoire, je l’**écoute jusqu’au bout**, sans me presser. Je peux la **réécouter** autant de fois que je veux.',
+  'Pendant que j’écoute, je me pose des **questions** :',
+  {
+    kind: 'table',
+    columns: [
+      {
+        title: 'je me demande',
+        cells: ['**Qui ?**', '**Où ?**', '**Quand ?**', '**Quoi ?**', '**Pourquoi ?**'],
+      },
+      {
+        title: 'je cherche',
+        cells: ['les personnages', 'l’endroit', 'le moment', 'ce qui se passe', 'la raison'],
+      },
+    ],
+  },
+  {
+    kind: 'example',
+    lines: [
+      '*Dans « Boucle d’or et les trois ours » :*',
+      '**Qui ?** Boucle d’or et les trois ours.',
+      '**Où ?** Dans une maison, au milieu de la forêt.',
+      '**Quand ?** Un matin.',
+      '**Pourquoi** les ours vont-ils se promener ? La soupe est trop chaude.',
+    ],
+  },
+  'Pour un **pourquoi ?**, l’histoire ne dit pas toujours la réponse : je **réfléchis** avec ce que j’ai entendu.',
+  {
+    kind: 'example',
+    lines: [
+      '*Boucle d’or voit les trois ours et saute par la fenêtre.*',
+      'Pourquoi ? → Elle a **peur** des ours.',
+    ],
+  },
 ];
 
 // CONJ 1 : le verbe, forme infinitive et conjuguée.
@@ -388,4 +426,12 @@ export const notions: Notion[] = [
     lesson: LETTRE_T_LESSON,
   },
   ...CLASS_DICTATIONS.map(classDictationNotion),
+  {
+    id: 'francais.oral.comprendre-histoire',
+    domain: 'francais.oral',
+    title: 'Comprendre une histoire écoutée',
+    grades: ['CP', 'CE1', 'CE2'],
+    competence: 'Écouter pour comprendre un texte lu par un adulte.',
+    lesson: ECOUTE_LESSON,
+  },
 ];

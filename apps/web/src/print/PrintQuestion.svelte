@@ -4,6 +4,7 @@
   import PrintClassify from './PrintClassify.svelte';
   import PrintClock from './PrintClock.svelte';
   import PrintColumnOp from './PrintColumnOp.svelte';
+  import PrintComprehension from './PrintComprehension.svelte';
   import PrintFillBlank from './PrintFillBlank.svelte';
   import PrintMatch from './PrintMatch.svelte';
   import PrintMcq from './PrintMcq.svelte';
@@ -47,6 +48,8 @@
   <PrintMoney {question} solution={key(question)} />
 {:else if question.widget === 'match'}
   <PrintMatch {question} solution={key(question)} />
+{:else if question.widget === 'comprehension'}
+  <PrintComprehension {question} solution={key(question)} />
 {/if}
 
 <style>

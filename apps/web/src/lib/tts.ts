@@ -21,6 +21,8 @@ let serverDownUntil = 0;
 let audio: HTMLAudioElement | null = null;
 /** Le numéro de la lecture en cours : une lecture plus récente fait taire les précédentes. */
 let current = 0;
+/** Prévenu quand la lecture d'une histoire est coupée (pause, autre lecture, écran quitté). */
+let onInterrupt: (() => void) | null = null;
 
 export function ttsAvailable(): boolean {
   return typeof window !== 'undefined' && ('speechSynthesis' in window || 'Audio' in window);
@@ -103,18 +105,59 @@ function voicesReady(): Promise<void> {
   });
 }
 
-async function browserSpeak(text: string, lang: string, rate: number, id: number): Promise<void> {
-  if (!('speechSynthesis' in window)) return;
+/** La suite d'une histoire lue par la voix du navigateur. */
+interface Follow {
+  /** La phrase est dite (ou n'en finit pas de l'être) : on passe à la suivante. */
+  then: () => void;
+  /** La voix du navigateur ne dit rien : l'histoire ne peut pas s'écouter sur cet appareil. */
+  silent: () => void;
+}
+
+/** Sans début de lecture au bout de ce temps, la voix du navigateur ne marche pas. */
+const START_TIMEOUT_MS = 3000;
+
+async function browserSpeak(
+  text: string,
+  lang: string,
+  rate: number,
+  id: number,
+  follow?: Follow,
+): Promise<void> {
+  if (!('speechSynthesis' in window)) return follow?.silent();
   await voicesReady();
   if (id !== current) return;
   const voice = pickVoice(lang);
   // Sans voix de cette langue, le navigateur prendrait sa voix par défaut (française) : mieux
   // vaut se taire que d'apprendre un mauvais accent.
-  if (!voice && !lang.toLowerCase().startsWith('fr')) return;
+  if (!voice && !lang.toLowerCase().startsWith('fr')) return follow?.silent();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
   utterance.voice = voice;
   utterance.rate = rate;
+  if (follow) {
+    let started = false;
+    let done = false;
+    const finish = (step: () => void) => {
+      if (done || id !== current) return;
+      done = true;
+      clearTimeout(startTimer);
+      clearTimeout(endTimer);
+      step();
+    };
+    utterance.onstart = () => (started = true);
+    utterance.onend = () => finish(follow.then);
+    utterance.onerror = () => finish(started ? follow.then : follow.silent);
+    const startTimer = setTimeout(() => {
+      if (started || done || id !== current) return;
+      finish(follow.silent);
+      speechSynthesis.cancel();
+    }, START_TIMEOUT_MS);
+    // Certaines voix oublient de prévenir à la fin d'une longue phrase : on n'attend pas toujours.
+    const endTimer = setTimeout(
+      () => finish(follow.then),
+      START_TIMEOUT_MS + (text.length * 100) / rate,
+    );
+  }
   speechSynthesis.speak(utterance);
 }
 
@@ -240,8 +283,64 @@ export function speak(text: string, lang = 'fr-FR', rate = 0.9): void {
   next(0);
 }
 
+export interface PartsEvents {
+  /** La phrase i commence. */
+  onpart?: (i: number) => void;
+  /** La dernière phrase est finie. */
+  onend?: () => void;
+  /** La lecture est coupée avant la fin (pause, autre lecture, écran quitté). */
+  oninterrupt?: () => void;
+  /** Aucune voix ne marche sur cet appareil : la lecture s'arrête (onend sinon). */
+  onsilent?: () => void;
+}
+
+/**
+ * Lit une histoire phrase par phrase, à partir de la phrase `from` (pour reprendre après une
+ * pause). Chaque phrase est demandée au serveur pendant que les deux précédentes se disent :
+ * l'histoire ne remplit pas d'un coup la file de la voix du serveur.
+ */
+export function speakParts(
+  parts: readonly string[],
+  lang = 'fr-FR',
+  rate = 0.9,
+  from = 0,
+  events: PartsEvents = {},
+): void {
+  stopSpeaking();
+  if (!ttsAvailable() || from >= parts.length) return events.onend?.();
+  const id = current;
+  onInterrupt = events.oninterrupt ?? null;
+  const voice = serverVoice(lang);
+  const say = (i: number): void => {
+    if (id !== current) return;
+    if (i >= parts.length) {
+      onInterrupt = null;
+      return events.onend?.();
+    }
+    events.onpart?.(i);
+    const next = () => say(i + 1);
+    const silent = () => {
+      onInterrupt = null;
+      (events.onsilent ?? events.onend)?.();
+    };
+    const browser = () => void browserSpeak(parts[i]!, lang, rate, id, { then: next, silent });
+    if (!voice || Date.now() < serverDownUntil) return browser();
+    const sound = serverSound(voice, parts[i]!);
+    for (const ahead of parts.slice(i + 1, i + 3)) void serverSound(voice, ahead);
+    void sound.then((blob) => {
+      if (id !== current) return;
+      if (blob) play(blob, rate, id, browser, next);
+      else browser();
+    });
+  };
+  say(from);
+}
+
 export function stopSpeaking(): void {
   current++;
+  const interrupted = onInterrupt;
+  onInterrupt = null;
+  interrupted?.();
   audio?.pause();
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) speechSynthesis.cancel();
 }

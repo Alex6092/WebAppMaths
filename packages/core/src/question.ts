@@ -301,6 +301,31 @@ export interface MatchAnswer {
   links: (number | null)[][];
 }
 
+/** Une question sur l'histoire : une seule bonne réponse parmi les choix. */
+export interface ComprehensionItem {
+  /** « Où vivent les trois ours ? », ou une phrase suivie de « Vrai ou faux ? ». */
+  ask: string;
+  choices: McqChoice[];
+  /** La phrase de l'histoire qui donne la réponse (son rang, en comptant tous les paragraphes). */
+  proof: number;
+}
+/**
+ * Écouter une histoire, puis répondre à quelques questions. L'histoire est lue à voix haute ;
+ * elle ne s'affiche qu'après la correction, avec les phrases qui donnent les réponses surlignées.
+ */
+export interface ComprehensionQuestion extends QuestionBase {
+  widget: 'comprehension';
+  title: string;
+  icon?: string;
+  /** Les paragraphes de l'histoire, chacun découpé en phrases. */
+  story: string[][];
+  items: ComprehensionItem[];
+}
+export interface ComprehensionAnswer {
+  /** Le choix de chaque question ('' = pas encore répondu). */
+  selected: string[];
+}
+
 export type Question =
   | ColumnOpQuestion
   | NumberInputQuestion
@@ -312,7 +337,8 @@ export type Question =
   | OrderQuestion
   | ClockQuestion
   | MoneyQuestion
-  | MatchQuestion;
+  | MatchQuestion
+  | ComprehensionQuestion;
 export type WidgetId = Question['widget'];
 
 export interface AnswerMap {
@@ -327,6 +353,7 @@ export interface AnswerMap {
   clock: ClockAnswer;
   money: MoneyAnswer;
   match: MatchAnswer;
+  comprehension: ComprehensionAnswer;
 }
 
 export type QuestionOf<W extends WidgetId> = Extract<Question, { widget: W }>;

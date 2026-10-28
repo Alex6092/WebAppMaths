@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { masteryByNotion, notionMastery, pickMixPlugin, type AttemptRecord } from './mastery';
+import {
+  masteryByNotion,
+  mixablePlugins,
+  notionMastery,
+  pickMixPlugin,
+  type AttemptRecord,
+} from './mastery';
 import { definePlugin, type AnyPlugin } from './plugin';
 import { createRng } from './rng';
 
@@ -83,5 +89,11 @@ describe('mélange', () => {
     expect(weakCount).toBeGreaterThan(700);
     expect(pickMixPlugin(rng, [weak, strong], ['n1', 'n2'], masteries, 'weak').id).toBe('strong');
     expect(pickMixPlugin(rng, [weak], ['n1'], masteries, 'weak').id).toBe('weak');
+  });
+
+  it('laisse de côté un exercice trop long, sauf s’il n’y a que lui', () => {
+    const story = { ...make('story', 'n3'), inMix: false } as AnyPlugin;
+    expect(mixablePlugins([weak, story, strong]).map((p) => p.id)).toEqual(['weak', 'strong']);
+    expect(mixablePlugins([story]).map((p) => p.id)).toEqual(['story']);
   });
 });

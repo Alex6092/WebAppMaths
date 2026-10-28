@@ -5,6 +5,7 @@
   import Classify from './Classify.svelte';
   import Clock from './Clock.svelte';
   import ColumnOp from './ColumnOp.svelte';
+  import Comprehension from './Comprehension.svelte';
   import FillBlank from './FillBlank.svelte';
   import Geometry from './Geometry.svelte';
   import Match from './Match.svelte';
@@ -68,6 +69,8 @@
   <Money {question} bind:answer {phase} {marks} {solution} />
 {:else if question.widget === 'match'}
   <Match {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'comprehension'}
+  <Comprehension {question} bind:answer {phase} {marks} {solution} />
 {/if}
 
 <style>

@@ -101,6 +101,12 @@ export function masteryByNotion(
   return out;
 }
 
+/** Les exercices d'un mélange : sans ceux qui n'y vont pas, sauf s'il ne reste qu'eux. */
+export function mixablePlugins(plugins: readonly AnyPlugin[]): AnyPlugin[] {
+  const short = plugins.filter((p) => p.inMix !== false);
+  return short.length ? short : [...plugins];
+}
+
 /**
  * Exercice suivant d'un mélange : plus souvent ceux des notions les moins maîtrisées,
  * jamais deux fois de suite le même (quand il y a le choix).

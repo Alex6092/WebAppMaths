@@ -39,6 +39,11 @@ export interface ExercisePlugin<W extends WidgetId = WidgetId, P = unknown, D = 
   expectedLevel?: number;
   /** Nombre d'essais par question (2 par défaut). */
   maxTries?: number;
+  /**
+   * Faux pour un exercice trop long pour un mélange (une histoire à écouter) : il ne vient ni dans
+   * « Tout mélanger », ni dans le défi du jour, ni dans les révisions. Les devoirs le gardent.
+   */
+  inMix?: boolean;
   generate(ctx: GenerateContext<P>): PluginQuestion<W, D>;
   /** La bonne réponse : sert aux tests, au corrigé et à « voir la réponse ». */
   solve(q: PluginQuestion<W, D>): AnswerMap[W];
