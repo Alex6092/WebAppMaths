@@ -5,6 +5,7 @@ import {
   isWhy,
   LEVEL_RULES,
   MAX_SENTENCE,
+  MIN_STORIES_PER_LEVEL,
   proofSentences,
   splitSentences,
   STORIES,
@@ -82,9 +83,11 @@ describe.each(STORIES.map((story) => ({ story, id: story.id })))('histoire $id',
   });
 });
 
-it('a au moins une histoire à chaque niveau, et un identifiant différent pour chacune', () => {
-  const levels = new Set(STORIES.map((s) => s.level));
-  expect([...levels].sort()).toEqual(Object.keys(LEVEL_RULES).map(Number) as StoryLevel[]);
+it('a assez d’histoires à chaque niveau, et un identifiant différent pour chacune', () => {
+  for (const level of Object.keys(LEVEL_RULES).map(Number) as StoryLevel[]) {
+    const count = STORIES.filter((s) => s.level === level).length;
+    expect(count, `niveau ${level}`).toBeGreaterThanOrEqual(MIN_STORIES_PER_LEVEL);
+  }
   const ids = STORIES.map((s) => s.id);
   expect(new Set(ids).size).toBe(ids.length);
 });
