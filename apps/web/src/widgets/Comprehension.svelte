@@ -44,7 +44,7 @@
     stopSpeaking();
     playing = true;
     position = from;
-    speakParts(sentences, 'fr-FR', STORY_RATE, from, {
+    speakParts(sentences, question.lang ?? 'fr-FR', STORY_RATE, from, {
       onpart: (i) => (position = i),
       onend: () => {
         playing = false;
@@ -277,7 +277,12 @@
 {#if !read && (corrected || mute)}{@render storyText()}{/if}
 
 {#snippet storyText()}
-  <section class="text" class:reading={read} aria-label="Le texte de l’histoire">
+  <section
+    class="text"
+    class:reading={read}
+    aria-label="Le texte de l’histoire"
+    lang={question.lang}
+  >
     {#if !read}<h3>📖 L’histoire</h3>{/if}
     {#each paragraphs as paragraph (paragraph.first)}
       <p>
@@ -291,6 +296,12 @@
         {/each}
       </p>
     {/each}
+    {#if corrected && question.translation}
+      <details class="translation" lang="fr">
+        <summary>🇫🇷 L’histoire en français</summary>
+        {#each question.translation as paragraph, n (n)}<p>{paragraph}</p>{/each}
+      </details>
+    {/if}
   </section>
 {/snippet}
 
@@ -497,6 +508,18 @@
   .text p {
     margin: 0 0 10px;
   }
+  .translation {
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 2px dashed var(--primary-soft);
+    color: var(--text-soft);
+  }
+  .translation summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 6px;
+  }
   .proof {
     background: #fff59d;
     border-radius: 4px;
@@ -629,6 +652,12 @@
     .choices:not(.short) .choice {
       justify-content: flex-start;
       text-align: left;
+    }
+    /* Trois réponses courtes côte à côte : l'image au-dessus du mot, pour qu'elles tiennent. */
+    .choices.short .choice {
+      flex-direction: column;
+      gap: 2px;
+      padding: 8px 4px;
     }
     .text {
       font-size: 1.05rem;

@@ -169,12 +169,12 @@ export function typography(text: string): string {
 }
 
 /** Les paragraphes de l'histoire, chacun découpé en phrases. */
-export function storyParagraphs(story: Story): string[][] {
+export function storyParagraphs(story: Pick<Story, 'text'>): string[][] {
   return story.text.map((p) => splitSentences(p));
 }
 
 /** Les rangs des phrases (comptées à la suite) où se trouve le morceau `proof`. */
-export function proofSentences(story: Story, proof: string): number[] {
+export function proofSentences(story: Pick<Story, 'text'>, proof: string): number[] {
   return storyParagraphs(story)
     .flat()
     .flatMap((sentence, i) => (sentence.includes(proof) ? [i] : []));

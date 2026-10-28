@@ -13,7 +13,10 @@ async function fakeVoice(page: Page) {
         constructor(readonly text: string) {}
       },
       speechSynthesis: {
-        getVoices: () => [{ name: 'Test', lang: 'fr-FR', localService: true }],
+        getVoices: () => [
+          { name: 'Test', lang: 'fr-FR', localService: true },
+          { name: 'Test EN', lang: 'en-GB', localService: true },
+        ],
         speak(u: Utterance) {
           said.push(u.text);
           setTimeout(() => u.onstart?.(), 10);
@@ -131,4 +134,37 @@ test('un enfant écoute une histoire et remet ses événements dans l’ordre', 
   await expect(text).toBeVisible();
   await expect(text.locator('.tag.step').first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Suivant|Terminer/ })).toBeVisible();
+});
+
+test('un enfant écoute une histoire en anglais, répond et lit sa traduction', async ({ page }) => {
+  await fakeVoice(page);
+  await page.goto('/');
+  await page.getByLabel('E-mail').fill(E2E_ACCOUNT.email);
+  await page.getByLabel('Mot de passe').fill(E2E_ACCOUNT.password);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await page.getByRole('button', { name: new RegExp(E2E_ACCOUNT.child) }).click();
+  await page.getByRole('button', { name: /Anglais/ }).click();
+  await page.getByRole('button', { name: /Une histoire en anglais/ }).click();
+
+  const items = page.getByTestId('story-item');
+  await expect(items.first()).toBeVisible();
+  // L'histoire est dite par la voix anglaise.
+  const said = await page.evaluate(() => (window as unknown as { __said: string[] }).__said);
+  expect(said.some((s) => / is | the /.test(s))).toBe(true);
+
+  for (let i = 0; i < (await items.count()); i++)
+    await items.nth(i).getByRole('radio').first().click();
+  await page.getByRole('button', { name: 'Valider ✓' }).click();
+  if (await page.getByRole('button', { name: 'Valider ✓' }).isVisible()) {
+    for (let i = 0; i < (await items.count()); i++) {
+      const choices = items.nth(i).getByRole('radio');
+      if (await choices.first().isEnabled()) await choices.nth(1).click();
+    }
+    await page.getByRole('button', { name: 'Valider ✓' }).click();
+  }
+
+  const text = page.getByRole('region', { name: 'Le texte de l’histoire' });
+  await expect(text).toHaveAttribute('lang', 'en-GB');
+  await text.getByText('L’histoire en français').click();
+  await expect(text.locator('.translation p').first()).toBeVisible();
 });
