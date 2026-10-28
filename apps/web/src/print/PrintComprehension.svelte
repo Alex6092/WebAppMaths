@@ -3,7 +3,8 @@
 
   /**
    * Une histoire sur papier : l'adulte la lit (son texte est sur le corrigé, les phrases qui
-   * donnent les réponses surlignées), l'enfant coche une réponse par question.
+   * donnent les réponses surlignées), ou l'enfant la lit seul (Lecture) ; il coche une réponse
+   * par question.
    */
   let {
     question,
@@ -21,13 +22,18 @@
     question.items.flatMap((item, i) => (item.proof === s ? [i + 1] : []));
 </script>
 
-<p class="told">🎧 L’adulte lit l’histoire « {question.title} ».</p>
-{#if solution}
-  <div class="story">
+{#if question.read}
+  <p class="told">📖 {question.title}</p>
+{:else}
+  <p class="told">🎧 L’adulte lit l’histoire « {question.title} ».</p>
+{/if}
+<!-- À lire seul, le texte est sur la fiche de l'enfant ; à écouter, sur le corrigé pour l'adulte. -->
+{#if solution || question.read}
+  <div class="story" class:key-story={solution !== null}>
     {#each paragraphs as paragraph (paragraph.first)}
       <p>
         {#each paragraph.sentences as sentence, k (k)}
-          {@const proofs = proofsOf(paragraph.first + k)}
+          {@const proofs = solution ? proofsOf(paragraph.first + k) : []}
           {k ? ' ' : ''}<span class:proof={proofs.length > 0}
             >{sentence}{#if proofs.length}<sup class="key"> ({proofs.join(', ')})</sup>{/if}</span
           >
@@ -61,13 +67,21 @@
     font-size: 13pt;
     font-weight: 700;
   }
+  /* Sur la fiche de l'enfant (Lecture), le texte en grand ; sur le corrigé, cadre rouge. */
   .story {
     margin: 0 0 0.3cm;
     padding: 0.25cm 0.35cm;
-    border: 1px solid #d32f2f;
+    border: 1px solid #888;
     border-radius: 4px;
     font-size: 11pt;
     line-height: 1.45;
+  }
+  .story:not(.key-story) {
+    font-size: 13pt;
+    line-height: 1.6;
+  }
+  .story.key-story {
+    border-color: #d32f2f;
   }
   .story p {
     margin: 0 0 0.15cm;

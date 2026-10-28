@@ -15,6 +15,21 @@ export const domains: Domain[] = [
   { id: 'francais.lecture', subject: 'francais', title: 'Lecture', icon: '👀', order: 6 },
 ];
 
+// Lecture : lire seul un texte, et le comprendre.
+const LECTURE_LESSON: LessonBlock[] = [
+  'Pour bien comprendre un texte, je le **lis en entier** une première fois, tranquillement.',
+  'Ensuite, je lis la **question** et je **cherche dans le texte** la phrase qui donne la réponse. Le texte reste là : je peux le **relire** autant que je veux !',
+  'Les **mots de la question** m’aident : souvent, ils sont aussi dans la phrase du texte.',
+  {
+    kind: 'example',
+    lines: [
+      '*Zoé va à la plage __avec sa maman__.*',
+      'Avec qui Zoé va-t-elle à la plage ? → **avec sa maman**',
+    ],
+  },
+  'Pour un **pourquoi ?**, la réponse n’est pas toujours écrite : je **réfléchis** avec ce que j’ai lu.',
+];
+
 // Langage oral : écouter une histoire lue, et la comprendre.
 const ECOUTE_LESSON: LessonBlock[] = [
   'Pour bien comprendre une histoire, je l’**écoute jusqu’au bout**, sans me presser. Je peux la **réécouter** autant de fois que je veux.',
@@ -433,5 +448,13 @@ export const notions: Notion[] = [
     grades: ['CP', 'CE1', 'CE2'],
     competence: 'Écouter pour comprendre un texte lu par un adulte.',
     lesson: ECOUTE_LESSON,
+  },
+  {
+    id: 'francais.lecture.comprendre-texte',
+    domain: 'francais.lecture',
+    title: 'Comprendre un texte lu seul',
+    grades: ['CP', 'CE1', 'CE2'],
+    competence: 'Lire et comprendre un texte.',
+    lesson: LECTURE_LESSON,
   },
 ];

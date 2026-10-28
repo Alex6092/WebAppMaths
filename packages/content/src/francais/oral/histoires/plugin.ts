@@ -1,16 +1,12 @@
-import { defineLevels, definePlugin, storySentences, type ComprehensionItem } from '@app/core';
+import { defineLevels, definePlugin } from '@app/core';
+import { MIN_STORIES_PER_LEVEL, type StoryLevel } from '../../lib/histoires';
 import {
-  isWhy,
-  LEVEL_RULES,
-  MIN_STORIES_PER_LEVEL,
-  proofSentences,
-  STORIES,
-  storyChoice,
-  storyParagraphs,
-  typography,
-  type StoryLevel,
-  type StoryQuestion,
-} from '../../lib/histoires';
+  explainStory,
+  solveStory,
+  storyExercise,
+  storyInvariants,
+  type StoryData,
+} from '../../lib/histoires/exercice';
 
 // Écouter une histoire, puis répondre à quelques questions. L'histoire et ses questions forment
 // une seule question de l'app : la suivante raconte une autre histoire.
@@ -19,17 +15,7 @@ interface Params {
   level: StoryLevel;
 }
 
-interface Data {
-  story: string;
-  /** Les questions de l'histoire posées, dans l'ordre de l'histoire. */
-  picked: number[];
-  /** Le bon choix de chaque question. */
-  answers: string[];
-}
-
-const IDS = ['a', 'b', 'c'];
-
-export default definePlugin<'comprehension', Params, Data>('comprehension', {
+export default definePlugin<'comprehension', Params, StoryData>('comprehension', {
   id: 'francais.oral.histoires',
   version: 2,
   title: 'Écoute une histoire',
@@ -46,76 +32,15 @@ export default definePlugin<'comprehension', Params, Data>('comprehension', {
     { label: 'Contes plus longs', grade: 'CE2', params: { level: 4 } },
   ]),
 
-  generate({ rng, params }) {
-    const rules = LEVEL_RULES[params.level];
-    const story = rng.pick(STORIES.filter((s) => s.level === params.level));
-    const proof = (i: number) => proofSentences(story, story.questions[i]!.proof)[0]!;
-    const order = rng.shuffle(story.questions.map((_, i) => i));
-    const picked = order.slice(0, rules.questions);
-    // Au CE1 et au CE2, au moins un « pourquoi ? ».
-    if (rules.why && !picked.some((i) => isWhy(story.questions[i]!))) {
-      picked[picked.length - 1] = order.find((i) => isWhy(story.questions[i]!))!;
-    }
-    // Les questions suivent l'ordre de l'histoire.
-    picked.sort((a, b) => proof(a) - proof(b) || a - b);
-
-    const items: ComprehensionItem[] = [];
-    const answers: string[] = [];
-    for (const i of picked) {
-      const q: StoryQuestion = story.questions[i]!;
-      if ('claim' in q) {
-        items.push({
-          ask: typography(`« ${q.claim} »`),
-          choices: [storyChoice('✅ Vrai', 'a'), storyChoice('❌ Faux', 'b')],
-          proof: proof(i),
-        });
-        answers.push(q.truth ? 'a' : 'b');
-        continue;
-      }
-      const labels = rng.shuffle([q.answer, ...q.wrong]);
-      items.push({
-        ask: typography(q.ask),
-        choices: labels.map((label, k) => storyChoice(label, IDS[k]!)),
-        proof: proof(i),
-      });
-      answers.push(IDS[labels.indexOf(q.answer)]!);
-    }
-
-    return {
-      widget: 'comprehension',
+  generate: ({ rng, params }) =>
+    storyExercise(rng, params.level, {
       instruction: 'ÉCOUTE l’histoire, puis RÉPONDS aux questions.',
-      title: story.title,
-      icon: story.icon,
-      story: storyParagraphs(story).map((p) => p.map(typography)),
-      items,
-      data: { story: story.id, picked, answers },
-    };
-  },
+      read: false,
+    }),
 
-  solve: (q) => ({ selected: [...q.data.answers] }),
-
-  // La première question ratée, avec la phrase de l'histoire qui donne la réponse.
-  explain(q, answer) {
-    const i = q.items.findIndex((_, k) => answer.selected[k] !== q.data.answers[k]);
-    const item = q.items[i];
-    if (!item) return undefined;
-    const right = item.choices.find((c) => c.id === q.data.answers[i])?.label;
-    return `Question ${i + 1} : la réponse est « ${right} ». Dans l’histoire : « ${storySentences(q)[item.proof]} »`;
-  },
-
-  invariants(q, { params }) {
-    const rules = LEVEL_RULES[params.level];
-    const story = STORIES.find((s) => s.id === q.data.story);
-    if (story?.level !== params.level) return 'histoire d’un autre niveau';
-    if (q.items.length !== rules.questions) return `${q.items.length} questions`;
-    if (rules.why && !q.data.picked.some((i) => isWhy(story.questions[i]!)))
-      return 'pas de « pourquoi ? »';
-    const proofs = q.items.map((item) => item.proof);
-    if (proofs.some((p, k) => k > 0 && p < proofs[k - 1]!)) return 'questions dans le désordre';
-    if (rules.pictures && q.items.some((item) => item.choices.some((c) => !c.icon)))
-      return 'un choix sans image au CP';
-    return undefined;
-  },
+  solve: solveStory,
+  explain: explainStory,
+  invariants: (q, { params }) => storyInvariants(q, params.level),
 
   // Une séance ne raconte pas deux fois la même histoire, même avec d'autres questions.
   signature: (q) => q.data.story,

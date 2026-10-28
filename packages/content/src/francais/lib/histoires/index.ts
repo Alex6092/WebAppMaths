@@ -10,6 +10,7 @@ import { chatBotte } from './chat-botte';
 import { doudou } from './doudou';
 import { gateauMamie } from './gateau-mamie';
 import { hanselGretel } from './hansel-gretel';
+import { chatLeo, piqueNique, plage, potager, veloRouge, zoo } from './lecture-cp';
 import { lievreTortue } from './lievre-tortue';
 import { lionSouris } from './lion-souris';
 import { lumierePhare } from './lumiere-phare';
@@ -52,7 +53,8 @@ export type StoryQuestion =
       proof: string;
     };
 
-export type StoryLevel = 1 | 2 | 3 | 4;
+/** 0 : les petits textes de la Lecture au CP, qui ne s'écoutent pas ; 1 à 4 : les histoires. */
+export type StoryLevel = 0 | 1 | 2 | 3 | 4;
 
 export interface Story {
   id: string;
@@ -73,6 +75,8 @@ export const LEVEL_RULES: Record<
   { minChars: number; maxChars: number; questions: number; why: boolean; pictures: boolean }
 > = {
   // CP : une histoire courte, des questions dont les réponses sont des images.
+  // Lecture au CP : un petit texte à déchiffrer seul.
+  0: { minChars: 150, maxChars: 450, questions: 3, why: false, pictures: true },
   1: { minChars: 300, maxChars: 750, questions: 3, why: false, pictures: true },
   2: { minChars: 700, maxChars: 1400, questions: 4, why: false, pictures: false },
   // CE1 : au moins une question « pourquoi ? ».
@@ -86,6 +90,13 @@ export const MAX_SENTENCE = 300;
 
 // Par niveau, dans l'ordre où on les ajoute.
 export const STORIES: Story[] = [
+  // Niveau 0 : les petits textes de la Lecture au CP.
+  chatLeo,
+  plage,
+  potager,
+  piqueNique,
+  veloRouge,
+  zoo,
   // Niveau 1 : CP, des réponses en images.
   cerfVolant,
   rouleGalette,
@@ -161,5 +172,7 @@ export const isWhy = (q: StoryQuestion) => 'why' in q && q.why === true;
 
 /** Les phrases des histoires telles que l'app les fait dire : le serveur les prépare à l'avance. */
 export function storySpeechTexts(): string[] {
-  return STORIES.flatMap((story) => storyParagraphs(story).flat().map(typography));
+  return STORIES.filter((story) => story.level > 0).flatMap((story) =>
+    storyParagraphs(story).flat().map(typography),
+  );
 }

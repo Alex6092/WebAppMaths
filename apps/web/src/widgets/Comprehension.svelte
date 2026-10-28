@@ -19,7 +19,10 @@
   const locked = $derived(isLocked(phase));
   /** La correction est finie : l'histoire s'affiche, avec les phrases qui donnent les réponses. */
   const corrected = $derived(phase === 'success' || phase === 'revealed' || phase === 'review');
-  const voice = ttsAvailable();
+  /** Un texte à lire seul (Lecture) : il s'affiche dès le début, et rien ne le lit à voix haute. */
+  const read = untrack(() => question.read === true);
+  /** Le lecteur de l'histoire (à l'écoute seulement). */
+  const voice = !read && ttsAvailable();
 
   /** La phrase en cours, ou celle où reprendre après une pause. */
   let position = $state(0);
@@ -27,7 +30,7 @@
   /** L'histoire a été écoutée jusqu'au bout une fois : les questions apparaissent. */
   let heard = $state(untrack(() => phase !== 'answering') || !voice);
   /** Aucune voix ne marche sur cet appareil : l'histoire se lit à l'écran. */
-  let mute = $state(!voice);
+  let mute = $state(!read && !voice);
   const progress = $derived(
     playing
       ? position / sentences.length
@@ -145,6 +148,8 @@
   {/if}
 </div>
 
+{#if read}{@render storyText()}{/if}
+
 {#if heard}
   <ol class="items">
     {#each question.items as item, i (i)}
@@ -152,7 +157,7 @@
         <div class="ask">
           <span class="number">{i + 1}</span>
           <span class="ask-text">{item.ask}</span>
-          {#if voice}
+          {#if ttsAvailable()}
             <button
               class="speak"
               onclick={() => speak(itemSpeech(item))}
@@ -185,9 +190,11 @@
   </ol>
 {/if}
 
-{#if corrected || mute}
-  <section class="text" aria-label="Le texte de l’histoire">
-    <h3>📖 L’histoire</h3>
+{#if !read && (corrected || mute)}{@render storyText()}{/if}
+
+{#snippet storyText()}
+  <section class="text" class:reading={read} aria-label="Le texte de l’histoire">
+    {#if !read}<h3>📖 L’histoire</h3>{/if}
     {#each paragraphs as paragraph (paragraph.first)}
       <p>
         {#each paragraph.sentences as sentence, k (k)}
@@ -199,7 +206,7 @@
       </p>
     {/each}
   </section>
-{/if}
+{/snippet}
 
 <style>
   .story {
@@ -392,6 +399,11 @@
     font-size: 1.2rem;
     line-height: 1.6;
   }
+  /* Le texte à lire seul : plus grand, bien aéré, comme dans un livre de lecture. */
+  .text.reading {
+    font-size: 1.4rem;
+    line-height: 1.8;
+  }
   h3 {
     margin: 0 0 6px;
     color: var(--primary-dark);
@@ -438,6 +450,10 @@
     .text {
       font-size: 1.05rem;
       padding: 12px 16px;
+    }
+    .text.reading {
+      font-size: 1.2rem;
+      line-height: 1.7;
     }
   }
 </style>

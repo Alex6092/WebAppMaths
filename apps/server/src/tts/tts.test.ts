@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app';
 import { loadConfig } from '../config';
 import { openDb } from '../db/client';
@@ -91,8 +91,8 @@ describe('service de voix', () => {
     const tts = setup(1, 1);
     const first = tts.speak('fr', 'LENT un');
     const second = tts.speak('fr', 'LENT deux');
-    await new Promise((r) => setTimeout(r, 20));
-    expect(tts.load).toEqual({ running: 1, waiting: 1 });
+    // Chaque phrase passe d'abord par le cache (le disque) : on attend qu'elles soient en file.
+    await vi.waitFor(() => expect(tts.load).toEqual({ running: 1, waiting: 1 }));
     await expect(tts.speak('fr', 'LENT trois')).rejects.toBeInstanceOf(TtsBusyError);
     await Promise.all([first, second]);
     expect(made()).toHaveLength(2);
@@ -119,6 +119,7 @@ describe('préparation des histoires', () => {
   it('laisse passer d’abord les enfants qui écoutent', async () => {
     const tts = setup(1);
     const child = tts.speak('fr', 'LENT la consigne');
+    await vi.waitFor(() => expect(tts.load.running).toBe(1));
     const warming = warmSpeech(tts, 'fr', ['Il était une fois.'], { idleMs: 20 });
     await child;
     await warming;
