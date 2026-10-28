@@ -58,8 +58,7 @@ export const comprehensionWidget: WidgetDef<'comprehension'> = {
       ...(correct
         ? {}
         : {
-            feedback:
-              'Ce qui est en rouge n’est pas juste. Réécoute l’histoire si tu veux, et réessaie ! 💪',
+            feedback: `Ce qui est en rouge n’est pas juste. ${q.read ? 'Relis le texte' : 'Réécoute l’histoire'} si tu veux, et réessaie ! 💪`,
           }),
     };
   },

@@ -43,6 +43,10 @@ describe('écouter une histoire', () => {
     const half = comprehensionWidget.compare(story, expected, { selected: ['b', 'c'] });
     expect(half).toMatchObject({ correct: false, score: 0.5, marks: { 0: 'ok', 1: 'wrong' } });
     expect(half.feedback).toMatch(/Réécoute/);
+    const read = { ...story, read: true };
+    expect(comprehensionWidget.compare(read, expected, { selected: ['b', 'c'] }).feedback).toMatch(
+      /Relis le texte/,
+    );
   });
 
   it('garde les bonnes réponses pour le deuxième essai', () => {
