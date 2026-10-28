@@ -132,7 +132,10 @@ validation, correction), son affichage dans `apps/web/src/widgets/`.
 Les histoires de « Écoute une histoire » (Langage oral) sont dans
 `packages/content/src/francais/lib/histoires/`, une par fichier, puis ajoutées à `STORIES` dans
 `index.ts`. Une histoire a un niveau (1 et 2 au CP, 3 au CE1, 4 au CE2), ses paragraphes et une
-liste de questions, dont l'exercice tire quelques-unes à chaque fois :
+liste de questions, dont l'exercice tire quelques-unes à chaque fois. « Lis et comprends »
+(Lecture) reprend les mêmes histoires une classe plus tard (niveau 2 au CE1, 3 au CE2) ; au CP,
+elle a ses propres petits textes, de niveau 0, dans `lecture-cp.ts`. Il faut au moins six
+histoires par niveau :
 
 ```ts
 {

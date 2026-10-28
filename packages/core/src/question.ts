@@ -319,6 +319,8 @@ export interface ComprehensionQuestion extends QuestionBase {
   icon?: string;
   /** Les paragraphes de l'histoire, chacun découpé en phrases. */
   story: string[][];
+  /** Un texte à lire seul (Lecture) : affiché dès le début, sans voix. Sinon, il s'écoute. */
+  read?: boolean;
   items: ComprehensionItem[];
 }
 export interface ComprehensionAnswer {

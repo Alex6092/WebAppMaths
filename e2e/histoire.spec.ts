@@ -63,3 +63,37 @@ test('un enfant écoute une histoire, répond aux questions et la relit corrigé
   await expect(text.locator('.proof').first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Suivant|Terminer/ })).toBeVisible();
 });
+
+test('un enfant lit un texte seul, répond aux questions et voit les phrases-réponses', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByLabel('E-mail').fill(E2E_ACCOUNT.email);
+  await page.getByLabel('Mot de passe').fill(E2E_ACCOUNT.password);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await page.getByRole('button', { name: new RegExp(E2E_ACCOUNT.child) }).click();
+  await page.getByRole('button', { name: /Français/ }).click();
+  await page.getByRole('button', { name: /Lis et comprends/ }).click();
+
+  // Le texte et les questions sont là tout de suite, sans lecteur ni voix.
+  const text = page.getByRole('region', { name: 'Le texte de l’histoire' });
+  await expect(text).toBeVisible();
+  await expect(page.getByTestId('story-listen')).toHaveCount(0);
+  const items = page.getByTestId('story-item');
+  await expect(items.first()).toBeVisible();
+  await expect(text.locator('.proof')).toHaveCount(0);
+
+  for (let i = 0; i < (await items.count()); i++)
+    await items.nth(i).getByRole('radio').first().click();
+  await page.getByRole('button', { name: 'Valider ✓' }).click();
+  if (await page.getByRole('button', { name: 'Valider ✓' }).isVisible()) {
+    for (let i = 0; i < (await items.count()); i++) {
+      const choices = items.nth(i).getByRole('radio');
+      if (await choices.first().isEnabled()) await choices.nth(1).click();
+    }
+    await page.getByRole('button', { name: 'Valider ✓' }).click();
+  }
+
+  await expect(text.locator('.proof').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Suivant|Terminer/ })).toBeVisible();
+});
