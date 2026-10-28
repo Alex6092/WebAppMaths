@@ -7,7 +7,7 @@ import { ensureAdminInvitation } from './services/invitations';
 
 const config = loadConfig();
 const db = openDb(join(config.dataDir, 'app.db'));
-const app = await buildApp(config, db);
+const app = await buildApp(config, db, { warmSpeech: true });
 
 const adminCode = ensureAdminInvitation(db, config.adminInviteCode);
 if (adminCode) {

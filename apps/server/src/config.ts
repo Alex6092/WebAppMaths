@@ -27,6 +27,11 @@ export interface Config {
   ttsWorkers: number;
   /** La taille du cache des phrases, en Mo. */
   ttsCacheMb: number;
+  /**
+   * Connexions, inscriptions et déverrouillages permis par quart d'heure et par adresse IP (10).
+   * Les tests de bout en bout, qui se connectent tous depuis la même machine, en demandent plus.
+   */
+  authAttempts: number;
 }
 
 export function normalizeBasePath(raw: string | undefined): string {
@@ -76,5 +81,6 @@ export function loadConfig(env = process.env): Config {
     // Un cœur pour l'app, les autres pour les voix (3 au plus).
     ttsWorkers: Number(env.TTS_WORKERS ?? Math.max(1, Math.min(3, cpus().length - 1))),
     ttsCacheMb: Number(env.TTS_CACHE_MB ?? 500),
+    authAttempts: Number(env.AUTH_ATTEMPTS ?? 10),
   };
 }

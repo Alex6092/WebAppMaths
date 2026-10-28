@@ -10,6 +10,7 @@ import { ensureAdminInvitation } from '../services/invitations';
 import { TtsCache } from './cache';
 import { TtsBusyError } from './pool';
 import { createTts, speechText, VOICES, type TtsService } from './service';
+import { warmSpeech } from './warm';
 
 const FAKE = fileURLToPath(new URL('./fake-piper.mjs', import.meta.url));
 
@@ -101,6 +102,38 @@ describe('service de voix', () => {
     const tts = setup(1);
     await expect(tts.speak('fr', 'PLANTE')).rejects.toThrow(/arrêté/);
     expect((await tts.speak('fr', 'Encore là ?')).toString()).toContain('Encore là ?');
+  });
+});
+
+describe('préparation des histoires', () => {
+  it('fabrique une fois chaque phrase, et passe celles déjà prêtes', async () => {
+    const tts = setup(1);
+    await tts.speak('fr', 'Il était une fois.');
+    const texts = ['Il était une fois.', 'Trois ours.', 'Trois ours.', 'Fin.'];
+    expect(await warmSpeech(tts, 'fr', texts)).toBe(2);
+    expect(made()).toHaveLength(3);
+    expect(await warmSpeech(tts, 'fr', texts)).toBe(0);
+    expect(await tts.has('fr', 'Fin.')).toBe(true);
+  });
+
+  it('laisse passer d’abord les enfants qui écoutent', async () => {
+    const tts = setup(1);
+    const child = tts.speak('fr', 'LENT la consigne');
+    const warming = warmSpeech(tts, 'fr', ['Il était une fois.'], { idleMs: 20 });
+    await child;
+    await warming;
+    expect(made().map((line) => line.split('|')[1])).toEqual([
+      'lent la consigne',
+      'Il était une fois.',
+    ]);
+  });
+
+  it('s’arrête avec le serveur', async () => {
+    const tts = setup(1);
+    const stop = new AbortController();
+    stop.abort();
+    expect(await warmSpeech(tts, 'fr', ['Un.', 'Deux.'], { signal: stop.signal })).toBe(0);
+    expect(made()).toHaveLength(0);
   });
 });
 

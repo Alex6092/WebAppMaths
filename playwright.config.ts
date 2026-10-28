@@ -30,6 +30,8 @@ export default defineConfig({
       ADMIN_INVITE_CODE: 'E2E0-TEST-CODE',
       COOKIE_SECURE: 'false',
       LOG_LEVEL: 'warn',
+      // Chaque test se connecte, sur trois appareils, depuis la même adresse.
+      AUTH_ATTEMPTS: '100',
     },
   },
 });

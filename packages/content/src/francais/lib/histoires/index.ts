@@ -105,3 +105,8 @@ export function storyChoice(text: string, id: string): McqChoice {
 }
 
 export const isWhy = (q: StoryQuestion) => 'why' in q && q.why === true;
+
+/** Les phrases des histoires telles que l'app les fait dire : le serveur les prépare à l'avance. */
+export function storySpeechTexts(): string[] {
+  return STORIES.flatMap((story) => storyParagraphs(story).flat().map(typography));
+}

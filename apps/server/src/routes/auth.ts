@@ -14,10 +14,9 @@ const EMAIL = {
   pattern: '^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$',
 } as const;
 const PASSWORD = { type: 'string', minLength: 8, maxLength: 200 } as const;
-// Connexion, inscription, déverrouillage : 10 essais par quart d'heure et par adresse IP.
-const STRICT_LIMIT = { rateLimit: { max: 10, timeWindow: '15 minutes' } };
-
 export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps): void {
+  // Connexion, inscription, déverrouillage : 10 essais par quart d'heure et par adresse IP.
+  const STRICT_LIMIT = { rateLimit: { max: config.authAttempts, timeWindow: '15 minutes' } };
   const cookieOptions = {
     path: config.basePath,
     httpOnly: true,
