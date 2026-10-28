@@ -1,4 +1,6 @@
+import { generateQuestion, storySentences, type QuestionOf } from '@app/core';
 import { describe, expect, it } from 'vitest';
+import plugin from '../../oral/histoires/plugin';
 import {
   isWhy,
   LEVEL_RULES,
@@ -8,6 +10,7 @@ import {
   STORIES,
   storyChoice,
   storyParagraphs,
+  storySpeechTexts,
   type StoryLevel,
 } from './index';
 
@@ -84,4 +87,14 @@ it('a au moins une histoire à chaque niveau, et un identifiant différent pour 
   expect([...levels].sort()).toEqual(Object.keys(LEVEL_RULES).map(Number) as StoryLevel[]);
   const ids = STORIES.map((s) => s.id);
   expect(new Set(ids).size).toBe(ids.length);
+});
+
+it('donne au serveur, à préparer d’avance, les phrases mêmes que l’exercice fait dire', () => {
+  const prepared = new Set(storySpeechTexts());
+  for (let level = 1; level <= plugin.levels.length; level++) {
+    for (let seed = 1; seed <= 20; seed++) {
+      const q = generateQuestion(plugin, level, seed) as QuestionOf<'comprehension'>;
+      expect(storySentences(q).filter((s) => !prepared.has(s))).toEqual([]);
+    }
+  }
 });

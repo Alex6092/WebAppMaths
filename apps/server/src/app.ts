@@ -1,3 +1,4 @@
+import { storySpeechTexts } from '@app/content';
 import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
@@ -15,6 +16,7 @@ import type { Deps } from './routes/deps';
 import { familyRoutes } from './routes/family';
 import { ttsRoutes } from './routes/tts';
 import { createTts, type TtsService } from './tts/service';
+import { warmSpeech } from './tts/warm';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
@@ -22,6 +24,8 @@ export interface AppOptions {
   logger?: boolean;
   /** La voix du serveur ; par défaut, celle installée dans config.ttsDir (s'il y en a une). */
   tts?: TtsService | null;
+  /** Prépare en arrière-plan le son des histoires à écouter (au démarrage du vrai serveur). */
+  warmSpeech?: boolean;
 }
 
 export async function buildApp(config: Config, db: Db, options: AppOptions = {}) {
@@ -83,7 +87,16 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
 
   const sessions = new SessionStore(db);
   const tts = options.tts !== undefined ? options.tts : createTts(config, app.log);
-  app.addHook('onClose', async () => tts?.close());
+  const warming = new AbortController();
+  app.addHook('onClose', async () => {
+    warming.abort();
+    tts?.close();
+  });
+  if (tts && options.warmSpeech) {
+    app.addHook('onReady', async () => {
+      void warmSpeech(tts, 'fr', storySpeechTexts(), { log: app.log, signal: warming.signal });
+    });
+  }
   const deps: Deps = { db, config, sessions, tts };
 
   await app.register(

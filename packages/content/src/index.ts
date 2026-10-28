@@ -12,4 +12,6 @@ export const registry = new Registry(catalog, plugins);
 
 export { pluginPathIds };
 
+export { storySpeechTexts } from './francais/lib/histoires';
+
 export { PLACE_COLORS, type Place } from './maths/lib/couleurs';

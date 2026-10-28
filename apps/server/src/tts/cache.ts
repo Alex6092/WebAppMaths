@@ -28,6 +28,14 @@ export class TtsCache {
     }
   }
 
+  /** La phrase est-elle déjà là ? (sans compter comme une écoute) */
+  async has(key: string): Promise<boolean> {
+    return stat(this.path(key)).then(
+      (info) => info.isFile(),
+      () => false,
+    );
+  }
+
   async put(key: string, audio: Buffer): Promise<void> {
     const file = this.path(key);
     await mkdir(join(this.dir, key.slice(0, 2)), { recursive: true });

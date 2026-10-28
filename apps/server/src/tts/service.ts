@@ -59,11 +59,21 @@ export class TtsService {
     return this.pool.load;
   }
 
+  private key(voice: VoiceId, said: string): string {
+    return createHash('sha256').update(`${VOICES[voice]}\n${said}`).digest('hex');
+  }
+
+  /** La phrase est-elle déjà dans le cache ? */
+  has(voice: VoiceId, text: string): Promise<boolean> {
+    const said = speechText(text);
+    return said ? this.cache.has(this.key(voice, said)) : Promise.resolve(false);
+  }
+
   /** Le son de la phrase (WAV), depuis le cache ou fabriqué. */
   async speak(voice: VoiceId, text: string): Promise<Buffer> {
     const said = speechText(text);
     if (!said) throw new Error('Rien à dire.');
-    const key = createHash('sha256').update(`${VOICES[voice]}\n${said}`).digest('hex');
+    const key = this.key(voice, said);
     const cached = await this.cache.get(key);
     if (cached) return cached;
     const running = this.pending.get(key);
