@@ -30,11 +30,15 @@
 {#if question.read}
   <p class="told">📖 {question.title}</p>
 {:else}
-  <p class="told">🎧 L’adulte lit l’histoire « {question.title} ».</p>
+  <p class="told">
+    🎧 L’adulte lit l’histoire « {question.title} »{question.lang?.startsWith('en')
+      ? ' en anglais'
+      : ''}.
+  </p>
 {/if}
 <!-- À lire seul, le texte est sur la fiche de l'enfant ; à écouter, sur le corrigé pour l'adulte. -->
 {#if solution || question.read}
-  <div class="story" class:key-story={solution !== null}>
+  <div class="story" class:key-story={solution !== null} lang={question.lang}>
     {#each paragraphs as paragraph (paragraph.first)}
       <p>
         {#each paragraph.sentences as sentence, k (k)}
@@ -50,6 +54,11 @@
         {/each}
       </p>
     {/each}
+    {#if solution && question.translation}
+      <div class="translation" lang="fr">
+        {#each question.translation as paragraph, n (n)}<p>{paragraph}</p>{/each}
+      </div>
+    {/if}
   </div>
 {/if}
 {#if question.items.length}
@@ -109,6 +118,13 @@
   }
   .story p {
     margin: 0 0 0.15cm;
+  }
+  .translation {
+    margin-top: 0.15cm;
+    padding-top: 0.15cm;
+    border-top: 1px dashed #888;
+    font-style: italic;
+    color: #444;
   }
   .proof {
     background: #fff59d;

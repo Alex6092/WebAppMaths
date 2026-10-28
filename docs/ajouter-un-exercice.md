@@ -166,6 +166,12 @@ events: [
 ],
 ```
 
+Les petites histoires en anglais (« Une histoire en anglais », CE1 et CE2) sont dans
+`packages/content/src/anglais/lib/histoires/` : le texte en anglais, écrit avec les mots des
+thèmes de vocabulaire, sa traduction (`translation`, un paragraphe pour un paragraphe), et des
+questions en français dont toutes les réponses ont une image. Les chiffres s'écrivent avec 🔢
+plutôt qu'avec les touches 7️⃣ : la police d'emoji ne contient pas les chiffres.
+
 Un exercice trop long pour un mélange (comme une histoire) déclare `inMix: false` : il ne vient
 ni dans « Tout mélanger », ni dans le défi du jour, ni dans les révisions ; un devoir le garde.
 

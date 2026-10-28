@@ -1,4 +1,4 @@
-import { storySpeechTexts } from '@app/content';
+import { englishSpeechTexts, storySpeechTexts } from '@app/content';
 import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
@@ -94,7 +94,10 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
   });
   if (tts && options.warmSpeech) {
     app.addHook('onReady', async () => {
-      void warmSpeech(tts, 'fr', storySpeechTexts(), { log: app.log, signal: warming.signal });
+      const options = { log: app.log, signal: warming.signal };
+      void warmSpeech(tts, 'fr', storySpeechTexts(), options).then(() =>
+        warmSpeech(tts, 'en', englishSpeechTexts(), options),
+      );
     });
   }
   const deps: Deps = { db, config, sessions, tts };

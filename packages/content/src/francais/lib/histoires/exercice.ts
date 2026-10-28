@@ -13,13 +13,14 @@ import {
   storyChoice,
   storyParagraphs,
   typography,
+  type Story,
   type StoryLevel,
   type StoryQuestion,
 } from './index';
 
 /**
  * Une histoire et quelques-unes de ses questions : une question de l'app, à écouter (Langage
- * oral) ou à lire (Lecture). Les deux exercices tirent de la même façon.
+ * oral, anglais) ou à lire (Lecture). Les exercices tirent tous de la même façon.
  */
 
 export interface StoryData {
@@ -34,13 +35,38 @@ export type StoryExercise = PluginQuestion<'comprehension', StoryData>;
 
 const IDS = ['a', 'b', 'c'];
 
-export function storyExercise(
-  rng: Rng,
-  level: StoryLevel,
-  { instruction, read }: { instruction: string; read: boolean },
-): StoryExercise {
-  const rules = LEVEL_RULES[level];
+/** Ce qu'un niveau demande aux questions tirées. */
+export interface PickRules {
+  questions: number;
+  /** Au moins un « pourquoi ? ». */
+  why: boolean;
+  /** Toutes les réponses en images. */
+  pictures: boolean;
+}
+
+export interface StoryOptions {
+  instruction: string;
+  /** Un texte à lire seul (Lecture), plutôt qu'à écouter. */
+  read: boolean;
+  /** La langue de l'histoire (« en-GB ») : le français sinon. */
+  lang?: string;
+  /** L'histoire en français, montrée après la correction (une histoire en anglais). */
+  translation?: string[];
+}
+
+/** Une histoire des contes et des histoires en français, du niveau demandé. */
+export function storyExercise(rng: Rng, level: StoryLevel, options: StoryOptions): StoryExercise {
   const story = rng.pick(STORIES.filter((s) => s.level === level));
+  return storyQuestion(rng, story, LEVEL_RULES[level], options);
+}
+
+/** Les questions d'une histoire donnée, tirées selon les règles de son niveau. */
+export function storyQuestion(
+  rng: Rng,
+  story: Pick<Story, 'id' | 'title' | 'icon' | 'text' | 'questions'>,
+  rules: PickRules,
+  { instruction, read, lang, translation }: StoryOptions,
+): StoryExercise {
   const proof = (i: number) => proofSentences(story, story.questions[i]!.proof)[0]!;
   const order = rng.shuffle(story.questions.map((_, i) => i));
   const picked = order.slice(0, rules.questions);
@@ -80,6 +106,8 @@ export function storyExercise(
     icon: story.icon,
     story: storyParagraphs(story).map((p) => p.map(typography)),
     ...(read ? { read: true } : {}),
+    ...(lang ? { lang } : {}),
+    ...(translation ? { translation } : {}),
     items,
     data: { story: story.id, picked, answers },
   };
@@ -100,9 +128,17 @@ export function explainStory(q: StoryExercise, answer: ComprehensionAnswer): str
 }
 
 export function storyInvariants(q: StoryExercise, level: StoryLevel): string | undefined {
-  const rules = LEVEL_RULES[level];
   const story = STORIES.find((s) => s.id === q.data.story);
   if (story?.level !== level) return 'histoire d’un autre niveau';
+  return pickedInvariants(q, story, LEVEL_RULES[level]);
+}
+
+/** Les questions tirées respectent les règles du niveau. */
+export function pickedInvariants(
+  q: StoryExercise,
+  story: Pick<Story, 'questions'>,
+  rules: PickRules,
+): string | undefined {
   if (q.items.length !== rules.questions) return `${q.items.length} questions`;
   if (rules.why && !q.data.picked.some((i) => isWhy(story.questions[i]!)))
     return 'pas de « pourquoi ? »';

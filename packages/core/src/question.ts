@@ -321,6 +321,10 @@ export interface ComprehensionQuestion extends QuestionBase {
   story: string[][];
   /** Un texte à lire seul (Lecture) : affiché dès le début, sans voix. Sinon, il s'écoute. */
   read?: boolean;
+  /** La langue de l'histoire (« en-GB ») : le français sinon. Les questions restent en français. */
+  lang?: string;
+  /** L'histoire en français, paragraphe par paragraphe, montrée après la correction. */
+  translation?: string[];
   items: ComprehensionItem[];
   /** Des événements de l'histoire à remettre dans l'ordre, montrés mélangés. */
   events?: ComprehensionEvent[];
