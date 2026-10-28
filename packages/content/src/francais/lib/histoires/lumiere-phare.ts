@@ -13,6 +13,26 @@ export const lumierePhare: Story = {
     'Capucine se souvint alors de ce que son oncle lui avait montré l’été précédent : dans un placard, il gardait une ancienne lampe à pétrole et des miroirs, comme on en utilisait autrefois. Elle courut les chercher, en grimpant les marches quatre à quatre. Ses mains tremblaient un peu, mais elle ne laissa rien tomber. Ensemble, ils allumèrent la lampe et placèrent les miroirs tout autour, pour que sa lumière brille le plus loin possible.',
     'Vers minuit, ils aperçurent enfin trois petites lumières qui avançaient dans la nuit : c’étaient les bateaux de pêche, qui rentraient au port en suivant la lueur du phare. Le lendemain matin, les pêcheurs vinrent remercier Capucine avec un panier rempli de crabes et de crevettes. Son oncle lui posa la main sur l’épaule : « Tu feras une excellente gardienne de phare. »',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'Le vent se met à souffler très fort.', proof: 'le vent se mit à souffler' },
+    { text: 'La tempête coupe l’électricité de l’île.', proof: 'la tempête avait coupé' },
+    { text: 'Le vieux générateur refuse de démarrer.', proof: 'refusa de démarrer' },
+    {
+      text: 'Capucine va chercher une lampe à pétrole et des miroirs.',
+      proof: 'Elle courut les chercher',
+    },
+    { text: 'Ils placent les miroirs autour de la lampe.', proof: 'placèrent les miroirs' },
+    { text: 'Les bateaux de pêche rentrent au port.', proof: 'Vers minuit' },
+    {
+      text: 'Les pêcheurs offrent un panier de crabes à Capucine.',
+      proof: 'un panier rempli de crabes',
+    },
+    {
+      text: 'L’oncle Yann dit qu’elle fera une excellente gardienne.',
+      proof: 'une excellente gardienne',
+    },
+  ],
   questions: [
     {
       ask: 'Quel est le métier de l’oncle Yann ?',

@@ -35,7 +35,7 @@ export function getWidget<W extends WidgetId>(id: W): WidgetDef<W> {
 }
 
 export * from './column-op';
-export { itemSpeech, storySentences } from './comprehension';
+export { eventMark, itemSpeech, storySentences } from './comprehension';
 export { compareAssignments } from './assign';
 export { ACCENT_HINT, blankParts, compareBlanks } from './fill-blank';
 export { checkGeometry, DEFAULT_TOLERANCE, sameDrawing, type GeometryRules } from './geometry';

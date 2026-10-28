@@ -322,10 +322,21 @@ export interface ComprehensionQuestion extends QuestionBase {
   /** Un texte à lire seul (Lecture) : affiché dès le début, sans voix. Sinon, il s'écoute. */
   read?: boolean;
   items: ComprehensionItem[];
+  /** Des événements de l'histoire à remettre dans l'ordre, montrés mélangés. */
+  events?: ComprehensionEvent[];
+}
+/** Un événement de l'histoire, à ranger à sa place. */
+export interface ComprehensionEvent {
+  /** « Le loup souffle sur la maison de paille. » */
+  text: string;
+  /** La phrase de l'histoire où il se passe (son rang, en comptant tous les paragraphes). */
+  proof: number;
 }
 export interface ComprehensionAnswer {
   /** Le choix de chaque question ('' = pas encore répondu). */
   selected: string[];
+  /** Avec des événements : l'événement posé dans chaque case, de la première à la dernière (-1 = vide). */
+  order?: number[];
 }
 
 export type Question =

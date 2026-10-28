@@ -1,9 +1,7 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { E2E_ACCOUNT } from './fixtures';
 
-test('un enfant écoute une histoire, répond aux questions et la relit corrigée', async ({
-  page,
-}) => {
+async function fakeVoice(page: Page) {
   // Une voix de test qui dit chaque phrase en 50 ms : sans Piper (CI), le serveur répond 503
   // et c'est la voix du navigateur qui raconte l'histoire.
   await page.addInitScript(() => {
@@ -30,6 +28,12 @@ test('un enfant écoute une histoire, répond aux questions et la relit corrigé
       Object.defineProperty(window, name, { value, configurable: true, writable: true });
     }
   });
+}
+
+test('un enfant écoute une histoire, répond aux questions et la relit corrigée', async ({
+  page,
+}) => {
+  await fakeVoice(page);
   await page.goto('/');
   await page.getByLabel('E-mail').fill(E2E_ACCOUNT.email);
   await page.getByLabel('Mot de passe').fill(E2E_ACCOUNT.password);
@@ -95,5 +99,36 @@ test('un enfant lit un texte seul, répond aux questions et voit les phrases-ré
   }
 
   await expect(text.locator('.proof').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Suivant|Terminer/ })).toBeVisible();
+});
+
+test('un enfant écoute une histoire et remet ses événements dans l’ordre', async ({ page }) => {
+  await fakeVoice(page);
+  await page.goto('/');
+  await page.getByLabel('E-mail').fill(E2E_ACCOUNT.email);
+  await page.getByLabel('Mot de passe').fill(E2E_ACCOUNT.password);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await page.getByRole('button', { name: new RegExp(E2E_ACCOUNT.child) }).click();
+  await page.getByRole('button', { name: /Français/ }).click();
+  await page.getByRole('button', { name: /Remets l’histoire dans l’ordre/ }).click();
+
+  // Les événements arrivent quand l'histoire a été lue jusqu'au bout ; ils se posent un à un.
+  const pool = page.getByTestId('story-event');
+  await expect(pool.first()).toBeVisible();
+  await expect(page.getByTestId('story-item')).toHaveCount(0);
+  const placeAll = async () => {
+    while ((await pool.count()) > 0) await pool.first().click();
+  };
+  await placeAll();
+  await page.getByRole('button', { name: 'Valider ✓' }).click();
+  // Au deuxième essai, les événements mal placés reviennent dans la réserve.
+  if (await page.getByRole('button', { name: 'Valider ✓' }).isVisible()) {
+    await placeAll();
+    await page.getByRole('button', { name: 'Valider ✓' }).click();
+  }
+
+  const text = page.getByRole('region', { name: 'Le texte de l’histoire' });
+  await expect(text).toBeVisible();
+  await expect(text.locator('.tag.step').first()).toBeVisible();
   await expect(page.getByRole('button', { name: /Suivant|Terminer/ })).toBeVisible();
 });

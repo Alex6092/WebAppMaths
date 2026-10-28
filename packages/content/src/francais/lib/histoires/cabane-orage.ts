@@ -12,6 +12,18 @@ export const cabaneOrage: Story = {
     'L’eau traverse la couverture et coule sur les coussins. Lina a peur. Jules lui prend la main et compte les secondes entre l’éclair et le tonnerre, comme son grand-père le lui a appris : plus on compte loin, plus l’orage est loin. Un, deux, trois… sept, huit ! L’orage s’éloigne.',
     'Quelques minutes plus tard, Grand-mère arrive sous un grand parapluie. Elle les ramène à la maison et leur prépare un chocolat chaud. Le lendemain, Jules et Lina réparent leur cabane avec une bâche bien solide. Cette fois, la pluie peut tomber : le Repaire des Écureuils restera au sec !',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'Jules et Lina construisent une cabane.', proof: 'construisent une cabane' },
+    { text: 'Ils apportent des biscuits et un jeu de cartes.', proof: 'apportent des biscuits' },
+    { text: 'Un coup de tonnerre les fait sursauter.', proof: 'grand coup de tonnerre' },
+    {
+      text: 'Jules compte les secondes entre l’éclair et le tonnerre.',
+      proof: 'compte les secondes',
+    },
+    { text: 'Grand-mère arrive avec un parapluie.', proof: 'Grand-mère arrive' },
+    { text: 'Ils réparent la cabane avec une bâche.', proof: 'réparent leur cabane' },
+  ],
   questions: [
     {
       ask: 'Chez qui Jules et Lina passent-ils les vacances ?',

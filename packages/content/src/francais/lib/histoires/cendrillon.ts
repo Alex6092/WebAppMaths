@@ -14,6 +14,23 @@ export const cendrillon: Story = {
     'Le lendemain, le prince fit savoir qu’il épouserait celle dont le pied entrerait dans la pantoufle. On l’essaya à toutes les dames du royaume. Les deux sœurs forcèrent tant qu’elles purent, mais leurs pieds étaient bien trop grands. « Puis-je essayer ? » demanda Cendrillon. Les sœurs éclatèrent de rire, mais la pantoufle lui alla comme un gant. Elle sortit alors de sa poche l’autre pantoufle.',
     'Cendrillon épousa le prince. Et comme elle était aussi bonne que belle, elle pardonna à ses sœurs et les invita à vivre au palais.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    {
+      text: 'La belle-mère donne à Cendrillon les travaux les plus durs.',
+      proof: 'les travaux les plus durs',
+    },
+    { text: 'Cendrillon coiffe ses deux sœurs pour le bal.', proof: 'Cendrillon les coiffa' },
+    { text: 'La fée change une citrouille en carrosse.', proof: 'changea la citrouille' },
+    { text: 'Le prince danse avec Cendrillon.', proof: 'le prince ne dansa' },
+    { text: 'Cendrillon perd une pantoufle de verre.', proof: 'perdit une de ses pantoufles' },
+    {
+      text: 'Les pieds des deux sœurs sont trop grands.',
+      proof: 'leurs pieds étaient bien trop grands',
+    },
+    { text: 'La pantoufle va à Cendrillon.', proof: 'lui alla comme un gant' },
+    { text: 'Cendrillon épouse le prince.', proof: 'Cendrillon épousa le prince' },
+  ],
   questions: [
     {
       ask: 'Pourquoi l’appelle-t-on Cendrillon ?',

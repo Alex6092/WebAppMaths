@@ -53,6 +53,14 @@ export type StoryQuestion =
       proof: string;
     };
 
+/** Un événement de l'histoire, à remettre dans l'ordre. */
+export interface StoryEvent {
+  /** Une phrase courte qui le résume : « Le loup avale la grand-mère. » */
+  text: string;
+  /** Un morceau de la phrase de l'histoire où il se passe (une seule phrase le contient). */
+  proof: string;
+}
+
 /** 0 : les petits textes de la Lecture au CP, qui ne s'écoutent pas ; 1 à 4 : les histoires. */
 export type StoryLevel = 0 | 1 | 2 | 3 | 4;
 
@@ -67,23 +75,36 @@ export interface Story {
   /** Les paragraphes. */
   text: string[];
   questions: StoryQuestion[];
+  /** Au CE1 et au CE2 : des événements à remettre dans l'ordre, dans l'ordre de l'histoire. */
+  events?: StoryEvent[];
 }
 
 /** Ce que chaque niveau demande à ses histoires (vérifié par histoires.test.ts). */
 export const LEVEL_RULES: Record<
   StoryLevel,
-  { minChars: number; maxChars: number; questions: number; why: boolean; pictures: boolean }
+  {
+    minChars: number;
+    maxChars: number;
+    questions: number;
+    why: boolean;
+    pictures: boolean;
+    /** Les événements à remettre dans l'ordre (0 : pas à ce niveau). */
+    events: number;
+  }
 > = {
   // CP : une histoire courte, des questions dont les réponses sont des images.
   // Lecture au CP : un petit texte à déchiffrer seul.
-  0: { minChars: 150, maxChars: 450, questions: 3, why: false, pictures: true },
-  1: { minChars: 300, maxChars: 750, questions: 3, why: false, pictures: true },
-  2: { minChars: 700, maxChars: 1400, questions: 4, why: false, pictures: false },
-  // CE1 : au moins une question « pourquoi ? ».
-  3: { minChars: 1000, maxChars: 1800, questions: 4, why: true, pictures: false },
-  // CE2 : des contes plus longs, l'ordre des événements, le sens d'un mot.
-  4: { minChars: 1500, maxChars: 2600, questions: 5, why: true, pictures: false },
+  0: { minChars: 150, maxChars: 450, questions: 3, why: false, pictures: true, events: 0 },
+  1: { minChars: 300, maxChars: 750, questions: 3, why: false, pictures: true, events: 0 },
+  2: { minChars: 700, maxChars: 1400, questions: 4, why: false, pictures: false, events: 0 },
+  // CE1 : au moins une question « pourquoi ? » ; quatre événements à ranger.
+  3: { minChars: 1000, maxChars: 1800, questions: 4, why: true, pictures: false, events: 4 },
+  // CE2 : des contes plus longs, le sens d'un mot ; cinq événements à ranger.
+  4: { minChars: 1500, maxChars: 2600, questions: 5, why: true, pictures: false, events: 5 },
 };
+
+/** Un événement tient sur une ligne ou deux, même sur un téléphone. */
+export const MAX_EVENT = 70;
 
 /** Une phrase dite d'un coup par la voix du serveur (qui lit 300 caractères au plus d'un trait). */
 export const MAX_SENTENCE = 300;
@@ -172,7 +193,8 @@ export const isWhy = (q: StoryQuestion) => 'why' in q && q.why === true;
 
 /** Les phrases des histoires telles que l'app les fait dire : le serveur les prépare à l'avance. */
 export function storySpeechTexts(): string[] {
-  return STORIES.filter((story) => story.level > 0).flatMap((story) =>
-    storyParagraphs(story).flat().map(typography),
-  );
+  return STORIES.filter((story) => story.level > 0).flatMap((story) => [
+    ...storyParagraphs(story).flat().map(typography),
+    ...(story.events ?? []).map((event) => typography(event.text)),
+  ]);
 }

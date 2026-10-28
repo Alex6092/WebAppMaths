@@ -16,6 +16,23 @@ export const blancheNeige: Story = {
     'Mais le miroir apprit à la reine que Blanche-Neige était vivante. La reine se déguisa en vieille marchande et prépara une pomme empoisonnée. Elle frappa à la fenêtre des nains et offrit la pomme à Blanche-Neige. La jeune fille en croqua un morceau et tomba sur le sol, comme morte.',
     'Les nains, très tristes, la placèrent dans un cercueil de verre, au sommet d’une colline. Un jour, un prince passa par là et demanda à emporter le cercueil dans son château. En le portant, ses serviteurs trébuchèrent sur une racine : le morceau de pomme sortit de la gorge de Blanche-Neige, et elle ouvrit les yeux. Le prince lui demanda de l’épouser, et on fit une grande fête.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    {
+      text: 'La reine demande à son miroir qui est la plus belle.',
+      proof: 'Chaque matin, elle lui demandait',
+    },
+    { text: 'Le chasseur laisse Blanche-Neige s’enfuir.', proof: 'il la laissa s’enfuir' },
+    {
+      text: 'Blanche-Neige découvre une petite maison.',
+      proof: 'elle découvrit une petite maison',
+    },
+    { text: 'Les nains décident de garder Blanche-Neige.', proof: 'décidèrent de la garder' },
+    { text: 'La reine se déguise en vieille marchande.', proof: 'se déguisa en vieille marchande' },
+    { text: 'Blanche-Neige croque la pomme empoisonnée.', proof: 'en croqua un morceau' },
+    { text: 'Un prince veut emporter le cercueil.', proof: 'Un jour, un prince passa' },
+    { text: 'Blanche-Neige ouvre les yeux.', proof: 'elle ouvrit les yeux' },
+  ],
   questions: [
     {
       ask: 'Pourquoi l’appelle-t-on Blanche-Neige ?',

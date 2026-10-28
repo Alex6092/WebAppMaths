@@ -13,6 +13,15 @@ export const musiciensBreme: Story = {
     'Les animaux ont une idée. L’âne pose ses pattes sur la fenêtre, le chien grimpe sur son dos, le chat sur le dos du chien, et le coq tout en haut. Puis ils chantent de toutes leurs forces : l’âne brait, le chien aboie, le chat miaule et le coq crie cocorico. Les voleurs, terrifiés, croient voir un monstre et s’enfuient dans la nuit.',
     'Les quatre amis mangent à leur faim et s’installent dans la maison. Ils s’y trouvent si bien qu’ils n’arrivent jamais à Brême… mais ils font de la musique tous les soirs.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'L’âne part pour la ville de Brême.', proof: 'décide de partir pour Brême' },
+    { text: 'L’âne rencontre un chien, un chat et un coq.', proof: 'Sur la route, il rencontre' },
+    { text: 'Le coq aperçoit une lumière dans la forêt.', proof: 'aperçoit une lumière' },
+    { text: 'Les animaux montent les uns sur les autres.', proof: 'le chien grimpe sur son dos' },
+    { text: 'Les voleurs s’enfuient, terrifiés.', proof: 's’enfuient dans la nuit' },
+    { text: 'Les quatre amis s’installent dans la maison.', proof: 's’installent dans la maison' },
+  ],
   questions: [
     {
       ask: 'Pourquoi l’âne quitte-t-il son maître ?',

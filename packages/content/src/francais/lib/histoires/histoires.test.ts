@@ -1,9 +1,11 @@
 import { generateQuestion, storySentences, type QuestionOf } from '@app/core';
 import { describe, expect, it } from 'vitest';
 import plugin from '../../oral/histoires/plugin';
+import ordre from '../../oral/ordre-histoire/plugin';
 import {
   isWhy,
   LEVEL_RULES,
+  MAX_EVENT,
   MAX_SENTENCE,
   MIN_STORIES_PER_LEVEL,
   proofSentences,
@@ -81,6 +83,22 @@ describe.each(STORIES.map((story) => ({ story, id: story.id })))('histoire $id',
       if (rules.pictures) expect(labels.every((l) => storyChoice(l, '').icon)).toBe(true);
     }
   });
+
+  it('a, au CE1 et au CE2, des événements à ranger, chacun dans sa phrase', () => {
+    const events = story.events ?? [];
+    if (!rules.events) return expect(events).toEqual([]);
+    expect(events.length).toBeGreaterThanOrEqual(rules.events + 2);
+    expect(events.filter((e) => e.text.length > MAX_EVENT)).toEqual([]);
+    expect(new Set(events.map((e) => e.text)).size).toBe(events.length);
+    const errors = events.flatMap((e) => {
+      const found = proofSentences(story, e.proof);
+      return found.length === 1 ? [] : [`« ${e.proof} » : ${found.length} phrases`];
+    });
+    expect(errors).toEqual([]);
+    // Dans l'ordre de l'histoire, chacun dans une phrase différente.
+    const at = events.map((e) => proofSentences(story, e.proof)[0]!);
+    expect(at.every((p, k) => k === 0 || p > at[k - 1]!)).toBe(true);
+  });
 });
 
 it('a assez d’histoires à chaque niveau, et un identifiant différent pour chacune', () => {
@@ -94,10 +112,13 @@ it('a assez d’histoires à chaque niveau, et un identifiant différent pour ch
 
 it('donne au serveur, à préparer d’avance, les phrases mêmes que l’exercice fait dire', () => {
   const prepared = new Set(storySpeechTexts());
-  for (let level = 1; level <= plugin.levels.length; level++) {
-    for (let seed = 1; seed <= 20; seed++) {
-      const q = generateQuestion(plugin, level, seed) as QuestionOf<'comprehension'>;
-      expect(storySentences(q).filter((s) => !prepared.has(s))).toEqual([]);
+  for (const p of [plugin, ordre]) {
+    for (let level = 1; level <= p.levels.length; level++) {
+      for (let seed = 1; seed <= 20; seed++) {
+        const q = generateQuestion(p, level, seed) as QuestionOf<'comprehension'>;
+        const said = [...storySentences(q), ...(q.events ?? []).map((e) => e.text)];
+        expect(said.filter((s) => !prepared.has(s))).toEqual([]);
+      }
     }
   }
 });

@@ -13,6 +13,21 @@ export const robePapillons: Story = {
     'Sa grand-mère ouvre alors sa boîte à couture. « Et si on transformait cette tache en idée ? » propose-t-elle. Ensemble, elles découpent des papillons dans un tissu doré et les cousent sur la robe. Bientôt, on ne voit plus la tache, cachée sous les ailes brillantes.',
     'Au défilé, Margot marche sur l’estrade en souriant. Tout le monde applaudit la robe aux papillons. Le soir, dans son carnet, Margot dessine une nouvelle robe… avec des papillons, bien sûr.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'La maîtresse annonce un défilé de mode.', proof: 'annonce une grande nouvelle' },
+    { text: 'Margot coud une robe bleue avec sa grand-mère.', proof: 'elle découpe, elle coud' },
+    { text: 'Margot renverse son chocolat sur la robe.', proof: 'renverse son bol' },
+    {
+      text: 'Margot et sa grand-mère cousent des papillons dorés.',
+      proof: 'découpent des papillons',
+    },
+    { text: 'Tout le monde applaudit la robe au défilé.', proof: 'Tout le monde applaudit' },
+    {
+      text: 'Margot dessine une nouvelle robe dans son carnet.',
+      proof: 'dessine une nouvelle robe',
+    },
+  ],
   questions: [
     {
       ask: 'Qu’est-ce que Margot adore faire ?',

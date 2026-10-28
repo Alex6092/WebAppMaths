@@ -20,6 +20,11 @@
   );
   const proofsOf = (s: number) =>
     question.items.flatMap((item, i) => (item.proof === s ? [i + 1] : []));
+
+  // Les événements, dans l'ordre où ils sont montrés : l'enfant écrit leur numéro dans la case.
+  const events = $derived(question.events ?? []);
+  /** La case de l'événement e dans le bon ordre (à partir de 1). */
+  const stepOf = (e: number) => (solution?.order?.indexOf(e) ?? -1) + 1;
 </script>
 
 {#if question.read}
@@ -33,7 +38,12 @@
     {#each paragraphs as paragraph (paragraph.first)}
       <p>
         {#each paragraph.sentences as sentence, k (k)}
-          {@const proofs = solution ? proofsOf(paragraph.first + k) : []}
+          {@const proofs = solution
+            ? [
+                ...proofsOf(paragraph.first + k),
+                ...events.flatMap((ev, e) => (ev.proof === paragraph.first + k ? [stepOf(e)] : [])),
+              ]
+            : []}
           {k ? ' ' : ''}<span class:proof={proofs.length > 0}
             >{sentence}{#if proofs.length}<sup class="key"> ({proofs.join(', ')})</sup>{/if}</span
           >
@@ -42,24 +52,38 @@
     {/each}
   </div>
 {/if}
-<ol class="items">
-  {#each question.items as item, i (i)}
-    <li>
-      <p class="ask">{item.ask}</p>
-      <ul class="choices">
-        {#each item.choices as choice (choice.id)}
-          <li>
-            <span class="check" class:key-box={chosen(i, choice.id)}
-              >{chosen(i, choice.id) ? '✗' : ''}</span
-            >
-            {#if choice.icon}<span class="icon">{choice.icon}</span>{/if}
-            <span>{choice.label}</span>
-          </li>
-        {/each}
-      </ul>
-    </li>
-  {/each}
-</ol>
+{#if question.items.length}
+  <ol class="items">
+    {#each question.items as item, i (i)}
+      <li>
+        <p class="ask">{item.ask}</p>
+        <ul class="choices">
+          {#each item.choices as choice (choice.id)}
+            <li>
+              <span class="check" class:key-box={chosen(i, choice.id)}
+                >{chosen(i, choice.id) ? '✗' : ''}</span
+              >
+              {#if choice.icon}<span class="icon">{choice.icon}</span>{/if}
+              <span>{choice.label}</span>
+            </li>
+          {/each}
+        </ul>
+      </li>
+    {/each}
+  </ol>
+{/if}
+{#if events.length}
+  <p class="ask">Numérote les événements dans l’ordre de l’histoire (1, 2, 3…).</p>
+  <ul class="events">
+    {#each events as event, e (e)}
+      <li>
+        <span class="check step" class:key-box={solution !== null}>{solution ? stepOf(e) : ''}</span
+        >
+        <span>{event.text}</span>
+      </li>
+    {/each}
+  </ul>
+{/if}
 
 <style>
   .told {
@@ -125,6 +149,25 @@
     border: 1px solid #444;
     border-radius: 2px;
     font-weight: 700;
+  }
+  .events {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2cm;
+    font-size: 12pt;
+  }
+  .events li {
+    display: flex;
+    align-items: center;
+    gap: 0.25cm;
+  }
+  .check.step {
+    flex: none;
+    width: 0.7cm;
+    height: 0.7cm;
   }
   .key,
   .key-box {

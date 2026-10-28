@@ -65,6 +65,7 @@ const ECOUTE_LESSON: LessonBlock[] = [
       'Pourquoi ? → Elle a **peur** des ours.',
     ],
   },
+  'Pour remettre l’histoire **dans l’ordre**, je cherche ce qui se passe **au début**, puis **ensuite**, et **à la fin**. Les petits mots m’aident : *d’abord, puis, soudain, le lendemain, enfin*.',
 ];
 
 // CONJ 1 : le verbe, forme infinitive et conjuguée.
