@@ -2,6 +2,7 @@ import type { WidgetId } from '../question';
 import { classifyWidget } from './classify';
 import { clockWidget } from './clock';
 import { columnOpWidget } from './column-op';
+import { comprehensionWidget } from './comprehension';
 import { fillBlankWidget } from './fill-blank';
 import { geometryWidget } from './geometry';
 import { matchWidget } from './match';
@@ -24,6 +25,7 @@ export const WIDGETS: { [W in WidgetId]: WidgetDef<W> } = {
   clock: clockWidget,
   money: moneyWidget,
   match: matchWidget,
+  comprehension: comprehensionWidget,
 };
 
 export function getWidget<W extends WidgetId>(id: W): WidgetDef<W> {
@@ -33,6 +35,7 @@ export function getWidget<W extends WidgetId>(id: W): WidgetDef<W> {
 }
 
 export * from './column-op';
+export { itemSpeech, storySentences } from './comprehension';
 export { compareAssignments } from './assign';
 export { ACCENT_HINT, blankParts, compareBlanks } from './fill-blank';
 export { checkGeometry, DEFAULT_TOLERANCE, sameDrawing, type GeometryRules } from './geometry';

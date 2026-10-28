@@ -8,6 +8,7 @@
     getWidget,
     initialLevel,
     maxTries,
+    mixablePlugins,
     pickMixPlugin,
     questionSignature,
     questionSpeech,
@@ -86,7 +87,12 @@
   // Le défi du jour et les devoirs mélangent les notions choisies par le serveur.
   let serverNotions = $state.raw<string[] | null>(null);
   const mixIds = $derived(serverNotions ?? mix);
-  const mixPlugins = $derived(mixIds ? registry.pluginsOfNotions(mixIds) : []);
+  // Une histoire à écouter est trop longue pour un mélange ; un devoir la garde (le parent l'a choisie).
+  const mixPlugins = $derived.by(() => {
+    if (!mixIds) return [];
+    const all = registry.pluginsOfNotions(mixIds);
+    return homework !== undefined ? all : mixablePlugins(all);
+  });
   // Dans un mélange, l'exercice change à chaque question.
   let plugin = $state.raw<AnyPlugin | undefined>(
     untrack(() => (pluginId ? registry.plugin(pluginId) : undefined)),

@@ -93,15 +93,16 @@ export default definePlugin('number-input', {
 
 ## Les widgets disponibles
 
-| Widget         | Réponse                     | Pour quoi faire                                             |
-| -------------- | --------------------------- | ----------------------------------------------------------- |
-| `number-input` | `{ value }`                 | réponse numérique ; `{?}` marque la case dans l'énoncé      |
-| `mcq`          | `{ selected: [...] }`       | choix unique ou multiple, VRAI/FAUX ; `{?}` montre le choix |
-| `column-op`    | `{ digits, carries }`       | opération posée avec retenues                               |
-| `word-select`  | `{ picks: [...] }`          | COLORIE, SOULIGNE, ENTOURE des mots (grille ou phrase)      |
-| `classify`     | `{ placed: [...] }`         | ranger des étiquettes en colonnes, ou COCHE en tableau      |
-| `fill-blank`   | `{ values: [...] }`         | trous à étiquettes ou à taper (clavier AZERTY accentué)     |
-| `geometry`     | `{ picked, drawn, placed }` | figure : ENTOURE, TRACE entre deux points, PLACE des points |
+| Widget          | Réponse                     | Pour quoi faire                                             |
+| --------------- | --------------------------- | ----------------------------------------------------------- |
+| `number-input`  | `{ value }`                 | réponse numérique ; `{?}` marque la case dans l'énoncé      |
+| `mcq`           | `{ selected: [...] }`       | choix unique ou multiple, VRAI/FAUX ; `{?}` montre le choix |
+| `column-op`     | `{ digits, carries }`       | opération posée avec retenues                               |
+| `word-select`   | `{ picks: [...] }`          | COLORIE, SOULIGNE, ENTOURE des mots (grille ou phrase)      |
+| `classify`      | `{ placed: [...] }`         | ranger des étiquettes en colonnes, ou COCHE en tableau      |
+| `fill-blank`    | `{ values: [...] }`         | trous à étiquettes ou à taper (clavier AZERTY accentué)     |
+| `geometry`      | `{ picked, drawn, placed }` | figure : ENTOURE, TRACE entre deux points, PLACE des points |
+| `comprehension` | `{ selected: [...] }`       | une histoire à écouter, puis une réponse par question       |
 
 Pour `fill-blank`, une réponse tapée est comptée fausse s'il manque un accent, mais l'enfant voit
 « Attention aux accents » et garde ce qu'il a tapé pour le deuxième essai. Quand plusieurs réponses
@@ -125,6 +126,33 @@ imparfait, futur), banques de verbes, de sujets, d'indicateurs de temps, et `bui
 Les widgets prévus ensuite : `order`, `number-line`, `clock`, `money`. Un nouveau
 widget se crée en deux temps : sa logique dans `packages/core/src/widgets/` (réponse vide,
 validation, correction), son affichage dans `apps/web/src/widgets/`.
+
+## Ajouter une histoire à écouter
+
+Les histoires de « Écoute une histoire » (Langage oral) sont dans
+`packages/content/src/francais/lib/histoires/`, une par fichier, puis ajoutées à `STORIES` dans
+`index.ts`. Une histoire a un niveau (1 et 2 au CP, 3 au CE1, 4 au CE2), ses paragraphes et une
+liste de questions, dont l'exercice tire quelques-unes à chaque fois :
+
+```ts
+{
+  ask: 'Où vivent les trois ours ?',
+  answer: '🌲 dans la forêt', // un emoji devant devient l'image du choix (obligatoire au niveau 1)
+  wrong: ['🏖️ au bord de la mer', '🏙️ en ville'],
+  proof: 'au milieu de la forêt', // un morceau de LA phrase qui donne la réponse
+},
+{ claim: 'Boucle d’or s’endort dans le grand lit.', truth: false, proof: 'le petit lit est juste' },
+```
+
+`why: true` marque un « pourquoi ? » ou un sentiment : il en faut au moins un à partir du CE1.
+Après la correction, l'enfant relit l'histoire avec les phrases `proof` surlignées. Le test
+`histoires.test.ts` vérifie la longueur de chaque niveau, que chaque `proof` ne se trouve que dans
+une phrase et qu'aucune phrase ne dépasse ce que la voix dit d'un trait. Les contes doivent être
+libres de droits (Grimm, Perrault, Andersen, contes traditionnels), racontés sans ce que les films
+y ont ajouté.
+
+Un exercice trop long pour un mélange (comme une histoire) déclare `inMix: false` : il ne vient
+ni dans « Tout mélanger », ni dans le défi du jour, ni dans les révisions ; un devoir le garde.
 
 ## Un nouvel emoji ?
 

@@ -130,4 +130,79 @@ describe('lecture sur iPad', () => {
     expect(FakeAudio.made.flatMap((a) => a.played)).toHaveLength(0);
     expect(said).toEqual([]);
   });
+
+  describe('une histoire', () => {
+    const parts = ['Phrase un.', 'Phrase deux.', 'Phrase trois.', 'Phrase quatre.', 'Fin.'];
+    const asked = () =>
+      vi.mocked(fetch).mock.calls.map(([, init]) => JSON.parse(String(init!.body)).text as string);
+    const finishSound = async () => {
+      FakeAudio.made[0]!.onended!();
+      await flush();
+    };
+
+    it('se lit phrase par phrase, en demandant deux phrases d’avance au serveur', async () => {
+      const tts = await import('./tts');
+      const heard: number[] = [];
+      const onend = vi.fn();
+      tts.speakParts(parts, 'fr-FR', 0.9, 0, { onpart: (i) => heard.push(i), onend });
+      await flush();
+      expect(asked()).toEqual(parts.slice(0, 3));
+      for (let i = 0; i < parts.length; i++) await finishSound();
+      expect(heard).toEqual([0, 1, 2, 3, 4]);
+      expect(FakeAudio.made[0]!.played).toHaveLength(5);
+      expect(asked()).toEqual(parts);
+      expect(onend).toHaveBeenCalledOnce();
+    });
+
+    it('prévient quand on la coupe, et reprend à la phrase donnée', async () => {
+      const tts = await import('./tts');
+      const heard: number[] = [];
+      const oninterrupt = vi.fn();
+      tts.speakParts(parts, 'fr-FR', 0.9, 0, { onpart: (i) => heard.push(i), oninterrupt });
+      await flush();
+      await finishSound();
+      tts.speak('Qui aide Lila ?');
+      expect(oninterrupt).toHaveBeenCalledOnce();
+      await flush();
+      tts.speakParts(parts, 'fr-FR', 0.9, 1, { onpart: (i) => heard.push(i) });
+      await flush();
+      expect(heard).toEqual([0, 1, 1]);
+      expect(oninterrupt).toHaveBeenCalledOnce();
+    });
+
+    it('continue avec la voix du navigateur quand le serveur ne répond pas', async () => {
+      vi.mocked(fetch).mockImplementation(async () => new Response(null, { status: 503 }));
+      const tts = await import('./tts');
+      const onend = vi.fn();
+      const speechSynthesis = globalThis.speechSynthesis as unknown as {
+        speak: (u: { text: string; onend?: () => void }) => void;
+      };
+      speechSynthesis.speak = (u) => {
+        said.push(u.text);
+        setTimeout(() => u.onend?.(), 0);
+      };
+      tts.speakParts(parts.slice(0, 2), 'fr-FR', 0.9, 0, { onend });
+      await flush();
+      await flush();
+      expect(said).toEqual(parts.slice(0, 2));
+      expect(onend).toHaveBeenCalledOnce();
+    });
+
+    it('prévient quand aucune voix ne dit rien, au lieu d’attendre toujours', async () => {
+      vi.useFakeTimers();
+      try {
+        vi.mocked(fetch).mockImplementation(async () => new Response(null, { status: 503 }));
+        const tts = await import('./tts');
+        const onsilent = vi.fn();
+        const onend = vi.fn();
+        tts.speakParts(parts, 'fr-FR', 0.9, 0, { onsilent, onend });
+        await vi.advanceTimersByTimeAsync(3500);
+        expect(onsilent).toHaveBeenCalledOnce();
+        expect(onend).not.toHaveBeenCalled();
+        expect(said).toEqual([parts[0]]);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
 });

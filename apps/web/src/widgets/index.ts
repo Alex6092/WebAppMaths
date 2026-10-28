@@ -13,6 +13,7 @@ export const HAS_OWN_SUBMIT: Record<WidgetId, boolean> = {
   clock: false,
   money: false,
   match: false,
+  comprehension: false,
 };
 
 export { default as Widget } from './Widget.svelte';
