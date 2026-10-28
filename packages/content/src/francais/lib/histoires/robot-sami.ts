@@ -13,6 +13,15 @@ export const robotSami: Story = {
     'Son amie Chloé s’approche et regarde la télécommande. « Les piles sont à l’envers ! » murmure-t-elle. Sami les retourne, et Boulon se met enfin à rouler. Il attrape une chaussette avec son bras et la dépose dans un panier. Toute la salle applaudit.',
     'Sami ne gagne pas le premier prix, mais le jury lui donne le prix de l’invention la plus utile. Le soir, il demande à Chloé de l’aider à fabriquer Boulon 2.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'La maîtresse annonce un concours d’inventions.', proof: 'annonce le concours' },
+    { text: 'Sami peint son robot en jaune.', proof: 'peint le robot en jaune' },
+    { text: 'Devant le jury, le robot ne marche pas.', proof: 'Rien ne se passe' },
+    { text: 'Chloé voit que les piles sont à l’envers.', proof: 'Les piles sont à l’envers' },
+    { text: 'Boulon range une chaussette dans un panier.', proof: 'attrape une chaussette' },
+    { text: 'Sami reçoit le prix de l’invention la plus utile.', proof: 'le prix de l’invention' },
+  ],
   questions: [
     {
       ask: 'Que doit faire le robot de Sami ?',

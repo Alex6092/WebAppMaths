@@ -93,16 +93,16 @@ export default definePlugin('number-input', {
 
 ## Les widgets disponibles
 
-| Widget          | Réponse                     | Pour quoi faire                                             |
-| --------------- | --------------------------- | ----------------------------------------------------------- |
-| `number-input`  | `{ value }`                 | réponse numérique ; `{?}` marque la case dans l'énoncé      |
-| `mcq`           | `{ selected: [...] }`       | choix unique ou multiple, VRAI/FAUX ; `{?}` montre le choix |
-| `column-op`     | `{ digits, carries }`       | opération posée avec retenues                               |
-| `word-select`   | `{ picks: [...] }`          | COLORIE, SOULIGNE, ENTOURE des mots (grille ou phrase)      |
-| `classify`      | `{ placed: [...] }`         | ranger des étiquettes en colonnes, ou COCHE en tableau      |
-| `fill-blank`    | `{ values: [...] }`         | trous à étiquettes ou à taper (clavier AZERTY accentué)     |
-| `geometry`      | `{ picked, drawn, placed }` | figure : ENTOURE, TRACE entre deux points, PLACE des points |
-| `comprehension` | `{ selected: [...] }`       | une histoire à écouter, puis une réponse par question       |
+| Widget          | Réponse                     | Pour quoi faire                                              |
+| --------------- | --------------------------- | ------------------------------------------------------------ |
+| `number-input`  | `{ value }`                 | réponse numérique ; `{?}` marque la case dans l'énoncé       |
+| `mcq`           | `{ selected: [...] }`       | choix unique ou multiple, VRAI/FAUX ; `{?}` montre le choix  |
+| `column-op`     | `{ digits, carries }`       | opération posée avec retenues                                |
+| `word-select`   | `{ picks: [...] }`          | COLORIE, SOULIGNE, ENTOURE des mots (grille ou phrase)       |
+| `classify`      | `{ placed: [...] }`         | ranger des étiquettes en colonnes, ou COCHE en tableau       |
+| `fill-blank`    | `{ values: [...] }`         | trous à étiquettes ou à taper (clavier AZERTY accentué)      |
+| `geometry`      | `{ picked, drawn, placed }` | figure : ENTOURE, TRACE entre deux points, PLACE des points  |
+| `comprehension` | `{ selected, order? }`      | une histoire à écouter, puis des questions ou des événements |
 
 Pour `fill-blank`, une réponse tapée est comptée fausse s'il manque un accent, mais l'enfant voit
 « Attention aux accents » et garde ce qu'il a tapé pour le deuxième essai. Quand plusieurs réponses
@@ -153,6 +153,18 @@ Après la correction, l'enfant relit l'histoire avec les phrases `proof` surlign
 une phrase et qu'aucune phrase ne dépasse ce que la voix dit d'un trait. Les contes doivent être
 libres de droits (Grimm, Perrault, Andersen, contes traditionnels), racontés sans ce que les films
 y ont ajouté.
+
+Au CE1 et au CE2, une histoire a aussi ses `events` : des phrases courtes qui résument ce qui se
+passe, dans l'ordre de l'histoire, chacune avec le `proof` de sa phrase (une phrase différente pour
+chaque événement). « Remets l'histoire dans l'ordre » en montre quatre (CE1) ou cinq (CE2),
+mélangés ; il en faut deux de plus pour changer d'une fois à l'autre.
+
+```ts
+events: [
+  { text: 'Le loup avale la grand-mère.', proof: 'l’avale d’un coup' },
+  { text: 'Un chasseur entend le loup ronfler.', proof: 'entend ces ronflements' },
+],
+```
 
 Un exercice trop long pour un mélange (comme une histoire) déclare `inMix: false` : il ne vient
 ni dans « Tout mélanger », ni dans le défi du jour, ni dans les révisions ; un devoir le garde.

@@ -14,6 +14,25 @@ export const chatBotte: Story = {
     'Le chat courut devant. Il arriva au château d’un ogre terrible, à qui appartenaient toutes les terres du pays. « On dit que vous pouvez vous changer en n’importe quel animal, dit le chat. Mais je parie que vous ne pouvez pas devenir une toute petite souris ! » Vexé, l’ogre se transforma aussitôt en souris… et le chat la mangea d’une bouchée.',
     'Quand le carrosse arriva, le chat accueillit le roi : « Bienvenue au château de mon maître, le marquis de Carabas ! » Le roi, émerveillé, donna sa fille en mariage au jeune homme. Et le chat devint un grand seigneur, qui ne courut plus après les souris que pour s’amuser.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'Le plus jeune fils reçoit le chat.', proof: 'seulement le chat' },
+    { text: 'Le chat demande un sac et des bottes.', proof: 'Donnez-moi un sac' },
+    { text: 'Le chat apporte un lapin au roi.', proof: 'attrapa un lapin' },
+    {
+      text: 'Le chat dit à son maître de se baigner dans la rivière.',
+      proof: 'Baignez-vous dans la rivière',
+    },
+    {
+      text: 'Le chat crie que des voleurs ont pris les habits du marquis.',
+      proof: 'Des voleurs ont pris',
+    },
+    { text: 'L’ogre se transforme en souris.', proof: 'l’ogre se transforma aussitôt' },
+    {
+      text: 'Le roi donne sa fille en mariage au jeune homme.',
+      proof: 'donna sa fille en mariage',
+    },
+  ],
   questions: [
     {
       ask: 'Qu’est-ce que le plus jeune fils reçoit de son père ?',

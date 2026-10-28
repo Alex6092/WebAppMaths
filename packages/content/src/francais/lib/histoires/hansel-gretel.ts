@@ -14,6 +14,20 @@ export const hanselGretel: Story = {
     'Chaque matin, la sorcière, qui voyait très mal, demandait à Hansel de tendre son doigt pour savoir s’il avait grossi. Le malin lui tendait un petit os. Un jour, impatiente, la sorcière décida de le manger quand même et demanda à Gretel de vérifier si le four était chaud. « Je ne sais pas comment faire », répondit Gretel. « Petite sotte ! » dit la sorcière en se penchant dans le four. Gretel la poussa dedans et referma la porte.',
     'Gretel libéra son frère. Dans la maison, ils trouvèrent des coffres pleins de perles et de pierres précieuses. Ils retrouvèrent le chemin de chez eux, où leur père les attendait. La belle-mère était partie, et ils vécurent heureux, sans plus jamais avoir faim.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'La belle-mère décide d’abandonner les enfants.', proof: 'décida d’abandonner' },
+    { text: 'Hansel remplit ses poches de cailloux blancs.', proof: 'remplit ses poches' },
+    { text: 'Les oiseaux mangent les miettes de pain.', proof: 'les oiseaux les mangèrent' },
+    {
+      text: 'Les enfants découvrent une maison en pain d’épice.',
+      proof: 'murs étaient en pain d’épice',
+    },
+    { text: 'La sorcière enferme Hansel dans une cage.', proof: 'enferma Hansel' },
+    { text: 'Gretel pousse la sorcière dans le four.', proof: 'Gretel la poussa' },
+    { text: 'Les enfants trouvent des coffres pleins de perles.', proof: 'des coffres pleins' },
+    { text: 'Les enfants retrouvent leur père.', proof: 'leur père les attendait' },
+  ],
   questions: [
     {
       ask: 'Quel est le métier du père ?',

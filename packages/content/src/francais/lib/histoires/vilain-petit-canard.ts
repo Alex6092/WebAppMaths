@@ -14,6 +14,19 @@ export const vilainPetitCanard: Story = {
     'L’hiver fut terrible. L’étang gela, et le caneton faillit rester prisonnier de la glace. Un paysan le trouva et le ramena chez lui, mais les enfants voulaient jouer avec lui, et le caneton, effrayé, renversa le lait et la farine avant de s’échapper.',
     'Quand le printemps revint, il sentit que ses ailes étaient devenues fortes. Il s’envola jusqu’à un beau jardin où nageaient trois cygnes. Il s’approcha en baissant la tête, prêt à être chassé… et il vit son reflet dans l’eau. Il n’était plus un caneton gris et maladroit : il était devenu un magnifique cygne blanc ! Les autres cygnes l’entourèrent et le caressèrent avec leur bec. Il était très heureux, mais il ne devint pas orgueilleux : un bon cœur ne l’est jamais.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'Un caneton gris sort du plus gros œuf.', proof: 'il en sortit un caneton gris' },
+    { text: 'Le caneton s’enfuit à travers les haies.', proof: 'il s’enfuit à travers les haies' },
+    { text: 'Une vieille femme recueille le caneton.', proof: 'une vieille femme le recueillit' },
+    {
+      text: 'Le caneton voit passer des cygnes dans le ciel.',
+      proof: 'il vit passer dans le ciel',
+    },
+    { text: 'Un paysan trouve le caneton dans la glace.', proof: 'Un paysan le trouva' },
+    { text: 'Le caneton voit son reflet dans l’eau.', proof: 'il vit son reflet' },
+    { text: 'Les autres cygnes l’entourent.', proof: 'Les autres cygnes l’entourèrent' },
+  ],
   questions: [
     {
       ask: 'Où la cane couve-t-elle ses œufs ?',

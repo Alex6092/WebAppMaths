@@ -13,6 +13,15 @@ export const lionSouris: Story = {
     'La petite souris reconnaît sa voix et accourt. Sans perdre de temps, elle se met à ronger les cordes avec ses petites dents pointues. Une corde cède, puis une autre, et bientôt le filet a un grand trou. Le lion est libre !',
     '« Tu vois, dit la souris, même un petit animal peut aider un grand. » Le lion la remercie, et depuis ce jour, ils sont les meilleurs amis du monde.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    { text: 'Une souris passe sur le museau du lion.', proof: 'passe sur son museau' },
+    { text: 'La souris supplie le lion de la laisser partir.', proof: 'supplie la souris' },
+    { text: 'Le lion laisse partir la souris.', proof: 'la laisse s’en aller' },
+    { text: 'Le lion tombe dans le filet des chasseurs.', proof: 'tombe dedans' },
+    { text: 'La souris ronge les cordes du filet.', proof: 'se met à ronger les cordes' },
+    { text: 'Le lion et la souris deviennent amis.', proof: 'meilleurs amis du monde' },
+  ],
   questions: [
     {
       ask: 'Où se passe l’histoire ?',

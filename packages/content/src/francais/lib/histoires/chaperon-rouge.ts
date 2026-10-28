@@ -15,6 +15,22 @@ export const chaperonRouge: Story = {
     'Puis il met son bonnet de nuit et se couche dans son lit. Quand le Petit Chaperon rouge arrive, elle trouve que sa grand-mère a l’air bizarre. « Grand-mère, comme vous avez de grandes oreilles ! — C’est pour mieux t’entendre, mon enfant. — Grand-mère, comme vous avez de grandes dents ! — C’est pour mieux te manger ! » Et le loup avale aussi la petite fille.',
     'Le ventre plein, le loup s’endort et ronfle très fort. Un chasseur qui passe par là entend ces ronflements. Il entre, voit le loup au gros ventre et comprend tout. Avec des ciseaux, il ouvre le ventre du loup : le Petit Chaperon rouge et sa grand-mère en sortent, bien vivantes ! La petite fille se promet de ne plus jamais quitter le chemin.',
   ],
+  // Dans l’ordre de l’histoire.
+  events: [
+    {
+      text: 'Sa maman lui donne une galette et un pot de beurre.',
+      proof: 'Va lui porter cette galette',
+    },
+    { text: 'Le Petit Chaperon rouge rencontre le loup.', proof: 'rencontre le loup' },
+    {
+      text: 'Elle quitte le chemin pour cueillir des fleurs.',
+      proof: 'quitte le chemin pour cueillir',
+    },
+    { text: 'Le loup avale la grand-mère.', proof: 'l’avale d’un coup' },
+    { text: 'Le loup se couche dans le lit de la grand-mère.', proof: 'se couche dans son lit' },
+    { text: 'Un chasseur entend le loup ronfler.', proof: 'entend ces ronflements' },
+    { text: 'Le chasseur ouvre le ventre du loup.', proof: 'il ouvre le ventre' },
+  ],
   questions: [
     {
       ask: 'Pourquoi l’appelle-t-on le Petit Chaperon rouge ?',

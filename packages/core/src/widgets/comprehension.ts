@@ -19,25 +19,39 @@ export function itemSpeech(item: ComprehensionItem): string {
   return `${item.ask} ${choices} ?`;
 }
 
+/** La marque d'une case d'événement : à côté de celles des questions (0, 1…), « e0 », « e1 »… */
+export const eventMark = (slot: number) => `e${slot}`;
+
 export const comprehensionWidget: WidgetDef<'comprehension'> = {
   id: 'comprehension',
 
-  emptyAnswer: (q) => ({ selected: q.items.map(() => '') }),
+  emptyAnswer: (q) => ({
+    selected: q.items.map(() => ''),
+    ...(q.events ? { order: q.events.map(() => -1) } : {}),
+  }),
 
   validate(q, answer): answer is ComprehensionAnswer {
     if (typeof answer !== 'object' || answer === null) return false;
-    const { selected } = answer as Partial<ComprehensionAnswer>;
+    const { selected, order } = answer as Partial<ComprehensionAnswer>;
+    const placed = Array.isArray(order) ? order.filter((i) => i !== -1) : [];
     return (
       Array.isArray(selected) &&
       selected.length === q.items.length &&
       selected.every(
         (id, i) =>
           id === '' || (typeof id === 'string' && q.items[i]!.choices.some((c) => c.id === id)),
-      )
+      ) &&
+      (q.events
+        ? Array.isArray(order) &&
+          order.length === q.events.length &&
+          order.every((i) => Number.isInteger(i) && i >= -1 && i < q.events!.length) &&
+          new Set(placed).size === placed.length
+        : order === undefined)
     );
   },
 
-  isComplete: (_q, answer) => answer.selected.every((id) => id !== ''),
+  isComplete: (_q, answer) =>
+    answer.selected.every((id) => id !== '') && (answer.order ?? []).every((i) => i !== -1),
 
   compare(q, expected, given) {
     const marks: Record<string, Mark> = {};
@@ -50,22 +64,43 @@ export const comprehensionWidget: WidgetDef<'comprehension'> = {
         ok++;
       } else marks[i] = 'wrong';
     });
-    const correct = ok === q.items.length;
+    // Chaque case d'événement compte comme une question.
+    (q.events ?? []).forEach((_, slot) => {
+      const event = given.order?.[slot] ?? -1;
+      if (event === -1) marks[eventMark(slot)] = 'missing';
+      else if (event === expected.order?.[slot]) {
+        marks[eventMark(slot)] = 'ok';
+        ok++;
+      } else marks[eventMark(slot)] = 'wrong';
+    });
+    const total = q.items.length + (q.events?.length ?? 0);
+    const correct = ok === total;
+    const again = q.read ? 'Relis le texte' : 'Réécoute l’histoire';
     return {
       correct,
-      score: q.items.length ? ok / q.items.length : 0,
+      score: total ? ok / total : 0,
       marks,
       ...(correct
         ? {}
         : {
-            feedback: `Ce qui est en rouge n’est pas juste. ${q.read ? 'Relis le texte' : 'Réécoute l’histoire'} si tu veux, et réessaie ! 💪`,
+            // Au deuxième essai, les événements mal placés retournent dans la réserve.
+            feedback: q.items.length
+              ? `Ce qui est en rouge n’est pas juste. ${again} si tu veux, et réessaie ! 💪`
+              : `Les événements bien placés restent en vert : range les autres. ${again} si tu veux ! 💪`,
           }),
     };
   },
 
-  // Les bonnes réponses restent ; les autres sont à refaire.
+  // Les bonnes réponses restent, les événements bien placés aussi ; les autres sont à refaire.
   retryAnswer: (_q, given, result) => ({
     selected: given.selected.map((id, i) => (result.marks[i] === 'ok' ? id : '')),
+    ...(given.order
+      ? {
+          order: given.order.map((event, slot) =>
+            result.marks[eventMark(slot)] === 'ok' ? event : -1,
+          ),
+        }
+      : {}),
   }),
 
   // L'histoire a son propre lecteur, et chaque question son bouton 🔊 : la consigne suffit ici.
