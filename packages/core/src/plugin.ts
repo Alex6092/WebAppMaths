@@ -37,6 +37,11 @@ export interface ExercisePlugin<W extends WidgetId = WidgetId, P = unknown, D = 
   levels: LevelDef<P>[];
   /** Niveau attendu en fin d'année pour considérer la notion acquise. */
   expectedLevel?: number;
+  /**
+   * Faux quand les niveaux ne suivent pas la classe (la musique) : chaque enfant commence au
+   * niveau 1, quelle que soit sa classe.
+   */
+  followsGrade?: boolean;
   /** Nombre d'essais par question (2 par défaut). */
   maxTries?: number;
   /**

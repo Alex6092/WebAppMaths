@@ -35,6 +35,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '🎹',
   notions: ['musique.instruments.piano'],
   expectedLevel: 3,
+  followsGrade: false,
   minVariety: 5,
   levels: defineLevels<Params>([
     {

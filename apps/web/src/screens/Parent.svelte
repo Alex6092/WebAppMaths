@@ -12,6 +12,7 @@
   import Evaluations from '../components/parent/Evaluations.svelte';
   import Homework from '../components/parent/Homework.svelte';
   import InstallHelp from '../components/parent/InstallHelp.svelte';
+  import Levels from '../components/parent/Levels.svelte';
   import Worksheets from '../components/parent/Worksheets.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
   import { toast } from '../lib/effects.svelte';
@@ -264,6 +265,8 @@
         <Evaluations child={followed} onerror={handle} />
         <h3>🖨️ Fiches à imprimer</h3>
         <Worksheets child={followed} onerror={handle} />
+        <h3>🎚️ Niveaux des exercices</h3>
+        <Levels child={followed} onerror={handle} />
         <ChildReport childId={followed.id} onerror={handle} />
       </section>
     {/if}

@@ -1,6 +1,8 @@
+import { registry } from '@app/content';
 import {
   dayKey,
   GRADE_IDS,
+  newLevelState,
   type AssignmentDto,
   type ChildDto,
   type ChildReport,
@@ -16,7 +18,7 @@ import type { FastifyInstance } from 'fastify';
 import { verifyPassword } from '../auth/crypto';
 import { requireParent, SESSION_COOKIE } from '../auth/session';
 import { children, exerciseStates, parentUsers } from '../db/schema';
-import { HttpError } from '../errors';
+import { HttpError, notFound } from '../errors';
 import {
   createEvaluation,
   deleteEvaluation,
@@ -132,6 +134,41 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
         .where(eq(exerciseStates.childId, child.id))
         .all();
       return Object.fromEntries(rows.map((r) => [r.pluginId, r.level]));
+    },
+  );
+
+  /** Le parent choisit le niveau d'un exercice : l'adaptation repart de là. */
+  api.put<{ Params: { id: number; pluginId: string }; Body: { level: number } }>(
+    '/children/:id/levels/:pluginId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          properties: { id: { type: 'integer' }, pluginId: { type: 'string', maxLength: 100 } },
+        },
+        body: {
+          type: 'object',
+          required: ['level'],
+          additionalProperties: false,
+          properties: { level: { type: 'integer', minimum: 1 } },
+        },
+      },
+    },
+    async (req) => {
+      const auth = requireParent(req);
+      const child = getFamilyChild(db, auth.familyId, req.params.id);
+      const plugin = registry.plugin(req.params.pluginId);
+      if (!plugin) throw notFound('plugin_not_found', 'Exercice inconnu.');
+      const level = Math.min(req.body.level, plugin.levels.length);
+      const state = { ...newLevelState(level), updatedAt: new Date() };
+      db.insert(exerciseStates)
+        .values({ childId: child.id, pluginId: plugin.id, ...state })
+        .onConflictDoUpdate({
+          target: [exerciseStates.childId, exerciseStates.pluginId],
+          set: state,
+        })
+        .run();
+      return { level };
     },
   );
 

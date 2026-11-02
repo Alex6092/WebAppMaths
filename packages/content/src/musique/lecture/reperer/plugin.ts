@@ -35,6 +35,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '🔍',
   notions: ['musique.lecture.reperer'],
   expectedLevel: 3,
+  followsGrade: false,
   levels: defineLevels<Params>([
     { label: 'Ligne ou interligne ?', grade: G, params: { mode: 'line' } },
     { label: 'La plus aiguë', grade: G, params: { mode: 'higher' } },

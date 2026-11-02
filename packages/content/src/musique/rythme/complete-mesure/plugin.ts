@@ -34,6 +34,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '🧩',
   notions: ['musique.rythme.durees'],
   expectedLevel: 3,
+  followsGrade: false,
   minVariety: 5,
   levels: defineLevels<Params>([
     {

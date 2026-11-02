@@ -42,6 +42,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '🎻',
   notions: ['musique.instruments.violon'],
   expectedLevel: 3,
+  followsGrade: false,
   minVariety: 4,
   levels: defineLevels<Params>([
     { label: 'Les cordes à vide', grade: G, params: { ask: 'string', notes: OPEN } },

@@ -45,6 +45,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '🎶',
   notions: ['musique.ecoute.dictee'],
   expectedLevel: 3,
+  followsGrade: false,
   minVariety: 5,
   levels: defineLevels<Params>([
     { label: '3 notes, 2 portées', grade: G, params: { clef: 'treble', count: 3, choices: 2 } },

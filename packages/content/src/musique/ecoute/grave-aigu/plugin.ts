@@ -24,6 +24,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '👂',
   notions: ['musique.ecoute.grave-aigu'],
   expectedLevel: 3,
+  followsGrade: false,
   levels: defineLevels<Params>([
     { label: 'Très différentes', grade: G, params: { gap: [7, 9] } },
     { label: 'Un peu moins', grade: G, params: { gap: [4, 5] } },

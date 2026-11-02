@@ -59,6 +59,7 @@ export function readingPlugin(options: {
     icon: options.icon,
     notions: [options.notion],
     expectedLevel: options.expectedLevel,
+    followsGrade: false,
     minVariety: 3,
     levels: defineLevels<ReadingParams>(options.levels),
 
