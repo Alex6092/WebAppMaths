@@ -55,6 +55,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '📈',
   notions: ['musique.ecoute.melodie'],
   expectedLevel: 3,
+  followsGrade: false,
   minVariety: 5,
   levels: defineLevels<Params>([
     { label: '3 notes voisines', grade: G, params: { count: 3, leap: 1, shapes: ['up', 'down'] } },

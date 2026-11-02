@@ -1,4 +1,4 @@
-import { checkPluginContract } from '@app/core';
+import { checkPluginContract, initialLevel } from '@app/core';
 import { describe, expect, it } from 'vitest';
 import { pluginPathIds, registry } from './index';
 
@@ -16,6 +16,14 @@ describe('catalogue', () => {
   it('donne un titre différent à chaque notion', () => {
     const titles = registry.notions.map((n) => n.title);
     expect(titles.filter((t, i) => titles.indexOf(t) !== i)).toEqual([]);
+  });
+
+  // La musique ne suit pas la classe : une élève de CE1 qui débute commence au niveau 1.
+  it('fait commencer la musique au niveau 1, quelle que soit la classe', () => {
+    const music = registry.plugins.filter((p) => p.id.startsWith('musique.'));
+    expect(music.length).toBeGreaterThan(0);
+    for (const grade of ['CP', 'CE1', 'CM2'] as const)
+      expect(music.filter((p) => initialLevel(p, grade) !== 1).map((p) => p.id)).toEqual([]);
   });
 });
 

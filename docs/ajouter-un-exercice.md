@@ -89,7 +89,8 @@ export default definePlugin('number-input', {
 - `check` est facultatif : par défaut, le widget compare la réponse donnée à celle de `solve`.
 - La consigne reprend le verbe d'action en majuscules, comme à l'école : COLORIE, SOULIGNE,
   ENTOURE, COCHE, COMPLÈTE, CALCULE.
-- Le niveau de départ d'un enfant est le premier niveau de sa classe (`grade`).
+- Le niveau de départ d'un enfant est le premier niveau de sa classe (`grade`). Le parent peut
+  le changer ensuite dans l'espace parent (« Niveaux des exercices »).
 
 ## Les widgets disponibles
 
@@ -182,8 +183,9 @@ milieu, 29 pour le ré… Une portée est une image (`picture: { kind: 'staff', 
 comme le clavier (`kind: 'keyboard'`) ; les widgets `piano` (toucher une touche) et
 `staff-place` (poser une note sur la portée) servent à répondre. Une question qui a des
 `tones` (numéro MIDI et durée en temps) les joue au piano et montre un bouton « 🎵 Écoute ».
-Les outils communs sont dans `packages/content/src/musique/lib/`. Les niveaux de musique sont
-tous au CP : la musique ne suit pas la classe, l'enfant monte aussi vite qu'il veut.
+Les outils communs sont dans `packages/content/src/musique/lib/`. La musique ne suit pas la
+classe : ses niveaux sont tous au CP et ses exercices déclarent `followsGrade: false`, pour que
+chaque enfant commence au niveau 1 ; il monte ensuite aussi vite qu'il veut.
 
 ## Un nouvel emoji ?
 

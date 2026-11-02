@@ -77,8 +77,9 @@ export function coinsFor(
   return solved ? Math.ceil(base / 2) : 0;
 }
 
-/** Niveau de départ : le premier niveau de la classe de l'enfant. */
+/** Niveau de départ : le premier niveau de la classe de l'enfant (le 1er hors classe). */
 export function initialLevel(plugin: AnyPlugin, grade: GradeId): number {
+  if (plugin.followsGrade === false) return 1;
   const target = gradeIndex(grade);
   const index = plugin.levels.findIndex((l) => gradeIndex(l.grade) >= target);
   return index === -1 ? plugin.levels.length : index + 1;

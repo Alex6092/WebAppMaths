@@ -33,6 +33,7 @@ export default definePlugin<'mcq', Params, Data>('mcq', {
   icon: '🥁',
   notions: ['musique.rythme.figures'],
   expectedLevel: 3,
+  followsGrade: false,
   minVariety: 3,
   levels: defineLevels<Params>([
     {

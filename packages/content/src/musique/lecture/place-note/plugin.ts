@@ -44,6 +44,7 @@ export default definePlugin<'staff-place', Params, Data>('staff-place', {
   icon: '✏️',
   notions: ['musique.lecture.placer'],
   expectedLevel: 2,
+  followsGrade: false,
   minVariety: 5,
   levels: defineLevels<Params>([
     { label: 'Clé de sol', grade: G, params: { mode: 'name', treble: [30, 38] } },

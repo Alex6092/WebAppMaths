@@ -26,6 +26,7 @@ export default definePlugin<'number-input', Params, Data>('number-input', {
   icon: '⏱️',
   notions: ['musique.rythme.durees'],
   expectedLevel: 3,
+  followsGrade: false,
   minVariety: 3,
   levels: defineLevels<Params>([
     {
