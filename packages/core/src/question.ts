@@ -1,3 +1,5 @@
+import type { Clef, StaffItem } from './music';
+
 /**
  * Questions et réponses, par widget. Une question est un objet JSON sérialisable :
  * on peut la stocker, la rejouer et l'imprimer.
@@ -14,6 +16,14 @@ export interface QuestionBase {
   listen?: string;
   /** La langue de ce qu'il faut écouter (« en-GB » pour l'anglais) ; le français sinon. */
   listenLang?: string;
+  /** Des notes de musique à écouter (jouées au piano), dans l'ordre. */
+  tones?: Tone[];
+}
+
+/** Une note jouée : sa touche (numéro MIDI, 60 pour le do du milieu) et sa durée en temps. */
+export interface Tone {
+  midi: number;
+  beats: number;
 }
 
 /** Point d'une figure. Les coordonnées sont en centimètres, origine en haut à gauche. */
@@ -81,7 +91,21 @@ export type Picture =
   /** Des emoji, dans l'ordre où ils sont rangés dans le cadre. */
   | { kind: 'icons'; icons: string[] }
   /** La page d'un mois (1 à 12) ; les jours de marks sont entourés (un anniversaire). */
-  | { kind: 'calendar'; year: number; month: number; marks?: number[] };
+  | { kind: 'calendar'; year: number; month: number; marks?: number[] }
+  /**
+   * Une portée : clé de sol, clé de fa, grand système (les deux), ou une seule ligne pour le
+   * rythme. time : le chiffrage de la mesure (4 pour 4/4).
+   */
+  | { kind: 'staff'; clef: Clef | 'grand' | 'rhythm'; items: StaffItem[]; time?: number }
+  /**
+   * Un morceau du clavier, de la touche blanche from à la touche blanche to (numéros MIDI).
+   * marks : touches marquées d'un point ; labels : le nom écrit sur les do.
+   */
+  | { kind: 'keyboard'; from: number; to: number; marks?: number[]; labels?: boolean }
+  /** Les quatre cordes du violon, avec leur nom. */
+  | { kind: 'violin' }
+  /** La courbe d'une mélodie : un point par note, plus haut quand c'est plus aigu. */
+  | { kind: 'contour'; steps: number[] };
 
 /** Opération posée en colonnes, avec cases de retenue. */
 export interface ColumnOpQuestion extends QuestionBase {
@@ -343,6 +367,43 @@ export interface ComprehensionAnswer {
   order?: number[];
 }
 
+/** Toucher les touches du piano : une note, ou plusieurs dans l'ordre. */
+export interface PianoQuestion extends QuestionBase {
+  widget: 'piano';
+  /** La partition à jouer, au-dessus du clavier. */
+  picture?: Picture;
+  /** Touches blanches de début et de fin (numéros MIDI). */
+  from: number;
+  to: number;
+  /** Nombre de touches à toucher. */
+  count: number;
+  /** Le nom écrit sur les do (une aide pour se repérer). */
+  labels?: boolean;
+}
+export interface PianoAnswer {
+  /** Les touches touchées, dans l'ordre (numéros MIDI). */
+  keys: number[];
+}
+
+/** Poser des notes sur la portée, en touchant une ligne ou un interligne. */
+export interface StaffPlaceQuestion extends QuestionBase {
+  widget: 'staff-place';
+  clef: Clef;
+  /** Ce qu'il faut poser (« un sol »), écrit au-dessus de la portée. */
+  prompt: string;
+  /** Nombre de notes à poser. */
+  count: number;
+  /** Places permises (en demi-interlignes au-dessus de la 1re ligne). */
+  min: number;
+  max: number;
+  /** Des notes déjà écrites au début (la note de départ d'une dictée). */
+  given?: number[];
+}
+export interface StaffPlaceAnswer {
+  /** La place de chaque note posée (en demi-interlignes au-dessus de la 1re ligne). */
+  positions: number[];
+}
+
 export type Question =
   | ColumnOpQuestion
   | NumberInputQuestion
@@ -355,7 +416,9 @@ export type Question =
   | ClockQuestion
   | MoneyQuestion
   | MatchQuestion
-  | ComprehensionQuestion;
+  | ComprehensionQuestion
+  | PianoQuestion
+  | StaffPlaceQuestion;
 export type WidgetId = Question['widget'];
 
 export interface AnswerMap {
@@ -371,6 +434,8 @@ export interface AnswerMap {
   money: MoneyAnswer;
   match: MatchAnswer;
   comprehension: ComprehensionAnswer;
+  piano: PianoAnswer;
+  'staff-place': StaffPlaceAnswer;
 }
 
 export type QuestionOf<W extends WidgetId> = Extract<Question, { widget: W }>;

@@ -2,9 +2,17 @@
   import type { Picture } from '@app/core';
   import Calendar from './Calendar.svelte';
   import Coin from './Coin.svelte';
+  import Contour from './Contour.svelte';
   import Dial from './Dial.svelte';
+  import Keyboard from './Keyboard.svelte';
+  import Staff from './Staff.svelte';
+  import Violin from './Violin.svelte';
 
-  /** Une image d'énoncé : une horloge, des pièces et des billets, des objets à compter ou un calendrier. Avec paper, en centimètres. */
+  /**
+   * Une image d'énoncé : une horloge, des pièces et des billets, des objets à compter, un
+   * calendrier, une portée, un clavier, un violon ou la courbe d'une mélodie. Avec paper, en
+   * centimètres.
+   */
   let {
     picture,
     paper = false,
@@ -32,6 +40,21 @@
   <div class="icons" class:paper role="img" aria-label="Des objets à compter">
     {#each picture.icons as icon, i (i)}<span>{icon}</span>{/each}
   </div>
+{:else if picture.kind === 'staff'}
+  <Staff kind={picture.clef} items={picture.items} time={picture.time} {paper} {small} />
+{:else if picture.kind === 'keyboard'}
+  <Keyboard
+    from={picture.from}
+    to={picture.to}
+    marks={picture.marks}
+    labels={picture.labels}
+    {paper}
+    {small}
+  />
+{:else if picture.kind === 'violin'}
+  <Violin {paper} />
+{:else if picture.kind === 'contour'}
+  <Contour steps={picture.steps} {paper} {small} />
 {:else}
   <div class="money" class:paper role="img" aria-label="Des pièces et des billets">
     {#each picture.values as value, i (i)}<Coin {value} {paper} {small} />{/each}

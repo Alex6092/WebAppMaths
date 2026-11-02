@@ -8,7 +8,7 @@ déposer le dossier suffit pour que l'exercice apparaisse dans l'app.
 
 ```
 Classe (CP, CE1…)
- └ Matière (maths, francais, qlm, anglais)          packages/content/src/catalog/subjects.ts
+ └ Matière (maths, francais, qlm, anglais, musique) packages/content/src/catalog/subjects.ts
     └ Domaine (maths.calcul, francais.conjugaison)  packages/content/src/<matière>/domains.ts
        └ Notion : l'acquisition est suivie ici       packages/content/src/<matière>/domains.ts
           └ Type d'exercice (plugin) et ses niveaux  packages/content/src/<matière>/<domaine>/<nom>/plugin.ts
@@ -174,6 +174,16 @@ plutôt qu'avec les touches 7️⃣ : la police d'emoji ne contient pas les chif
 
 Un exercice trop long pour un mélange (comme une histoire) déclare `inMix: false` : il ne vient
 ni dans « Tout mélanger », ni dans le défi du jour, ni dans les révisions ; un devoir le garde.
+
+## La musique
+
+Les notes se repèrent par leur rang diatonique (`packages/core/src/music.ts`) : 28 pour le do du
+milieu, 29 pour le ré… Une portée est une image (`picture: { kind: 'staff', clef, items }`),
+comme le clavier (`kind: 'keyboard'`) ; les widgets `piano` (toucher une touche) et
+`staff-place` (poser une note sur la portée) servent à répondre. Une question qui a des
+`tones` (numéro MIDI et durée en temps) les joue au piano et montre un bouton « 🎵 Écoute ».
+Les outils communs sont dans `packages/content/src/musique/lib/`. Les niveaux de musique sont
+tous au CP : la musique ne suit pas la classe, l'enfant monte aussi vite qu'il veut.
 
 ## Un nouvel emoji ?
 

@@ -12,6 +12,7 @@ export * from './grades';
 export * from './lesson';
 export * from './mastery';
 export * from './money';
+export * from './music';
 export * from './plugin';
 export * from './progression';
 export * from './question';

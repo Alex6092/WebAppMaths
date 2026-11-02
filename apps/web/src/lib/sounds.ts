@@ -1,3 +1,4 @@
+import { frequency, type Tone } from '@app/core';
 import { activeChild } from './session.svelte';
 
 /**
@@ -89,4 +90,67 @@ export function playSound(name: SoundName): void {
     osc.start(now + start);
     osc.stop(now + start + duration + 0.05);
   }
+}
+
+/** La durée d'un temps, en secondes, quand l'app joue des notes. */
+const BEAT = 0.6;
+/** Les notes en train de sonner : une nouvelle écoute coupe la précédente. */
+let playing: OscillatorNode[] = [];
+
+/** Arrête les notes en train de sonner. */
+export function stopNotes(): void {
+  for (const osc of playing) {
+    try {
+      osc.stop();
+    } catch {
+      // Déjà arrêtée.
+    }
+  }
+  playing = [];
+}
+
+/**
+ * Joue des notes l'une après l'autre, avec un son de piano (un son qui frappe puis s'éteint).
+ * Le réglage 🔇 ne les coupe pas : dans un exercice d'écoute, le son est la question.
+ */
+export function playNotes(tones: readonly Tone[]): void {
+  const ctx = audio();
+  if (!ctx) return;
+  stopNotes();
+  let at = ctx.currentTime + 0.05;
+  for (const tone of tones) {
+    const length = tone.beats * BEAT;
+    const ring = Math.max(length, 0.9);
+    const base = frequency(tone.midi);
+    // La note et deux harmoniques, plus faibles : un timbre plus rond qu'un simple sifflement.
+    for (const [ratio, volume] of [
+      [1, 0.22],
+      [2, 0.07],
+      [3, 0.03],
+    ] as const) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = base * ratio;
+      gain.gain.setValueAtTime(0, at);
+      gain.gain.linearRampToValueAtTime(volume, at + 0.01);
+      gain.gain.exponentialRampToValueAtTime(volume * 0.3, at + length * 0.8);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + ring);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(at);
+      osc.stop(at + ring + 0.05);
+      playing.push(osc);
+    }
+    at += length;
+  }
+}
+
+// Safari ne laisse sonner Web Audio qu'après un toucher : on réveille le son au premier.
+const WAKE = ['pointerup', 'touchend', 'keydown'] as const;
+function wake(): void {
+  if (audio()?.state !== 'running') return;
+  for (const type of WAKE) window.removeEventListener(type, wake, true);
+}
+if (typeof window !== 'undefined') {
+  for (const type of WAKE) window.addEventListener(type, wake, true);
 }

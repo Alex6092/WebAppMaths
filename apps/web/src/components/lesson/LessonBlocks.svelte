@@ -88,6 +88,15 @@
       />
       {#if block.caption}<figcaption><RichText text={block.caption} /></figcaption>{/if}
     </figure>
+  {:else if block.kind === 'pictures'}
+    <div class="clocks">
+      {#each block.items as item, i (i)}
+        <figure>
+          <PictureView picture={item.picture} small />
+          {#if item.caption}<figcaption><RichText text={item.caption} /></figcaption>{/if}
+        </figure>
+      {/each}
+    </div>
   {:else if block.kind === 'words'}
     <!-- Les mots d'anglais : on touche une carte pour l'entendre. -->
     <div class="words">

@@ -1,5 +1,11 @@
 <script lang="ts">
-  import type { AnswerOf, PluginQuestion, Question } from '@app/core';
+  import {
+    noteOfMidi,
+    noteSymbol,
+    type AnswerOf,
+    type PluginQuestion,
+    type Question,
+  } from '@app/core';
   import PaperFigure from './PaperFigure.svelte';
   import PrintClassify from './PrintClassify.svelte';
   import PrintClock from './PrintClock.svelte';
@@ -11,6 +17,8 @@
   import PrintMoney from './PrintMoney.svelte';
   import PrintNumber from './PrintNumber.svelte';
   import PrintOrder from './PrintOrder.svelte';
+  import PrintPiano from './PrintPiano.svelte';
+  import PrintStaffPlace from './PrintStaffPlace.svelte';
   import PrintWords from './PrintWords.svelte';
 
   /** Une question sur papier ; avec solution, son corrigé (en rouge). */
@@ -24,6 +32,10 @@
 <!-- Une dictée : l'adulte lit ce qui est écrit sur le corrigé. -->
 {#if question.listen && solution}<p class="listen">
     🔊 à lire{question.listenLang?.startsWith('en') ? ' en anglais' : ''} : « {question.listen} »
+  </p>{/if}
+<!-- Des notes à écouter : l'adulte les joue (ou les chante) d'après le corrigé. -->
+{#if question.tones && solution}<p class="listen">
+    🎵 à jouer : {question.tones.map((t) => noteSymbol(noteOfMidi(t.midi))).join(' – ')}
   </p>{/if}
 
 {#if question.widget === 'column-op'}
@@ -48,6 +60,10 @@
   <PrintMoney {question} solution={key(question)} />
 {:else if question.widget === 'match'}
   <PrintMatch {question} solution={key(question)} />
+{:else if question.widget === 'piano'}
+  <PrintPiano {question} solution={key(question)} />
+{:else if question.widget === 'staff-place'}
+  <PrintStaffPlace {question} solution={key(question)} />
 {:else if question.widget === 'comprehension'}
   <PrintComprehension {question} solution={key(question)} />
 {/if}

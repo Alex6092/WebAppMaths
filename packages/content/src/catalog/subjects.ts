@@ -5,4 +5,5 @@ export const subjects: Subject[] = [
   { id: 'francais', title: 'Français', icon: '📖', color: '#e53935', order: 2 },
   { id: 'qlm', title: 'Questionner le monde', icon: '🌍', color: '#43a047', order: 3 },
   { id: 'anglais', title: 'Anglais', icon: '🗣️', color: '#8e24aa', order: 4 },
+  { id: 'musique', title: 'Musique', icon: '🎵', color: '#f4511e', order: 5 },
 ];
