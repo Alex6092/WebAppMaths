@@ -10,6 +10,8 @@ import { mcqWidget } from './mcq';
 import { moneyWidget } from './money';
 import { numberInputWidget } from './number-input';
 import { orderWidget } from './order';
+import { pianoWidget } from './piano';
+import { staffPlaceWidget } from './staff-place';
 import type { WidgetDef } from './types';
 import { wordSelectWidget } from './word-select';
 
@@ -26,6 +28,8 @@ export const WIDGETS: { [W in WidgetId]: WidgetDef<W> } = {
   money: moneyWidget,
   match: matchWidget,
   comprehension: comprehensionWidget,
+  piano: pianoWidget,
+  'staff-place': staffPlaceWidget,
 };
 
 export function getWidget<W extends WidgetId>(id: W): WidgetDef<W> {
@@ -43,5 +47,6 @@ export { compareMatch, linkKey } from './match';
 export { compareMoney, pickedTotal } from './money';
 export { normalizeNumber } from './number-input';
 export { compareOrder, orderText } from './order';
+export { comparePositions } from './staff-place';
 export type { WidgetDef } from './types';
 export { isSelectable, tokensText } from './word-select';

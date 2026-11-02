@@ -87,7 +87,9 @@ export class TtsPool {
     } catch (error) {
       job.reject(error as Error);
     } finally {
-      await rm(file, { force: true });
+      // Sous Windows, Piper tient parfois encore le fichier : on réessaie, puis on le laisse
+      // (un fichier oublié dans tmp vaut mieux qu'un serveur qui s'arrête).
+      await rm(file, { force: true, maxRetries: 3 }).catch(() => undefined);
       this.running--;
       if (!this.closed) {
         this.idle.set(job.voice, [...(this.idle.get(job.voice) ?? []), piper]);

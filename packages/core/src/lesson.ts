@@ -1,6 +1,6 @@
 import { figurePoint } from './geometry';
 import { DENOMINATIONS } from './money';
-import type { Figure } from './question';
+import type { Figure, Picture } from './question';
 
 /**
  * Une fiche de leçon, comme celles du cahier : du texte et des illustrations.
@@ -46,7 +46,9 @@ export type LessonBlock =
   /** La page d'un mois (1 à 12), des jours entourés. */
   | { kind: 'calendar'; year: number; month: number; marks?: number[]; caption?: string }
   /** Des mots d'une autre langue, chacun avec son sens et sa voix : on touche pour écouter. */
-  | { kind: 'words'; lang: string; items: LessonWord[] };
+  | { kind: 'words'; lang: string; items: LessonWord[] }
+  /** Des images côte à côte (une portée, un clavier…), chacune avec sa légende. */
+  | { kind: 'pictures'; items: { picture: Picture; caption?: string }[] };
 
 export interface LessonWord {
   /** Le mot dans la langue apprise : « red ». */
@@ -124,6 +126,8 @@ export function lessonSpeech(blocks: readonly LessonBlock[]): string {
         return block.caption ? [block.caption] : [];
       case 'clocks':
         return block.items.map((c) => c.caption);
+      case 'pictures':
+        return block.items.flatMap((p) => (p.caption ? [p.caption] : []));
       case 'base-ten':
         return [
           [...String(block.value)]

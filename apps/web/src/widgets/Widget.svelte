@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Mark, PluginQuestion } from '@app/core';
   import { untrack } from 'svelte';
+  import { playNotes, stopNotes } from '../lib/sounds';
   import { speak, ttsAvailable } from '../lib/tts';
   import Classify from './Classify.svelte';
   import Clock from './Clock.svelte';
@@ -13,6 +14,8 @@
   import Money from './Money.svelte';
   import NumberInput from './NumberInput.svelte';
   import Order from './Order.svelte';
+  import Piano from './Piano.svelte';
+  import StaffPlace from './StaffPlace.svelte';
   import type { Phase } from './types';
   import WordSelect from './WordSelect.svelte';
 
@@ -35,11 +38,31 @@
   $effect(() => {
     if (question.listen && untrack(() => phase) === 'answering') untrack(hear);
   });
+
+  // Les notes à écouter se jouent aussi toutes seules, un peu après l'arrivée de la question.
+  const play = () => playNotes(question.tones ?? []);
+  $effect(() => {
+    if (!question.tones || untrack(() => phase) !== 'answering') return;
+    const timer = setTimeout(
+      untrack(() => play),
+      400,
+    );
+    return () => {
+      clearTimeout(timer);
+      stopNotes();
+    };
+  });
 </script>
 
 {#if question.listen && ttsAvailable()}
   <button class="listen" data-testid="listen" onclick={hear}>
     <span aria-hidden="true">🔊</span> Écoute
+  </button>
+{/if}
+
+{#if question.tones}
+  <button class="listen" data-testid="tones" onclick={play}>
+    <span aria-hidden="true">🎵</span> Écoute
   </button>
 {/if}
 
@@ -69,6 +92,10 @@
   <Money {question} bind:answer {phase} {marks} {solution} />
 {:else if question.widget === 'match'}
   <Match {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'piano'}
+  <Piano {question} bind:answer {phase} {marks} {solution} />
+{:else if question.widget === 'staff-place'}
+  <StaffPlace {question} bind:answer {phase} {marks} {solution} />
 {:else if question.widget === 'comprehension'}
   <Comprehension {question} bind:answer {phase} {marks} {solution} />
 {/if}

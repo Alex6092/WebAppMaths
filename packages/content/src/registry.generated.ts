@@ -95,34 +95,49 @@ import plugin90 from './maths/problemes/phrase-reponse/plugin';
 import plugin91 from './maths/problemes/quelle-operation/plugin';
 import plugin92 from './maths/problemes/relie-enonce/plugin';
 import plugin93 from './maths/problemes/resous-probleme/plugin';
-import plugin94 from './qlm/matiere/change-etat/plugin';
-import plugin95 from './qlm/matiere/solide-liquide/plugin';
-import plugin96 from './qlm/temps/compte-calendrier/plugin';
-import plugin97 from './qlm/temps/jour-calendrier/plugin';
-import plugin98 from './qlm/temps/quel-jour/plugin';
-import plugin99 from './qlm/temps/quel-mois/plugin';
-import plugin100 from './qlm/temps/range-jours/plugin';
-import plugin101 from './qlm/temps/range-mois/plugin';
-import plugin102 from './qlm/temps/range-moments/plugin';
-import plugin103 from './qlm/temps/range-saisons/plugin';
-import plugin104 from './qlm/temps/saison-du-mois/plugin';
-import plugin105 from './qlm/vivant/aliments-transformes/plugin';
-import plugin106 from './qlm/vivant/besoins-plante/plugin';
-import plugin107 from './qlm/vivant/classe-animaux/plugin';
-import plugin108 from './qlm/vivant/classe-familles-aliments/plugin';
-import plugin109 from './qlm/vivant/cycle-vie/plugin';
-import plugin110 from './qlm/vivant/famille-aliment/plugin';
-import plugin111 from './qlm/vivant/origine-aliments/plugin';
-import plugin112 from './qlm/vivant/parties-plante/plugin';
-import plugin113 from './qlm/vivant/petit-animal/plugin';
-import plugin114 from './qlm/vivant/provenance-aliments/plugin';
-import plugin115 from './qlm/vivant/quel-sens/plugin';
-import plugin116 from './qlm/vivant/relie-sens/plugin';
-import plugin117 from './qlm/vivant/vivant-ou-pas/plugin';
+import plugin94 from './musique/ecoute/grave-aigu/plugin';
+import plugin95 from './musique/ecoute/monte-descend/plugin';
+import plugin96 from './musique/ecoute/quelle-portee/plugin';
+import plugin97 from './musique/instruments/piano-nom/plugin';
+import plugin98 from './musique/instruments/piano-touche/plugin';
+import plugin99 from './musique/instruments/violon/plugin';
+import plugin100 from './musique/lecture/cle-de-fa/plugin';
+import plugin101 from './musique/lecture/cle-de-sol/plugin';
+import plugin102 from './musique/lecture/deux-cles/plugin';
+import plugin103 from './musique/lecture/place-note/plugin';
+import plugin104 from './musique/lecture/reperer/plugin';
+import plugin105 from './musique/rythme/combien-de-temps/plugin';
+import plugin106 from './musique/rythme/complete-mesure/plugin';
+import plugin107 from './musique/rythme/figures/plugin';
+import plugin108 from './qlm/matiere/change-etat/plugin';
+import plugin109 from './qlm/matiere/solide-liquide/plugin';
+import plugin110 from './qlm/temps/compte-calendrier/plugin';
+import plugin111 from './qlm/temps/jour-calendrier/plugin';
+import plugin112 from './qlm/temps/quel-jour/plugin';
+import plugin113 from './qlm/temps/quel-mois/plugin';
+import plugin114 from './qlm/temps/range-jours/plugin';
+import plugin115 from './qlm/temps/range-mois/plugin';
+import plugin116 from './qlm/temps/range-moments/plugin';
+import plugin117 from './qlm/temps/range-saisons/plugin';
+import plugin118 from './qlm/temps/saison-du-mois/plugin';
+import plugin119 from './qlm/vivant/aliments-transformes/plugin';
+import plugin120 from './qlm/vivant/besoins-plante/plugin';
+import plugin121 from './qlm/vivant/classe-animaux/plugin';
+import plugin122 from './qlm/vivant/classe-familles-aliments/plugin';
+import plugin123 from './qlm/vivant/cycle-vie/plugin';
+import plugin124 from './qlm/vivant/famille-aliment/plugin';
+import plugin125 from './qlm/vivant/origine-aliments/plugin';
+import plugin126 from './qlm/vivant/parties-plante/plugin';
+import plugin127 from './qlm/vivant/petit-animal/plugin';
+import plugin128 from './qlm/vivant/provenance-aliments/plugin';
+import plugin129 from './qlm/vivant/quel-sens/plugin';
+import plugin130 from './qlm/vivant/relie-sens/plugin';
+import plugin131 from './qlm/vivant/vivant-ou-pas/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
-import * as domains3 from './qlm/domains';
+import * as domains3 from './musique/domains';
+import * as domains4 from './qlm/domains';
 
 export const plugins: AnyPlugin[] = [
   plugin0,
@@ -243,6 +258,20 @@ export const plugins: AnyPlugin[] = [
   plugin115,
   plugin116,
   plugin117,
+  plugin118,
+  plugin119,
+  plugin120,
+  plugin121,
+  plugin122,
+  plugin123,
+  plugin124,
+  plugin125,
+  plugin126,
+  plugin127,
+  plugin128,
+  plugin129,
+  plugin130,
+  plugin131,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -341,6 +370,20 @@ export const pluginPathIds: string[] = [
   'maths.problemes.quelle-operation',
   'maths.problemes.relie-enonce',
   'maths.problemes.resous-probleme',
+  'musique.ecoute.grave-aigu',
+  'musique.ecoute.monte-descend',
+  'musique.ecoute.quelle-portee',
+  'musique.instruments.piano-nom',
+  'musique.instruments.piano-touche',
+  'musique.instruments.violon',
+  'musique.lecture.cle-de-fa',
+  'musique.lecture.cle-de-sol',
+  'musique.lecture.deux-cles',
+  'musique.lecture.place-note',
+  'musique.lecture.reperer',
+  'musique.rythme.combien-de-temps',
+  'musique.rythme.complete-mesure',
+  'musique.rythme.figures',
   'qlm.matiere.change-etat',
   'qlm.matiere.solide-liquide',
   'qlm.temps.compte-calendrier',
@@ -372,4 +415,5 @@ export const domainModules: { domains: Domain[]; notions: Notion[] }[] = [
   domains1,
   domains2,
   domains3,
+  domains4,
 ];
