@@ -4,6 +4,7 @@ import { loadConfig } from './config';
 import { scheduleDailyBackups } from './db/backup';
 import { openDb } from './db/client';
 import { ensureAdminInvitation } from './services/invitations';
+import { applyRetention, describeRetention } from './services/retention';
 
 const config = loadConfig();
 const db = openDb(join(config.dataDir, 'app.db'));
@@ -16,7 +17,11 @@ if (adminCode) {
   );
 }
 
-scheduleDailyBackups(db, join(config.dataDir, 'backups'), config.backupKeep, app.log);
+// Chaque nuit, après la sauvegarde : la durée de conservation (sessions, codes, classes
+// d'années passées, comptes d'enseignants partis).
+scheduleDailyBackups(db, join(config.dataDir, 'backups'), config.backupKeep, app.log, () =>
+  app.log.info(describeRetention(applyRetention(db))),
+);
 
 if (!config.webDist)
   app.log.info('Interface non construite : seule l’API est servie (npm run dev lance Vite).');

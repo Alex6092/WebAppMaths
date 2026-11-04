@@ -90,6 +90,23 @@ réinitialisation** (code + QR code, valable 14 jours, une seule fois).
 - Le parent clique sur « Mot de passe oublié ? » (écran de connexion) ou scanne le QR code, saisit
   son e-mail et un nouveau mot de passe : il est connecté, et ses autres appareils sont déconnectés.
 
+## Durée de conservation
+
+Chaque nuit, juste après la sauvegarde quotidienne (jamais sans elle), l'app efface ce qui ne sert
+plus :
+
+- les sessions expirées ; les invitations, fiches parents et codes de réinitialisation utilisés ou
+  expirés depuis plus de 30 jours ;
+- une classe dont l'année scolaire est finie depuis plus d'un an (la rentrée n'a pas été faite) :
+  ses élèves sans compte parent sont supprimés, les autres restent à leur famille, sans classe ;
+- un compte sans école ni famille (un enseignant retiré de son école) après 6 mois sans connexion.
+
+Les avis de l'enseignant, les devoirs et la progression restent avec le profil de l'enfant tant
+qu'il existe ; une famille n'est jamais supprimée parce qu'elle est inactive. Ce qui est effacé
+reste 14 jours dans les sauvegardes. Le journal du serveur indique chaque nuit combien d'éléments
+ont été effacés (des nombres, jamais de noms) ; `cli.js retention --dry-run` montre ce qui le
+serait aujourd'hui.
+
 ## Plusieurs postes derrière la même adresse
 
 Dans une école, tous les postes (et les parents sur le Wi-Fi d'une réunion) sortent souvent par la

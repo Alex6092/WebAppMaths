@@ -28,6 +28,8 @@ export const parentUsers = sqliteTable('parent_user', {
   passwordHash: text('password_hash').notNull(),
   role: text('role', { enum: ['admin', 'parent'] }).notNull(),
   createdAt: createdAt(),
+  /** Dernière connexion (au jour près) : un compte sans école ni famille s'efface après 6 mois. */
+  lastSeenAt: integer('last_seen_at', { mode: 'timestamp_ms' }),
 });
 
 /** Écoles (établissements). */

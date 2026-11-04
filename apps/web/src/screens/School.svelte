@@ -403,6 +403,12 @@
             maison reste dans l’export de chaque famille. Pense à inscrire l’app au registre des
             traitements de l’école.
           </p>
+          <p class="hint">
+            Durée de conservation : une classe dont l’année est finie depuis plus d’un an (si la
+            rentrée n’a pas été faite) est supprimée, avec ses élèves sans compte parent ; un compte
+            d’enseignant retiré de l’école est supprimé après 6 mois sans connexion. Les avis et la
+            progression des élèves restent avec leur profil.
+          </p>
           <button class="btn small" disabled={exporting} onclick={exportSchool}
             >⬇️ Télécharger les données de l’école</button
           >

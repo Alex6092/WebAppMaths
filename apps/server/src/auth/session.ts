@@ -48,6 +48,7 @@ export class SessionStore {
         expiresAt: new Date(now + SESSION_TTL_MS),
       })
       .run();
+    this.touchUser(userId, now);
     return token;
   }
 
@@ -67,6 +68,7 @@ export class SessionStore {
         .set({ lastSeenAt: new Date(now), expiresAt: new Date(now + SESSION_TTL_MS) })
         .where(eq(authSessions.id, row.session.id))
         .run();
+      this.touchUser(row.user.id, now);
     }
     return {
       sessionId: row.session.id,
@@ -76,6 +78,15 @@ export class SessionStore {
       parentVerifiedAt: row.session.parentVerifiedAt?.getTime() ?? null,
       activeChildId: row.session.activeChildId,
     };
+  }
+
+  /** La dernière activité du compte (durée de conservation des comptes sans école ni famille). */
+  private touchUser(userId: number, now: number): void {
+    this.db
+      .update(parentUsers)
+      .set({ lastSeenAt: new Date(now) })
+      .where(eq(parentUsers.id, userId))
+      .run();
   }
 
   update(

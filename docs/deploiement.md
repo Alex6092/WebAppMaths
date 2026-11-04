@@ -118,6 +118,14 @@ oublié ? » sur l'écran de connexion.
 docker exec webappmaths node apps/server/dist/cli.js reset --email adresse@du.compte
 ```
 
+Durée de conservation (voir [les écoles](ecoles.md)) : la purge passe chaque nuit après la
+sauvegarde. Pour voir ce qu'elle effacerait aujourd'hui, ou la lancer à la main (une sauvegarde
+« pre-retention » est faite avant) :
+
+```bash
+docker exec webappmaths node apps/server/dist/cli.js retention --dry-run
+```
+
 ## La voix du serveur (Piper)
 
 Les consignes, les dictées et l'anglais sont lus par [Piper](https://github.com/rhasspy/piper)

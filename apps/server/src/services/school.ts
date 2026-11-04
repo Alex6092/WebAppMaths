@@ -24,6 +24,7 @@ import {
   classroomTeachers,
   invitations,
   parentUsers,
+  rolloverChoices,
   schoolMembers,
   schools,
 } from '../db/schema';
@@ -373,9 +374,12 @@ export function deleteClass(db: Db, auth: AuthContext, classId: number): void {
   db.transaction((tx) => removeClass(tx, row));
 }
 
-function removeClass(tx: Tx, row: ClassRow): void {
-  for (const pupil of classPupils(tx, row.id)) removeFromClass(tx, pupil);
+/** Supprime une classe ; renvoie combien d'élèves sont restés à leur famille ou ont été supprimés. */
+export function removeClass(tx: Tx, row: ClassRow): { detached: number; deleted: number } {
+  const counts = { detached: 0, deleted: 0 };
+  for (const pupil of classPupils(tx, row.id)) counts[removeFromClass(tx, pupil)]++;
   tx.delete(classrooms).where(eq(classrooms.id, row.id)).run();
+  return counts;
 }
 
 export function classroomDetail(db: Db, auth: AuthContext, classId: number): ClassroomDetail {
@@ -520,6 +524,7 @@ export function removeFromClass(tx: Tx, pupil: ChildRow): 'detached' | 'deleted'
   tx.delete(invitations)
     .where(and(eq(invitations.childId, pupil.id), isNull(invitations.usedAt)))
     .run();
+  tx.delete(rolloverChoices).where(eq(rolloverChoices.childId, pupil.id)).run();
   if (pupil.familyId === null) {
     tx.delete(children).where(eq(children.id, pupil.id)).run();
     return 'deleted';
