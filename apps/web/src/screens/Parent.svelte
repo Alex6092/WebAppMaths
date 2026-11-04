@@ -109,6 +109,24 @@
     }
   }
 
+  // --- Administration : mot de passe oublié ---
+  let resetEmail = $state('');
+  let resetCode = $state<{ email: string; reset: CreatedInvitation } | null>(null);
+
+  async function accountReset(event: SubmitEvent) {
+    event.preventDefault();
+    try {
+      const email = resetEmail.trim();
+      resetCode = {
+        email,
+        reset: await api.post<CreatedInvitation>('admin/password-resets', { email }),
+      };
+      resetEmail = '';
+    } catch (e) {
+      handle(e);
+    }
+  }
+
   // --- Fiche de l'école ---
   let pupilCode = $state('');
 
@@ -592,6 +610,29 @@
               {/each}
             </tbody>
           </table>
+        {/if}
+      </section>
+
+      <section class="card">
+        <h2>Administration : mot de passe oublié</h2>
+        <p class="hint">
+          Pour un parent sans école, un enseignant ou une direction. Les parents d’un élève peuvent
+          aussi demander une fiche à la direction de l’école.
+        </p>
+        <form class="row" onsubmit={accountReset}>
+          <div class="field">
+            <label for="reset-email">E-mail du compte</label>
+            <input id="reset-email" type="email" bind:value={resetEmail} maxlength="200" required />
+          </div>
+          <button class="btn small" type="submit">Créer un code</button>
+        </form>
+        {#if resetCode}
+          <p>Code pour {resetCode.email} :</p>
+          <p class="code">{resetCode.reset.code}</p>
+          <p class="hint">
+            Valable jusqu’au {date(resetCode.reset.expiresAt)}, une seule fois · lien :
+            {`${location.origin}${location.pathname}#/reinitialiser?code=${resetCode.reset.code}`}
+          </p>
         {/if}
       </section>
     {/if}

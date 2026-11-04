@@ -34,6 +34,7 @@ import {
   saveClassAssessment,
 } from '../services/classwork';
 import { setClassNotions } from '../services/notions';
+import { createFamilyReset } from '../services/password-reset';
 import { classCsv, exportSchool, fileName } from '../services/school-export';
 import { applyRollover, rolloverDto, setRolloverChoices } from '../services/rollover';
 import { childReport } from '../services/report';
@@ -373,6 +374,13 @@ export function schoolRoutes(api: FastifyInstance, { db }: Deps): void {
     const { pupil } = getPupil(db, requireParent(req), req.params.id);
     return { removed: db.transaction((tx) => removeFromClass(tx, pupil)) };
   });
+
+  /** Accès parent oublié : une fiche de réinitialisation pour la famille de l'élève (direction). */
+  api.post<{ Params: { id: number } }>(
+    '/pupils/:id/parent-reset',
+    { schema: ID_PARAMS },
+    async (req) => createFamilyReset(db, requireParent(req), req.params.id),
+  );
 
   /** Le bilan d'un élève (le même que celui du parent). */
   api.get<{ Params: { id: number } }>(

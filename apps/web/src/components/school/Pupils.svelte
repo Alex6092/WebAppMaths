@@ -2,6 +2,7 @@
   import { untrack } from 'svelte';
   import type {
     ClassroomDetail,
+    CreatedInvitation,
     GradeId,
     NewPupil,
     PupilCode,
@@ -13,6 +14,7 @@
   import { toast } from '../../lib/effects.svelte';
   import { session } from '../../lib/session.svelte';
   import ParentSheets from './ParentSheets.svelte';
+  import ResetSheet from './ResetSheet.svelte';
 
   /** Les élèves de la classe : ajout (une ligne par élève), modification, retrait, fiches parents. */
   let {
@@ -116,6 +118,26 @@
     }
   }
 
+  // --- Accès parent oublié (direction) ---
+  let reset = $state<{ pupil: PupilDto; fiche: CreatedInvitation } | null>(null);
+
+  async function parentReset(p: PupilDto) {
+    if (
+      !confirm(
+        `Imprimer une fiche de réinitialisation pour les parents de ${p.firstName} ? Elle permet de choisir un nouveau mot de passe : ne la remets qu’à ses parents.`,
+      )
+    )
+      return;
+    try {
+      reset = {
+        pupil: p,
+        fiche: await api.post<CreatedInvitation>(`pupils/${p.id}/parent-reset`),
+      };
+    } catch (e) {
+      onerror(e);
+    }
+  }
+
   // --- Fiches parents ---
   const chosen = new SvelteSet<number>();
   const unlinked = $derived(detail.pupilList.filter((p) => !p.linked));
@@ -209,6 +231,11 @@
                 <button class="btn ghost small" type="button" onclick={() => (editing = null)}
                   >Annuler</button
                 >
+                {#if p.linked && school.role === 'direction'}
+                  <button class="btn ghost small" type="button" onclick={() => parentReset(p)}
+                    >🔑 Accès parent oublié</button
+                  >
+                {/if}
                 <button class="btn danger small" type="button" onclick={() => remove(p)}
                   >Retirer de la classe</button
                 >
@@ -257,6 +284,16 @@
     🔒 Pas d’e-mail ni de date de naissance : un prénom et une initiale suffisent.
   </p>
 </form>
+
+{#if reset}
+  <ResetSheet
+    reset={reset.fiche}
+    firstName={reset.pupil.firstName}
+    className={detail.name}
+    schoolName={school.name}
+    onclose={() => (reset = null)}
+  />
+{/if}
 
 {#if codes}
   <ParentSheets

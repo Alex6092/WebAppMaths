@@ -1,12 +1,13 @@
-import type { InvitationPreview, RedeemRequest } from '@app/core';
+import type { InvitationPreview, RedeemRequest, ResetPreview, ResetRequest } from '@app/core';
 import type { FastifyInstance } from 'fastify';
 import { eq } from 'drizzle-orm';
-import { hashPassword, verifyPassword } from '../auth/crypto';
+import { hashPassword, normalizeInvitationCode, verifyPassword } from '../auth/crypto';
 import { createGuard, ipOf } from '../auth/limits';
 import { requireAuth, requireParent, SESSION_COOKIE, SESSION_TTL_MS } from '../auth/session';
 import { parentUsers } from '../db/schema';
 import { badRequest, conflict, HttpError } from '../errors';
 import { buildMe, getFamilyChild } from '../services/family';
+import { previewReset, resetPassword } from '../services/password-reset';
 import {
   attachPupil,
   ensureFamily,
@@ -40,6 +41,12 @@ export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps)
       `login:${ipOf(req)}:${String((req.body as { email?: unknown }).email ?? '')
         .trim()
         .toLowerCase()}`,
+  });
+  // Une fiche de réinitialisation : 10 essais d'e-mail par quart d'heure, pas plus.
+  const resetPerCode = createGuard(api, {
+    max: config.authAttempts,
+    keyOf: (req) =>
+      `reset:${normalizeInvitationCode(String((req.body as { code?: unknown }).code ?? ''))}`,
   });
   const unlockPerAccount = createGuard(api, {
     max: config.authAttempts,
@@ -205,6 +212,49 @@ export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps)
       const ok = await verifyPassword(user?.passwordHash ?? null, req.body.password);
       if (!user || !ok)
         throw new HttpError(401, 'bad_credentials', 'E-mail ou mot de passe incorrect.');
+      const token = sessions.create(user.familyId, user.id, req.headers['user-agent']);
+      reply.setCookie(SESSION_COOKIE, token, cookieOptions);
+      return buildMe(db, sessions.load(token)!, config.version);
+    },
+  );
+
+  /** Ce que montre une fiche de réinitialisation (l'école, l'élève), sans l'utiliser. */
+  api.post<{ Body: { code: string } }>(
+    '/auth/reset/preview',
+    {
+      preHandler: perIp,
+      schema: {
+        body: {
+          type: 'object',
+          required: ['code'],
+          additionalProperties: false,
+          properties: { code: { type: 'string', minLength: 6, maxLength: 40 } },
+        },
+      },
+    },
+    async (req): Promise<ResetPreview> => previewReset(db, req.body.code),
+  );
+
+  /** Mot de passe oublié : nouveau mot de passe avec une fiche, puis connexion sur cet appareil. */
+  api.post<{ Body: ResetRequest }>(
+    '/auth/reset',
+    {
+      preHandler: [perIp, resetPerCode],
+      schema: {
+        body: {
+          type: 'object',
+          required: ['code', 'email', 'password'],
+          additionalProperties: false,
+          properties: {
+            code: { type: 'string', minLength: 6, maxLength: 40 },
+            email: { type: 'string', maxLength: 200 },
+            password: PASSWORD,
+          },
+        },
+      },
+    },
+    async (req, reply) => {
+      const user = await resetPassword(db, req.body.code, req.body.email, req.body.password);
       const token = sessions.create(user.familyId, user.id, req.headers['user-agent']);
       reply.setCookie(SESSION_COOKIE, token, cookieOptions);
       return buildMe(db, sessions.load(token)!, config.version);

@@ -3,6 +3,7 @@
  *   node dist/cli.js invite [--admin] [--days 7] [--note "Famille Martin"]
  *   node dist/cli.js school --name "École des Tilleuls" [--city Lyon]   (école + code de la direction)
  *   node dist/cli.js school --id 3                                    (nouveau code de la direction)
+ *   node dist/cli.js reset --email parent@exemple.fr                  (mot de passe oublié)
  *   node dist/cli.js backup [--label pre-deploy]
  * (en dev : npm run cli -w @app/server -- invite --admin)
  */
@@ -13,6 +14,7 @@ import { loadConfig } from './config';
 import { backupDatabase, pruneBackups } from './db/backup';
 import { openDb } from './db/client';
 import { createInvitation } from './services/invitations';
+import { createAccountReset } from './services/password-reset';
 import { createSchool, getSchool } from './services/school';
 
 const { positionals, values } = parseArgs({
@@ -24,6 +26,7 @@ const { positionals, values } = parseArgs({
     name: { type: 'string' },
     city: { type: 'string' },
     id: { type: 'string' },
+    email: { type: 'string' },
     label: { type: 'string', default: 'manual' },
     keep: { type: 'string', default: '10' },
   },
@@ -73,6 +76,26 @@ switch (positionals[0]) {
     db.$client.close();
     break;
   }
+  case 'reset': {
+    if (!values.email) {
+      console.log('Indique --email adresse@du.compte');
+      process.exitCode = 1;
+      break;
+    }
+    const db = openDb(dbFile);
+    try {
+      const { code, expiresAt } = createAccountReset(db, values.email, null);
+      console.log(`Code de réinitialisation pour ${values.email} : ${code}`);
+      console.log(
+        `À saisir après « Mot de passe oublié ? » (écran de connexion), avant le ${new Date(expiresAt).toLocaleString('fr-FR')}`,
+      );
+    } catch (error) {
+      console.log(error instanceof Error ? error.message : String(error));
+      process.exitCode = 1;
+    }
+    db.$client.close();
+    break;
+  }
   case 'backup': {
     if (!existsSync(dbFile)) {
       console.log(`Pas encore de base (${dbFile}) : rien à sauvegarder.`);
@@ -89,7 +112,7 @@ switch (positionals[0]) {
   }
   default:
     console.log(
-      'Commandes : invite [--admin] [--days N] [--note "…"] | school --name "…" [--city …] | school --id N | backup [--label nom] [--keep N]',
+      'Commandes : invite [--admin] [--days N] [--note "…"] | school --name "…" [--city …] | school --id N | reset --email … | backup [--label nom] [--keep N]',
     );
     process.exitCode = 1;
 }

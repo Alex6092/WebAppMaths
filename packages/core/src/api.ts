@@ -519,6 +519,19 @@ export interface RolloverResult {
   deleted: number;
 }
 
+/** Ce que montre une fiche de réinitialisation avant de l'utiliser. */
+export interface ResetPreview {
+  /** Fiche de l'école : l'école et l'élève pour qui elle a été imprimée. */
+  schoolName: string | null;
+  pupil: { firstName: string } | null;
+}
+
+export interface ResetRequest {
+  code: string;
+  email: string;
+  password: string;
+}
+
 export interface ApiError {
   error: string;
   message: string;
