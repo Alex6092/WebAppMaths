@@ -408,3 +408,23 @@ export const rolloverChoices = sqliteTable('rollover_choice', {
   leaves: integer('leaves', { mode: 'boolean' }).notNull().default(false),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 });
+
+/**
+ * Fiches de réinitialisation du mot de passe (pas d'e-mail dans l'app). Un code vaut pour une
+ * famille (fiche imprimée par la direction : n'importe quel parent de la famille, avec son
+ * e-mail) ou pour un compte (code donné par l'administrateur). Seule l'empreinte est gardée.
+ * Table à part des invitations : un tel code ne crée jamais de compte.
+ */
+export const passwordResets = sqliteTable('password_reset', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  codeHash: text('code_hash').notNull().unique(),
+  userId: integer('user_id').references(() => parentUsers.id, { onDelete: 'cascade' }),
+  familyId: integer('family_id').references(() => families.id, { onDelete: 'cascade' }),
+  /** L'élève pour qui la fiche a été imprimée (affiché au parent). */
+  childId: integer('child_id').references(() => children.id, { onDelete: 'set null' }),
+  schoolId: integer('school_id').references(() => schools.id, { onDelete: 'cascade' }),
+  createdBy: integer('created_by').references(() => parentUsers.id, { onDelete: 'set null' }),
+  createdAt: createdAt(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  usedAt: integer('used_at', { mode: 'timestamp_ms' }),
+});

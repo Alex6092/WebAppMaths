@@ -15,6 +15,7 @@
   import Parent from './screens/Parent.svelte';
   import Profiles from './screens/Profiles.svelte';
   import Register from './screens/Register.svelte';
+  import ResetPassword from './screens/ResetPassword.svelte';
   import School from './screens/School.svelte';
   import Shop from './screens/Shop.svelte';
   import Subject from './screens/Subject.svelte';
@@ -51,6 +52,9 @@
   const view = $derived.by(() => {
     if (!session.ready) return 'loading';
     const [first = ''] = route.segments;
+    // « reinitialiser » : mot de passe oublié (fiche de l'école ou code de l'administrateur),
+    // connecté ou non.
+    if (first === 'reinitialiser') return 'reset';
     // « activer » : le lien du QR code d'une fiche parent (ou d'une invitation d'enseignant).
     if (!session.me) return first === 'register' || first === 'activer' ? 'register' : 'login';
     if (first === 'dev' && route.segments[1] === 'gallery') {
@@ -110,6 +114,8 @@
   <Login />
 {:else if view === 'register'}
   <Register />
+{:else if view === 'reset'}
+  {#key route.query.get('code')}<ResetPassword />{/key}
 {:else if view === 'activate'}
   {#key route.query.get('code')}<Activate />{/key}
 {:else if view === 'school'}

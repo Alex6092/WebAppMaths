@@ -48,6 +48,7 @@
     {#if error}<p class="error-msg">{error}</p>{/if}
     <button class="btn" type="submit" disabled={busy}>Se connecter</button>
     <a class="link" href="#/register">J’ai un code d’invitation</a>
+    <a class="link" href="#/reinitialiser">Mot de passe oublié ?</a>
   </form>
 </div>
 

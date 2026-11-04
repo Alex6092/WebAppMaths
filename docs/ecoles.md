@@ -74,6 +74,22 @@ Une fiche parent imprimée pour une classe vaut jusqu'au 31 août de l'année de
 - Supprimé par sa famille (ou famille supprimée) : il quitte la famille et reste élève ; l'école peut
   imprimer une nouvelle fiche.
 
+## Mot de passe oublié
+
+L'app n'envoie pas d'e-mails : un mot de passe oublié se remplace avec une **fiche de
+réinitialisation** (code + QR code, valable 14 jours, une seule fois).
+
+- Pour les parents d'un élève, la **direction** l'imprime : onglet Élèves de la classe, « Modifier »
+  sur l'élève, puis « 🔑 Accès parent oublié ». La fiche vaut pour la famille : chaque parent
+  l'utilise avec son propre e-mail ; la direction ne voit jamais les e-mails des parents. Une
+  nouvelle fiche remplace la précédente.
+- Pour tout autre compte (parent sans école, enseignant, direction), l'**administrateur** crée un
+  code dans son espace parent (« Administration : mot de passe oublié »), ou en ligne de commande
+  (`cli.js reset --email …`, aussi pour son propre compte). La fiche d'une école ne marche pas pour
+  un compte qui est aussi celui d'un enseignant ou de l'administrateur.
+- Le parent clique sur « Mot de passe oublié ? » (écran de connexion) ou scanne le QR code, saisit
+  son e-mail et un nouveau mot de passe : il est connecté, et ses autres appareils sont déconnectés.
+
 ## Plusieurs postes derrière la même adresse
 
 Dans une école, tous les postes (et les parents sur le Wi-Fi d'une réunion) sortent souvent par la

@@ -5,6 +5,7 @@ import { requireAdmin } from '../auth/session';
 import { invitations } from '../db/schema';
 import { notFound } from '../errors';
 import { createInvitation, listInvitations } from '../services/invitations';
+import { createAccountReset } from '../services/password-reset';
 import { adminSchools, createSchool, deleteSchool, getSchool } from '../services/school';
 import type { Deps } from './deps';
 
@@ -116,6 +117,25 @@ export function adminRoutes(api: FastifyInstance, { db }: Deps): void {
       requireAdmin(req);
       deleteSchool(db, req.params.id);
       return { ok: true };
+    },
+  );
+
+  /** Mot de passe oublié : un code pour n'importe quel compte, désigné par son e-mail. */
+  api.post<{ Body: { email: string } }>(
+    '/admin/password-resets',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['email'],
+          additionalProperties: false,
+          properties: { email: { type: 'string', minLength: 3, maxLength: 200 } },
+        },
+      },
+    },
+    async (req): Promise<CreatedInvitation> => {
+      const auth = requireAdmin(req);
+      return createAccountReset(db, req.body.email, auth.user.id);
     },
   );
 }

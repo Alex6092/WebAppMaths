@@ -111,6 +111,13 @@ docker exec webappmaths node apps/server/dist/cli.js school --name "École des T
 docker exec webappmaths node apps/server/dist/cli.js school --id 3   # nouveau code de la direction
 ```
 
+Mot de passe oublié (y compris celui de l'administrateur) : un code à saisir après « Mot de passe
+oublié ? » sur l'écran de connexion.
+
+```bash
+docker exec webappmaths node apps/server/dist/cli.js reset --email adresse@du.compte
+```
+
 ## La voix du serveur (Piper)
 
 Les consignes, les dictées et l'anglais sont lus par [Piper](https://github.com/rhasspy/piper)
