@@ -116,4 +116,15 @@ test('une école : classe, élèves, fiche parent, devoir et avis vus par le par
   // L'enseignante voit que Léo a un compte parent.
   await teacher.getByRole('link', { name: /Élèves/ }).click();
   await expect(teacher.getByRole('row', { name: /Léo/ }).getByText('✅ Activé')).toBeVisible();
+
+  // Les exports : le tableur de la classe, puis toutes les données de l'école.
+  await teacher.getByRole('link', { name: /Suivi/ }).click();
+  const csv = teacher.waitForEvent('download');
+  await teacher.getByRole('button', { name: /Tableur de la classe/ }).click();
+  expect((await csv).suggestedFilename()).toMatch(/^classe-ce1-b-\d{4}-\d{2}-\d{2}\.csv$/);
+  await teacher.getByRole('link', { name: /Classes/ }).click();
+  await teacher.getByRole('link', { name: 'Équipe' }).click();
+  const json = teacher.waitForEvent('download');
+  await teacher.getByRole('button', { name: /Télécharger les données de l’école/ }).click();
+  expect((await json).suggestedFilename()).toMatch(/^ecole-ecole-.+\.json$/);
 });

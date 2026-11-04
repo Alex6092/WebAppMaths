@@ -12,6 +12,7 @@
   import ClassPage from '../components/school/ClassPage.svelte';
   import Rollover from '../components/school/Rollover.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
+  import { downloadFile } from '../lib/download';
   import { toast } from '../lib/effects.svelte';
   import { navigate, route } from '../lib/router.svelte';
   import { isParentUnlocked, refreshMe, session, setMe } from '../lib/session.svelte';
@@ -154,6 +155,20 @@
       await Promise.all([load(), refreshMe()]);
     } catch (e) {
       handle(e);
+    }
+  }
+
+  let exporting = $state(false);
+
+  /** Toutes les données de l'école (JSON), pour la direction. */
+  async function exportSchool() {
+    exporting = true;
+    try {
+      await downloadFile(`schools/${schoolId}/export`, 'ecole.json');
+    } catch (e) {
+      handle(e);
+    } finally {
+      exporting = false;
     }
   }
 
@@ -373,6 +388,26 @@
           {/if}
         {/if}
       </section>
+      {#if isDirection}
+        <section class="card">
+          <h2>🔒 Données de l’école</h2>
+          <p>
+            L’école est responsable des données de ses élèves. L’app ne garde que le strict
+            nécessaire : le prénom et le nom ou l’initiale des élèves, leur classe, leur niveau,
+            leur acquisition des notions, les devoirs et les avis de l’enseignant ; les comptes de
+            l’équipe (e-mail et rôle). Rien n’est transmis à personne.
+          </p>
+          <p class="hint">
+            Tu peux télécharger toutes les données de l’école (fichier JSON) : pour les archiver,
+            répondre à une demande d’accès ou changer d’outil. Le détail des réponses faites à la
+            maison reste dans l’export de chaque famille. Pense à inscrire l’app au registre des
+            traitements de l’école.
+          </p>
+          <button class="btn small" disabled={exporting} onclick={exportSchool}
+            >⬇️ Télécharger les données de l’école</button
+          >
+        </section>
+      {/if}
     {/if}
   {:else if !error}
     <p class="muted">Chargement…</p>

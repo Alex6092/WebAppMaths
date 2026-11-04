@@ -34,6 +34,7 @@ import {
   saveClassAssessment,
 } from '../services/classwork';
 import { setClassNotions } from '../services/notions';
+import { classCsv, exportSchool, fileName } from '../services/school-export';
 import { applyRollover, rolloverDto, setRolloverChoices } from '../services/rollover';
 import { childReport } from '../services/report';
 import {
@@ -172,6 +173,35 @@ export function schoolRoutes(api: FastifyInstance, { db }: Deps): void {
     async (req) => {
       removeMember(db, requireParent(req), req.params.id, req.params.userId);
       return { ok: true };
+    },
+  );
+
+  // --- Données de l'école ---
+
+  /** Toutes les données de l'école, en JSON (direction). */
+  api.get<{ Params: { id: number } }>(
+    '/schools/:id/export',
+    { schema: ID_PARAMS },
+    async (req, reply) => {
+      const data = exportSchool(db, requireParent(req), req.params.id);
+      reply.header(
+        'Content-Disposition',
+        `attachment; filename="${fileName('ecole', data.school.name)}.json"`,
+      );
+      return data;
+    },
+  );
+
+  /** Le tableur d'une classe : acquisition et avis de chaque élève, notion par notion. */
+  api.get<{ Params: { id: number } }>(
+    '/classes/:id/export.csv',
+    { schema: ID_PARAMS },
+    async (req, reply) => {
+      const row = getManagedClass(db, requireParent(req), req.params.id);
+      return reply
+        .type('text/csv; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${fileName('classe', row.name)}.csv"`)
+        .send(classCsv(db, row));
     },
   );
 

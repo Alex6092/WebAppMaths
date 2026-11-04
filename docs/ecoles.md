@@ -85,6 +85,13 @@ proxy, `TRUST_PROXY` doit être réglé : sinon tout le monde a l'adresse du pro
 
 ## Données personnelles
 
+- **Données de l'école** (direction, onglet Équipe) : un fichier JSON avec l'école, son équipe,
+  ses classes et, pour chaque élève, son niveau, son acquisition des notions, les devoirs de la
+  classe et les avis de l'enseignant. Rien sur les familles, et pas le détail des réponses faites à
+  la maison (chaque famille l'exporte depuis son espace parent).
+- **Tableur d'une classe** (enseignant, onglet Suivi) : un CSV avec une ligne par élève et par
+  notion, l'acquisition mesurée dans l'app et le dernier avis de l'enseignant.
+
 Avant d'utiliser l'app avec une classe, la direction inscrit ce traitement au registre de l'école
 (dans le public, avec l'aide du DPO académique) et informe les familles ; la fiche parent rappelle
 ce que voit l'enseignant. L'app ne garde que le strict nécessaire (prénom et initiale, avatar,

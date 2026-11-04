@@ -697,3 +697,130 @@ describe('rentrée', () => {
     ]);
   });
 });
+
+describe('export des données de l’école', () => {
+  it('JSON pour la direction, tableur pour la classe', async () => {
+    const { admin, schoolId, direction, teacher, classroom } = await schoolWithClass();
+    const [leo, formula] = await teacher.browser.ok<PupilDto[]>(
+      'POST',
+      `/classes/${classroom.id}/pupils`,
+      { pupils: [{ firstName: 'Léo', lastName: 'M.' }, { firstName: '=SOMME(A1)' }] },
+    );
+    const [code] = await teacher.browser.ok<PupilCode[]>(
+      'POST',
+      `/classes/${classroom.id}/pupil-codes`,
+      { pupilIds: [leo!.id] },
+    );
+    await register(code!.code, 'parent-leo@example.org', 'Famille Martin');
+    const geometry = registry.notionsInScope('maths.geometrie', 'CE1').map((n) => n.id);
+    await teacher.browser.ok('PATCH', `/classes/${classroom.id}/notions`, {
+      notionIds: [geometry[0]],
+      active: false,
+    });
+    await teacher.browser.ok('PATCH', `/classes/${classroom.id}`, {
+      focusNotions: ['maths.calcul.tables'],
+    });
+    await teacher.browser.ok('POST', `/classes/${classroom.id}/assignments`, {
+      title: 'Tables de 2',
+      notions: ['maths.calcul.tables'],
+      questions: 5,
+      dueOn: dayKey(new Date()),
+    });
+    await teacher.browser.ok('POST', `/classes/${classroom.id}/assessments`, {
+      title: 'Évaluation de novembre',
+      assessedOn: '2026-11-03',
+      notions: ['maths.calcul.tables'],
+      results: { [leo!.id]: { 'maths.calcul.tables': 'ECA' } },
+    });
+
+    // JSON : direction seulement.
+    expect((await teacher.browser.send('GET', `/schools/${schoolId}/export`)).statusCode).toBe(403);
+    const res = await direction.browser.send('GET', `/schools/${schoolId}/export`);
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-disposition']).toMatch(
+      /^attachment; filename="ecole-ecole-des-tilleuls-\d{4}-\d{2}-\d{2}\.json"$/,
+    );
+    const data = res.json();
+    expect(data.school).toMatchObject({ name: 'École des Tilleuls', city: 'Lyon' });
+    expect(data.members).toEqual([
+      { email: 'directrice@example.org', role: 'direction', classes: [] },
+      { email: 'enseignante@example.org', role: 'enseignant', classes: ['CE1 B'] },
+    ]);
+    const [exported] = data.classes;
+    expect(exported).toMatchObject({
+      name: 'CE1 B',
+      grades: ['CE1'],
+      teachers: ['enseignante@example.org'],
+      focusNotions: ['maths.calcul.tables'],
+      notionsNotSeen: [geometry[0]],
+    });
+    const pupil = exported.pupils.find((p: { firstName: string }) => p.firstName === 'Léo');
+    expect(pupil).toMatchObject({ lastName: 'M.', grade: 'CE1', parentAccount: true });
+    expect(pupil.assessments).toEqual([
+      {
+        notionId: 'maths.calcul.tables',
+        notion: 'Tables de multiplication',
+        result: 'ECA',
+        assessedOn: '2026-11-03',
+        title: 'Évaluation de novembre',
+      },
+    ]);
+    expect(pupil.homework).toMatchObject([
+      { title: 'Tables de 2', answered: 0, completedAt: null },
+    ]);
+    // Rien sur la famille, ni secret.
+    const text = res.body;
+    for (const secret of ['parent-leo@example.org', 'Famille Martin', 'passwordHash', 'codeHash'])
+      expect(text).not.toContain(secret);
+    // Une autre école ne voit rien.
+    const other = await admin.ok<{ invitation: CreatedInvitation }>('POST', '/admin/schools', {
+      name: 'Autre école',
+    });
+    const stranger = await register(other.invitation.code, 'autre@example.org');
+    expect((await stranger.browser.send('GET', `/schools/${schoolId}/export`)).statusCode).toBe(
+      404,
+    );
+
+    // Tableur de la classe : l'enseignante.
+    const csv = await teacher.browser.send('GET', `/classes/${classroom.id}/export.csv`);
+    expect(csv.statusCode).toBe(200);
+    expect(csv.headers['content-type']).toBe('text/csv; charset=utf-8');
+    expect(csv.headers['content-disposition']).toMatch(/filename="classe-ce1-b-.+\.csv"/);
+    expect(csv.body.startsWith('\uFEFFÉlève;Niveau;Matière;Domaine;Notion;Vue en classe')).toBe(
+      true,
+    );
+    const lines = csv.body.slice(1).trim().split('\r\n');
+    const notionsCE1 = registry.notionsInScope('all', 'CE1').length;
+    expect(lines).toHaveLength(1 + 2 * notionsCE1);
+    const tables = lines.find(
+      (l) => l.startsWith('Léo M.;') && l.includes(';Tables de multiplication;'),
+    );
+    expect(tables!.split(';').slice(5)).toEqual([
+      'oui',
+      'oui',
+      '0',
+      'À découvrir',
+      '0',
+      'ECA',
+      '03/11/2026',
+      'Évaluation de novembre',
+    ]);
+    const notSeen = registry.notion(geometry[0]!)!.title;
+    expect(
+      lines.find((l) => l.startsWith('Léo M.;') && l.includes(`;${notSeen};`))!.split(';')[5],
+    ).toBe('non');
+    // Un prénom qui ressemble à une formule n'en est pas une.
+    expect(lines.some((l) => l.startsWith("'=SOMME(A1);CE1;"))).toBe(true);
+    expect(formula).toBeDefined();
+    // Une collègue sans cette classe ne l'exporte pas.
+    const invite = await direction.browser.ok<CreatedInvitation>(
+      'POST',
+      `/schools/${schoolId}/invitations`,
+      {},
+    );
+    const colleague = await register(invite.code, 'collegue@example.org');
+    expect(
+      (await colleague.browser.send('GET', `/classes/${classroom.id}/export.csv`)).statusCode,
+    ).toBe(404);
+  });
+});

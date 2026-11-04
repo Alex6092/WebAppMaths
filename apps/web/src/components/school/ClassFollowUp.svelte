@@ -3,6 +3,7 @@
   import { registry } from '@app/content';
   import { NEW_MASTERY, type ClassOverview, type ClassroomDetail } from '@app/core';
   import { api } from '../../lib/api';
+  import { downloadFile } from '../../lib/download';
   import NotionBadge from '../NotionBadge.svelte';
   import ChildReport from '../parent/ChildReport.svelte';
 
@@ -18,6 +19,19 @@
   onMount(() => {
     api.get<ClassOverview>(`classes/${detail.id}/overview`).then((o) => (overview = o), onerror);
   });
+
+  let exporting = $state(false);
+  /** Le tableur de la classe : acquisition et avis de chaque élève, notion par notion. */
+  async function exportCsv() {
+    exporting = true;
+    try {
+      await downloadFile(`classes/${detail.id}/export.csv`, 'classe.csv');
+    } catch (e) {
+      onerror(e);
+    } finally {
+      exporting = false;
+    }
+  }
 
   const focus = $derived(detail.focusNotions.map((id) => registry.notion(id)).filter((n) => !!n));
   const pupilOf = (id: number) => detail.pupilList.find((p) => p.id === id);
@@ -76,6 +90,16 @@
   {/if}
 {/if}
 
+<div class="export">
+  <button class="btn ghost small" disabled={exporting} onclick={exportCsv}
+    >⬇️ Tableur de la classe (CSV)</button
+  >
+  <span class="muted"
+    >Une ligne par élève et par notion : acquisition dans l’app et avis de l’enseignant, à ouvrir
+    dans un tableur.</span
+  >
+</div>
+
 {#if followed !== null}
   {@const p = pupilOf(followed)}
   <div class="report">
@@ -126,6 +150,12 @@
   .quiet {
     color: #c62828;
     font-weight: 700;
+  }
+  .export {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
   }
   .report {
     display: flex;
