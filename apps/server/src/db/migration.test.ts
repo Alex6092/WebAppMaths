@@ -50,7 +50,7 @@ it('la migration des écoles garde les familles, les enfants et leurs réponses'
     `insert into auth_session (id, family_id, parent_user_id, active_child_id, created_at, last_seen_at, expires_at)
      values ('s', 1, 1, 1, ?, ?, ?)`,
     now,
-    now,
+    now + 5000,
     now + 1e9,
   );
   run(
@@ -76,6 +76,10 @@ it('la migration des écoles garde les familles, les enfants et leurs réponses'
   for (const table of ['family', 'parent_user', 'child', 'auth_session', 'attempt', 'assignment'])
     expect(count(table), table).toBe(1);
   expect(sqlite.prepare('select active_child_id as c from auth_session').get()).toEqual({ c: 1 });
+  // La dernière activité d'un compte existant : celle de sa session la plus récente.
+  expect(sqlite.prepare('select last_seen_at as t from parent_user').get()).toEqual({
+    t: now + 5000,
+  });
 
   // Les nouvelles références suppriment bien en cascade (ou se vident).
   run(`insert into school (id, name, created_at) values (1, 'École', ?)`, now);

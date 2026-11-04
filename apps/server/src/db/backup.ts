@@ -25,12 +25,17 @@ export function pruneBackups(dir: string, label: string, keep: number): string[]
   return removed;
 }
 
-/** Une sauvegarde « daily » par jour, vérifiée au démarrage puis toutes les heures. */
+/**
+ * Une sauvegarde « daily » par jour, vérifiée au démarrage puis toutes les heures. afterBackup
+ * (la durée de conservation) ne passe qu'après une sauvegarde réussie : ce qu'elle efface reste
+ * dans les sauvegardes.
+ */
 export function scheduleDailyBackups(
   db: Db,
   dir: string,
   keep: number,
   log: { info: (msg: string) => void; error: (msg: string) => void },
+  afterBackup?: () => void,
 ): NodeJS.Timeout {
   const run = async () => {
     const today = stamp().slice(0, 8);
@@ -44,6 +49,12 @@ export function scheduleDailyBackups(
       log.info(`Sauvegarde quotidienne : ${file}`);
     } catch (error) {
       log.error(`Échec de la sauvegarde quotidienne : ${(error as Error).message}`);
+      return;
+    }
+    try {
+      afterBackup?.();
+    } catch (error) {
+      log.error(`Échec de la tâche de nuit : ${(error as Error).message}`);
     }
   };
   void run();
