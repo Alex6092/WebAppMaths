@@ -3,7 +3,7 @@ import { dayKey, type AssignmentDto, type NewAssignment } from '@app/core';
 import { and, desc, eq, gte, isNull, or, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { assignments, children, practiceSessions } from '../db/schema';
-import { badRequest, notFound } from '../errors';
+import { badRequest, forbidden, notFound } from '../errors';
 
 type ChildRow = typeof children.$inferSelect;
 type AssignmentRow = typeof assignments.$inferSelect;
@@ -33,6 +33,7 @@ function answeredFor(db: Tx, assignmentId: number): number {
 export function assignmentDto(db: Tx, row: AssignmentRow): AssignmentDto {
   return {
     id: row.id,
+    from: row.batch === null ? 'famille' : 'ecole',
     title: row.title,
     notions: row.notions,
     questions: row.questions,
@@ -84,7 +85,8 @@ export function childAssignments(db: Db, child: ChildRow, now = new Date()): Ass
     .map((row) => assignmentDto(db, row));
 }
 
-export function createAssignment(db: Db, child: ChildRow, input: NewAssignment): AssignmentDto {
+/** Notions d'un devoir (sans doublon), et sa date, vérifiées. */
+export function checkAssignment(input: NewAssignment): string[] {
   const notions = [...new Set(input.notions)];
   if (
     notions.length === 0 ||
@@ -93,6 +95,11 @@ export function createAssignment(db: Db, child: ChildRow, input: NewAssignment):
   )
     throw badRequest('invalid_notions', 'Choisis au moins une notion avec des exercices.');
   if (input.dueOn < dayKey(new Date())) throw badRequest('invalid_due', 'La date est déjà passée.');
+  return notions;
+}
+
+export function createAssignment(db: Db, child: ChildRow, input: NewAssignment): AssignmentDto {
+  const notions = checkAssignment(input);
   const row = db
     .insert(assignments)
     .values({
@@ -108,8 +115,11 @@ export function createAssignment(db: Db, child: ChildRow, input: NewAssignment):
   return assignmentDto(db, row);
 }
 
+/** Le parent retire un devoir qu'il a donné (pas ceux de la classe). */
 export function deleteAssignment(db: Db, child: ChildRow, id: number): void {
   const row = getAssignment(db, child, id);
+  if (row.batch !== null)
+    throw forbidden('school_assignment', 'Ce devoir a été donné par l’enseignant.');
   db.delete(assignments).where(eq(assignments.id, row.id)).run();
 }
 

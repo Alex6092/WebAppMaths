@@ -15,7 +15,8 @@ const TOUCH_EVERY_MS = 24 * 3600 * 1000;
 
 export interface AuthContext {
   sessionId: string;
-  familyId: number;
+  /** null : compte d'enseignant sans famille (aucun profil enfant sur l'appareil). */
+  familyId: number | null;
   user: { id: number; email: string; role: Role };
   parentVerifiedAt: number | null;
   activeChildId: number | null;
@@ -31,7 +32,7 @@ export class SessionStore {
   constructor(private readonly db: Db) {}
 
   /** Crée une session (espace parent déverrouillé) et renvoie le jeton du cookie. */
-  create(familyId: number, userId: number, userAgent: string | undefined): string {
+  create(familyId: number | null, userId: number, userAgent: string | undefined): string {
     const token = newSessionToken();
     const now = Date.now();
     this.db
@@ -69,7 +70,8 @@ export class SessionStore {
     }
     return {
       sessionId: row.session.id,
-      familyId: row.session.familyId,
+      // La famille du compte (elle peut changer : un enseignant qui active la fiche de son enfant).
+      familyId: row.user.familyId,
       user: { id: row.user.id, email: row.user.email, role: row.user.role },
       parentVerifiedAt: row.session.parentVerifiedAt?.getTime() ?? null,
       activeChildId: row.session.activeChildId,
@@ -88,7 +90,12 @@ export class SessionStore {
   }
 }
 
+/**
+ * L'espace parent (et l'espace école) est-il ouvert ? Un compte sans famille n'a aucun profil
+ * enfant sur l'appareil : il ne se verrouille pas.
+ */
 export function isParentUnlocked(auth: AuthContext, now = Date.now()): boolean {
+  if (auth.familyId === null) return true;
   return auth.parentVerifiedAt !== null && now - auth.parentVerifiedAt < PARENT_UNLOCK_MS;
 }
 
@@ -103,6 +110,13 @@ export function requireParent(req: FastifyRequest): AuthContext {
     throw forbidden('parent_locked', 'Saisis le mot de passe parent pour continuer.');
   }
   return auth;
+}
+
+/** Espace parent ouvert, pour un compte qui a une famille. */
+export function requireFamily(req: FastifyRequest): AuthContext & { familyId: number } {
+  const auth = requireParent(req);
+  if (auth.familyId === null) throw forbidden('no_family', 'Ce compte n’a pas de famille.');
+  return auth as AuthContext & { familyId: number };
 }
 
 export function requireAdmin(req: FastifyRequest): AuthContext {

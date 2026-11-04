@@ -28,7 +28,8 @@ import {
 } from '../services/motivation';
 import { childEvaluations, evaluationReport, getEvaluation } from '../services/evaluation';
 import { childAssignments } from '../services/homework';
-import { activeNotions } from '../services/notions';
+import { activeNotions, focusNotions } from '../services/notions';
+import { notionsToRework } from '../services/assessments';
 import { reviewQueue } from '../services/report';
 import { childReviews } from '../services/spaced';
 import type { Deps } from './deps';
@@ -37,7 +38,7 @@ import type { Deps } from './deps';
 export function childRoutes(api: FastifyInstance, { db }: Deps): void {
   const activeChild = (req: FastifyRequest) => {
     const auth = requireAuth(req);
-    if (auth.activeChildId === null)
+    if (auth.activeChildId === null || auth.familyId === null)
       throw forbidden('no_active_child', 'Choisis d’abord un profil.');
     return getFamilyChild(db, auth.familyId, auth.activeChildId);
   };
@@ -58,7 +59,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
     // Rattrape les badges mérités avant leur arrivée (ou gagnés sur un autre appareil).
     awardBadges(db, child.id, notions);
     return {
-      child: toChildDto(child),
+      child: toChildDto(db, child),
       levels: Object.fromEntries(
         states.map((s) => [
           s.pluginId,
@@ -75,6 +76,8 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
       assignments: childAssignments(db, child),
       reviews: childReviews(db, child.id),
       evaluations: childEvaluations(db, child),
+      focusNotions: focusNotions(db, child),
+      toRework: notionsToRework(db, child.id),
     };
   });
 
@@ -213,7 +216,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
         .where(eq(children.id, child.id))
         .returning()
         .get();
-      return toChildDto(row);
+      return toChildDto(db, row);
     },
   );
 }

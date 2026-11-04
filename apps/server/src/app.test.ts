@@ -100,7 +100,7 @@ describe('comptes', () => {
     await setup();
     const { me } = await registerAdmin();
     expect(me.user).toMatchObject({ email: 'admin@example.org', role: 'admin' });
-    expect(me.family.name).toBe('Famille A');
+    expect(me.family?.name).toBe('Famille A');
     expect(me.parentVerifiedUntil).toBeGreaterThan(Date.now());
     const health = await app.inject({ url: '/api/health' });
     expect(health.json()).toMatchObject({ status: 'ok' });

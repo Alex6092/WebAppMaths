@@ -14,6 +14,7 @@ import { authRoutes } from './routes/auth';
 import { childRoutes } from './routes/child';
 import type { Deps } from './routes/deps';
 import { familyRoutes } from './routes/family';
+import { schoolRoutes } from './routes/school';
 import { ttsRoutes } from './routes/tts';
 import { createTts, type TtsService } from './tts/service';
 import { warmSpeech } from './tts/warm';
@@ -130,6 +131,7 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
       familyRoutes(api, deps);
       childRoutes(api, deps);
       adminRoutes(api, deps);
+      schoolRoutes(api, deps);
       ttsRoutes(api, deps);
     },
     { prefix: `${config.basePath}api` },

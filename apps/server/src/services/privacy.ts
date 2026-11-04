@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNotNull } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import {
   assignments,
@@ -9,14 +9,18 @@ import {
   evaluations,
   exerciseStates,
   families,
+  notionAssessments,
   notionReviews,
   notionSettings,
   parentUsers,
   practiceSessions,
   rewardsOwned,
+  schoolMembers,
   themesOwned,
 } from '../db/schema';
 import { forbidden, notFound } from '../errors';
+import { toChildDto } from './family';
+import { forgetActiveChild } from './school';
 
 /**
  * Toutes les données d'une famille, lisibles (JSON) : comptes parents (sans les mots de passe),
@@ -37,7 +41,8 @@ export function exportFamily(db: Db, familyId: number) {
       lastSeenAt: authSessions.lastSeenAt,
     })
     .from(authSessions)
-    .where(eq(authSessions.familyId, familyId))
+    .innerJoin(parentUsers, eq(parentUsers.id, authSessions.parentUserId))
+    .where(eq(parentUsers.familyId, familyId))
     .all();
   const kids = db
     .select()
@@ -53,6 +58,7 @@ export function exportFamily(db: Db, familyId: number) {
     devices,
     children: kids.map((child) => ({
       ...child,
+      classroom: toChildDto(db, child).classroom,
       sessions: db
         .select()
         .from(practiceSessions)
@@ -77,6 +83,16 @@ export function exportFamily(db: Db, familyId: number) {
       reviews: db.select().from(notionReviews).where(eq(notionReviews.childId, child.id)).all(),
       assignments: db.select().from(assignments).where(eq(assignments.childId, child.id)).all(),
       evaluations: db.select().from(evaluations).where(eq(evaluations.childId, child.id)).all(),
+      teacherAssessments: db
+        .select({
+          notionId: notionAssessments.notionId,
+          result: notionAssessments.result,
+          assessedOn: notionAssessments.assessedOn,
+          title: notionAssessments.title,
+        })
+        .from(notionAssessments)
+        .where(eq(notionAssessments.childId, child.id))
+        .all(),
     })),
   };
 }
@@ -84,7 +100,9 @@ export function exportFamily(db: Db, familyId: number) {
 /**
  * Supprime la famille et tout ce qui s'y rattache (les clés étrangères suppriment en cascade
  * parents, appareils, invitations vers la famille, enfants et leurs données). Le compte
- * administrateur ne se supprime pas ici.
+ * administrateur ne se supprime pas ici. Ce qui appartient aussi à une école reste à l'école :
+ * un enfant inscrit dans une classe quitte seulement la famille, un parent enseignant garde son
+ * compte d'enseignant.
  */
 export function deleteFamily(db: Db, familyId: number): void {
   const users = db
@@ -94,5 +112,37 @@ export function deleteFamily(db: Db, familyId: number): void {
     .all();
   if (users.some((u) => u.role === 'admin'))
     throw forbidden('admin_family', 'La famille de l’administrateur ne peut pas être supprimée.');
-  db.delete(families).where(eq(families.id, familyId)).run();
+  db.transaction((tx) => {
+    const pupils = tx
+      .select({ id: children.id })
+      .from(children)
+      .where(and(eq(children.familyId, familyId), isNotNull(children.classId)))
+      .all();
+    for (const { id } of pupils) forgetActiveChild(tx, id);
+    tx.update(children)
+      .set({ familyId: null })
+      .where(and(eq(children.familyId, familyId), isNotNull(children.classId)))
+      .run();
+    const teachers = users.length
+      ? tx
+          .selectDistinct({ userId: schoolMembers.userId })
+          .from(schoolMembers)
+          .where(
+            inArray(
+              schoolMembers.userId,
+              users.map((u) => u.id),
+            ),
+          )
+          .all()
+          .map((m) => m.userId)
+      : [];
+    if (teachers.length > 0) {
+      tx.update(parentUsers).set({ familyId: null }).where(inArray(parentUsers.id, teachers)).run();
+      tx.update(authSessions)
+        .set({ familyId: null, activeChildId: null })
+        .where(inArray(authSessions.parentUserId, teachers))
+        .run();
+    }
+    tx.delete(families).where(eq(families.id, familyId)).run();
+  });
 }
