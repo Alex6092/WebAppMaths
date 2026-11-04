@@ -14,6 +14,7 @@ import type { Db } from '../db/client';
 import { assignments, attempts, exerciseStates, notionAssessments } from '../db/schema';
 import { badRequest, notFound } from '../errors';
 import { classPupils, type ClassRow } from './access';
+import { latestAssessments, notionsToRework } from './assessments';
 import { assignmentDto, checkAssignment } from './homework';
 import { childMasteries } from './practice';
 import { reviewQueue } from './report';
@@ -230,6 +231,7 @@ export function classOverview(db: Db, row: ClassRow, now = new Date()): ClassOve
         .get();
       const mine = homework.filter((h) => h.childId === p.id);
       const masteries = focus.length > 0 ? childMasteries(db, p.id, focus) : {};
+      const assessments = latestAssessments(db, p.id);
       return {
         pupilId: p.id,
         questions7d: recent.length,
@@ -239,6 +241,10 @@ export function classOverview(db: Db, row: ClassRow, now = new Date()): ClassOve
         toReview: reviewQueue(db, p.id, now).length,
         focus: Object.fromEntries(
           focus.flatMap((id) => (masteries[id] ? [[id, masteries[id]]] : [])),
+        ),
+        toRework: notionsToRework(db, p.id, now).length,
+        focusAssessments: Object.fromEntries(
+          focus.flatMap((id) => (assessments[id] ? [[id, assessments[id]]] : [])),
         ),
       };
     }),

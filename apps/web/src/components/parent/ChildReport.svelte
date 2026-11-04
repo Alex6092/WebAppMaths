@@ -5,6 +5,7 @@
   import { STATUS_LABELS } from '../../lib/notions';
   import { session } from '../../lib/session.svelte';
   import NotionBadge from '../NotionBadge.svelte';
+  import TeacherCode from '../TeacherCode.svelte';
   import ActivityChart from './ActivityChart.svelte';
   import MistakeViewer from './MistakeViewer.svelte';
   import ResponseTimes from './ResponseTimes.svelte';
@@ -62,15 +63,25 @@
   });
 
   /** Les notions de la classe de l'enfant, par matière puis par domaine. */
+  /** « Seulement les notions vues en classe » : cochée d'office pour un élève inscrit. */
+  let onlySeenChoice = $state<boolean | null>(null);
+  const onlySeen = $derived(onlySeenChoice ?? report?.notionsSetBy === 'ecole');
+
   const subjects = $derived.by(() => {
     if (!report) return [];
     const grade = report.child.grade;
+    const seen = new Set(report.activeNotions);
     return registry.subjects
       .map((subject) => ({
         subject,
         domains: registry
           .domainsOf(subject.id)
-          .map((domain) => ({ domain, notions: registry.notionsInScope(domain.id, grade) }))
+          .map((domain) => ({
+            domain,
+            notions: registry
+              .notionsInScope(domain.id, grade)
+              .filter((n) => !onlySeen || seen.has(n.id)),
+          }))
           .filter((d) => d.notions.length > 0),
       }))
       .filter((s) => s.domains.length > 0);
@@ -84,7 +95,6 @@
   const focusNotions = $derived(
     (report?.focusNotions ?? []).map((id) => registry.notion(id)).filter((n) => !!n),
   );
-  const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR');
   const STATUS_ORDER: NotionStatus[] = ['A', 'ECA', 'NA', 'new'];
   function countByStatus(ids: string[]) {
     return STATUS_ORDER.map((status) => ({
@@ -140,12 +150,7 @@
 
   {#snippet teacher(id: string)}
     {@const a = report?.assessments[id]}
-    {#if a}
-      <span class="teacher {a.result}" title="{a.title}, le {day(a.assessedOn)}">🏫 {a.result}</span
-      >
-    {:else}
-      <span></span>
-    {/if}
+    {#if a}<TeacherCode assessment={a} />{:else}<span></span>{/if}
   {/snippet}
 
   <h3>Acquisition des notions ({report.child.grade})</h3>
@@ -179,6 +184,14 @@
       </ul>
     </div>
   {/if}
+  <label class="only-seen">
+    <input
+      type="checkbox"
+      checked={onlySeen}
+      onchange={(e) => (onlySeenChoice = e.currentTarget.checked)}
+    />
+    Seulement les notions vues en classe ({report.activeNotions.length})
+  </label>
   {#each subjects as { subject, domains } (subject.id)}
     {@const ids = domains.flatMap((d) => d.notions.map((n) => n.id))}
     <div class="subject">
@@ -346,6 +359,19 @@
     height: 18px;
     accent-color: var(--primary);
   }
+  .only-seen {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .only-seen input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+  }
   .focus {
     display: flex;
     flex-direction: column;
@@ -353,26 +379,6 @@
     padding: 10px 12px;
     border-radius: 14px;
     background: #f7f4fb;
-  }
-  .teacher {
-    justify-self: center;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  .teacher.A {
-    background: #c8e6c9;
-    color: #1b5e20;
-  }
-  .teacher.ECA {
-    background: #bbdefb;
-    color: #0d47a1;
-  }
-  .teacher.NA {
-    background: #ffe0b2;
-    color: #b45309;
   }
   .hint {
     font-size: 0.85rem;

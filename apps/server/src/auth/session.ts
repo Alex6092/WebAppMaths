@@ -9,7 +9,8 @@ import { newSessionToken, sha256 } from './crypto';
 export const SESSION_COOKIE = 'wam_sid';
 /** Un appareil de confiance reste connecté un an. */
 export const SESSION_TTL_MS = 365 * 24 * 3600 * 1000;
-/** Après saisie du mot de passe, l'espace parent reste ouvert 10 minutes. */
+/** Après saisie du mot de passe, l'espace parent reste ouvert tant qu'il sert, et se verrouille
+ * après 10 minutes sans action. */
 export const PARENT_UNLOCK_MS = 10 * 60 * 1000;
 const TOUCH_EVERY_MS = 24 * 3600 * 1000;
 
@@ -25,7 +26,24 @@ export interface AuthContext {
 declare module 'fastify' {
   interface FastifyRequest {
     auth: AuthContext | null;
+    /** La requête utilise l'espace parent ou école : son verrou est repoussé (inactivité). */
+    parentSpaceUsed: boolean;
   }
+}
+
+/** Le verrou n'est repoussé qu'une fois par minute au plus (pas d'écriture à chaque requête). */
+const UNLOCK_TOUCH_MS = 60 * 1000;
+
+/**
+ * Après une requête réussie de l'espace parent ou école, l'espace reste ouvert 10 minutes de plus :
+ * il ne se verrouille qu'après 10 minutes sans action.
+ */
+export function extendUnlock(store: SessionStore, req: FastifyRequest, status: number): void {
+  const auth = req.auth;
+  if (!req.parentSpaceUsed || status >= 400 || !auth || auth.parentVerifiedAt === null) return;
+  const now = Date.now();
+  if (now - auth.parentVerifiedAt < UNLOCK_TOUCH_MS) return;
+  store.update(auth.sessionId, { parentVerifiedAt: new Date(now) });
 }
 
 export class SessionStore {
@@ -120,6 +138,7 @@ export function requireParent(req: FastifyRequest): AuthContext {
   if (!isParentUnlocked(auth)) {
     throw forbidden('parent_locked', 'Saisis le mot de passe parent pour continuer.');
   }
+  req.parentSpaceUsed = true;
   return auth;
 }
 

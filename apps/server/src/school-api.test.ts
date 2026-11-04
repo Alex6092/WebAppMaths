@@ -495,6 +495,14 @@ describe('travail de la classe', () => {
       'GET',
       `/classes/${classroom.id}/overview`,
     );
+    // Léo a un avis ECA sur la leçon en cours (les tables) : une notion à retravailler.
+    expect(overview.pupils[0]).toMatchObject({
+      toRework: 1,
+      focusAssessments: {
+        'maths.calcul.tables': { result: 'ECA', title: 'Évaluation de novembre' },
+      },
+    });
+    expect(overview.pupils[1]).toMatchObject({ toRework: 0, focusAssessments: {} });
     expect(overview.pupils).toMatchObject([
       { pupilId: leo!.id, homeworkTotal: 1, homeworkDone: 0, questions7d: 0 },
       { pupilId: zoe!.id, homeworkTotal: 1 },

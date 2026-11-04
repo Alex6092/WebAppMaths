@@ -3,7 +3,7 @@ import { generateQuestion, getWidget, type AttemptResponse, type MeResponse } fr
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from './app';
 import { loadConfig, type Config } from './config';
 import { openDb } from './db/client';
@@ -23,6 +23,7 @@ async function setup(overrides: Partial<Config> = {}) {
 }
 
 afterEach(async () => {
+  vi.useRealTimers();
   await app?.close();
 });
 
@@ -270,6 +271,33 @@ describe('comptes', () => {
       (await browser.send('POST', '/children', { firstName: 'Léo', avatar: '🐱', grade: 'CP' }))
         .statusCode,
     ).toBe(200);
+  });
+
+  it('l’espace parent se verrouille après 10 minutes sans action', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const t0 = new Date('2026-11-04T08:00:00Z').getTime();
+    const at = (minutes: number) => vi.setSystemTime(t0 + minutes * 60_000);
+    at(0);
+    await setup();
+    const { browser } = await registerAdmin();
+    const parentSpace = () => browser.send('GET', '/family/export');
+    // Une action à 8 minutes : l'espace reste ouvert à 15 minutes…
+    at(8);
+    expect((await parentSpace()).statusCode).toBe(200);
+    at(15);
+    expect((await parentSpace()).statusCode).toBe(200);
+    expect((await browser.send('GET', '/auth/me')).json<MeResponse>().parentVerifiedUntil).toBe(
+      t0 + 25 * 60_000,
+    );
+    // … puis se verrouille 10 minutes après la dernière action.
+    at(26);
+    expect((await parentSpace()).json().error).toBe('parent_locked');
+    // Une requête refusée ne repousse pas le verrou.
+    await browser.send('POST', '/auth/unlock', { password: PASSWORD });
+    at(32);
+    expect((await browser.send('PATCH', '/children/999999', { coins: 1 })).statusCode).toBe(404);
+    at(41);
+    expect((await parentSpace()).json().error).toBe('parent_locked');
   });
 
   it('refuse les requêtes venues d’un autre site', async () => {
