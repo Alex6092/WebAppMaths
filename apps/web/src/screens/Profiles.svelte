@@ -31,11 +31,17 @@
     </div>
   {:else}
     <div class="card empty">
-      Aucun profil pour l’instant. Crée le profil de ton enfant dans l’espace parent.
+      Aucun profil pour l’instant. Crée le profil de ton enfant dans l’espace parent, ou utilise la
+      fiche donnée par son école.
     </div>
   {/if}
 
-  <button class="btn ghost" onclick={() => navigate('/parent')}>🔒 Espace parent</button>
+  <div class="row">
+    <button class="btn ghost" onclick={() => navigate('/parent')}>🔒 Espace parent</button>
+    {#if session.me?.schools.length}
+      <button class="btn ghost" onclick={() => navigate('/ecole')}>🏫 Espace école</button>
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -76,5 +82,11 @@
   .empty {
     max-width: 420px;
     text-align: center;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
   }
 </style>

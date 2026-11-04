@@ -83,15 +83,23 @@
       {#each list as a (a.id)}
         <li>
           <div class="text">
-            <strong>{a.title}</strong>
-            <span class="muted">pour le {day(a.dueOn)} · {notionNames(a.notions)}</span>
+            <strong>{a.from === 'ecole' ? '🏫 ' : ''}{a.title}</strong>
+            <span class="muted"
+              >{a.from === 'ecole' ? 'donné par l’enseignant · ' : ''}pour le {day(a.dueOn)} · {notionNames(
+                a.notions,
+              )}</span
+            >
           </div>
           <span class="state" class:done={a.completedAt !== null}>
             {a.completedAt !== null ? '✅ fait' : `${a.answered}/${a.questions}`}
           </span>
-          <button class="btn ghost small" onclick={() => remove(a)} aria-label="Supprimer"
-            >🗑️</button
-          >
+          {#if a.from === 'famille'}
+            <button class="btn ghost small" onclick={() => remove(a)} aria-label="Supprimer"
+              >🗑️</button
+            >
+          {:else}
+            <span></span>
+          {/if}
         </li>
       {/each}
     </ul>

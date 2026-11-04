@@ -69,11 +69,13 @@ test('le 🔊 lit toujours la consigne, par le serveur ou par la voix du navigat
 test('le service worker garde l’app ouverte sans connexion', async ({ page, context }, info) => {
   test.skip(info.project.name !== 'pc', 'service worker vérifié dans Chromium');
   await login(page);
+  // L'accueil de l'enfant : le profil choisi est enregistré avant de recharger la page.
+  const home = page.getByRole('button', { name: 'Changer de profil' });
+  await expect(home).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   // Deuxième chargement : la page passe par le service worker et entre dans son cache.
   await page.reload();
-  const child = page.getByRole('button', { name: new RegExp(E2E_ACCOUNT.child) });
-  await expect(child).toBeVisible();
+  await expect(home).toBeVisible();
 
   await context.setOffline(true);
   await page.reload();

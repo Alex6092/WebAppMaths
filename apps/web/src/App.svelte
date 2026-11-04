@@ -10,10 +10,12 @@
   import ChildHome from './screens/ChildHome.svelte';
   import Exercise from './screens/Exercise.svelte';
   import Gallery from './screens/Gallery.svelte';
+  import Activate from './screens/Activate.svelte';
   import Login from './screens/Login.svelte';
   import Parent from './screens/Parent.svelte';
   import Profiles from './screens/Profiles.svelte';
   import Register from './screens/Register.svelte';
+  import School from './screens/School.svelte';
   import Shop from './screens/Shop.svelte';
   import Subject from './screens/Subject.svelte';
   import Themes from './screens/Themes.svelte';
@@ -26,7 +28,7 @@
   onMount(() => {
     refreshMe().catch((e) => (fatal = errorMessage(e)));
     startPwa(() => {
-      if (!BUSY_SCREENS.has(view) && view !== 'parent') location.reload();
+      if (!BUSY_SCREENS.has(view) && view !== 'parent' && view !== 'school') location.reload();
     });
   });
 
@@ -49,18 +51,33 @@
   const view = $derived.by(() => {
     if (!session.ready) return 'loading';
     const [first = ''] = route.segments;
-    if (!session.me) return first === 'register' ? 'register' : 'login';
+    // « activer » : le lien du QR code d'une fiche parent (ou d'une invitation d'enseignant).
+    if (!session.me) return first === 'register' || first === 'activer' ? 'register' : 'login';
     if (first === 'dev' && route.segments[1] === 'gallery') {
       return import.meta.env.DEV || session.me.user.role === 'admin' ? 'gallery' : 'redirect';
     }
+    if (first === 'activer') return 'activate';
+    if (first === 'ecole') return session.me.schools.length > 0 ? 'school' : 'redirect';
+    // Un compte d'enseignant sans famille n'a que l'espace école.
+    if (!session.me.family) return 'redirect';
     if (first === 'parent' || first === 'profiles') return first;
     if (CHILD_SCREENS.has(first)) return activeChild() ? first : 'redirect';
     return 'redirect';
   });
 
-  // Redirections : page d'accueil de l'enfant si un profil est choisi, sinon le choix du profil.
+  // Redirections : page d'accueil de l'enfant si un profil est choisi, sinon le choix du profil
+  // (ou l'espace école, pour un compte d'enseignant sans famille).
   $effect(() => {
-    if (view === 'redirect') navigate(activeChild() ? '/home' : '/profiles');
+    if (view === 'redirect')
+      navigate(
+        activeChild()
+          ? '/home'
+          : session.me?.family
+            ? '/profiles'
+            : session.me?.schools.length
+              ? '/ecole'
+              : '/activer',
+      );
     if (view === 'login' && route.segments[0] !== 'login') navigate('/login');
   });
 
@@ -93,6 +110,10 @@
   <Login />
 {:else if view === 'register'}
   <Register />
+{:else if view === 'activate'}
+  {#key route.query.get('code')}<Activate />{/key}
+{:else if view === 'school'}
+  <School />
 {:else if view === 'profiles'}
   <Profiles />
 {:else if view === 'parent'}

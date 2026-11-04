@@ -103,6 +103,14 @@ docker exec webappmaths node apps/server/dist/cli.js invite --admin             
 DATA_DIR=/opt/webappmaths/data node /opt/webappmaths/current/apps/server/dist/cli.js invite   # systemd
 ```
 
+Une école se crée depuis l'espace parent de l'administrateur (« Administration : écoles »), ou en
+ligne de commande ; le code affiché est celui de la direction (voir [les écoles](ecoles.md)) :
+
+```bash
+docker exec webappmaths node apps/server/dist/cli.js school --name "École des Tilleuls" --city Lyon
+docker exec webappmaths node apps/server/dist/cli.js school --id 3   # nouveau code de la direction
+```
+
 ## La voix du serveur (Piper)
 
 Les consignes, les dictées et l'anglais sont lus par [Piper](https://github.com/rhasspy/piper)
