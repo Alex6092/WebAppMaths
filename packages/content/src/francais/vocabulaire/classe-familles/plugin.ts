@@ -13,7 +13,7 @@ interface Data {
 
 export default definePlugin<'classify', Params, Data>('classify', {
   id: 'francais.vocabulaire.classe-familles',
-  version: 1,
+  version: 2,
   title: 'Range les mots dans leur famille',
   description: 'Chaque mot va avec le mot dont il est fabriqué.',
   icon: '🗂️',
@@ -25,7 +25,10 @@ export default definePlugin<'classify', Params, Data>('classify', {
   ]),
 
   generate({ rng, params }) {
-    const families = rng.sample(FAMILIES, params.families);
+    const families = rng.sample(
+      FAMILIES.filter((f) => f.words.length >= 2),
+      params.families,
+    );
     // Deux mots par famille (trois quand la famille en a assez, au premier niveau).
     const items = rng.shuffle(
       families.flatMap((f) =>

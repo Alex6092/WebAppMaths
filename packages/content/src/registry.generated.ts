@@ -45,94 +45,98 @@ import plugin40 from './francais/orthographe/son-sont/plugin';
 import plugin41 from './francais/orthographe/t-muet/plugin';
 import plugin42 from './francais/vocabulaire/avant-apres/plugin';
 import plugin43 from './francais/vocabulaire/classe-familles/plugin';
-import plugin44 from './francais/vocabulaire/contraire-prefixe/plugin';
-import plugin45 from './francais/vocabulaire/intrus-famille/plugin';
-import plugin46 from './francais/vocabulaire/meme-famille/plugin';
-import plugin47 from './francais/vocabulaire/range-alphabetique/plugin';
-import plugin48 from './francais/vocabulaire/relie-contraires/plugin';
-import plugin49 from './francais/vocabulaire/relie-synonymes/plugin';
-import plugin50 from './francais/vocabulaire/trouve-contraire/plugin';
-import plugin51 from './francais/vocabulaire/trouve-synonyme/plugin';
-import plugin52 from './maths/calcul/addition-posee/plugin';
-import plugin53 from './maths/calcul/calcul-mental/plugin';
-import plugin54 from './maths/calcul/soustraction-posee/plugin';
-import plugin55 from './maths/calcul/tables/plugin';
-import plugin56 from './maths/geometrie/alignes-oui-non/plugin';
-import plugin57 from './maths/geometrie/entoure-milieu/plugin';
-import plugin58 from './maths/geometrie/entoure-segments/plugin';
-import plugin59 from './maths/geometrie/longueurs-milieu/plugin';
-import plugin60 from './maths/geometrie/milieu-oui-non/plugin';
-import plugin61 from './maths/geometrie/nomme-segment/plugin';
-import plugin62 from './maths/geometrie/place-alignes/plugin';
-import plugin63 from './maths/geometrie/place-milieu/plugin';
-import plugin64 from './maths/geometrie/relie-alignes/plugin';
-import plugin65 from './maths/geometrie/trace-alignes/plugin';
-import plugin66 from './maths/geometrie/trace-segment-milieu/plugin';
-import plugin67 from './maths/geometrie/vocabulaire-segment/plugin';
-import plugin68 from './maths/mesures/compte-argent/plugin';
-import plugin69 from './maths/mesures/dans-combien/plugin';
-import plugin70 from './maths/mesures/heure-en-mots/plugin';
-import plugin71 from './maths/mesures/lis-heure/plugin';
-import plugin72 from './maths/mesures/mesure-segment/plugin';
-import plugin73 from './maths/mesures/moins-de-pieces/plugin';
-import plugin74 from './maths/mesures/paie/plugin';
-import plugin75 from './maths/mesures/quelle-horloge/plugin';
-import plugin76 from './maths/mesures/qui-a-le-plus/plugin';
-import plugin77 from './maths/mesures/regle-horloge/plugin';
-import plugin78 from './maths/mesures/rendre-monnaie/plugin';
-import plugin79 from './maths/mesures/unites-duree/plugin';
-import plugin80 from './maths/nombres/comparer-signe/plugin';
-import plugin81 from './maths/nombres/decomposer/plugin';
-import plugin82 from './maths/nombres/ecrire-chiffres/plugin';
-import plugin83 from './maths/nombres/ecrire-lettres/plugin';
-import plugin84 from './maths/nombres/encadrer/plugin';
-import plugin85 from './maths/nombres/lire-nombre/plugin';
-import plugin86 from './maths/nombres/ranger/plugin';
-import plugin87 from './maths/problemes/enonce-question/plugin';
-import plugin88 from './maths/problemes/mot-qui-regroupe/plugin';
-import plugin89 from './maths/problemes/parmi-les/plugin';
-import plugin90 from './maths/problemes/phrase-reponse/plugin';
-import plugin91 from './maths/problemes/quelle-operation/plugin';
-import plugin92 from './maths/problemes/relie-enonce/plugin';
-import plugin93 from './maths/problemes/resous-probleme/plugin';
-import plugin94 from './musique/ecoute/grave-aigu/plugin';
-import plugin95 from './musique/ecoute/monte-descend/plugin';
-import plugin96 from './musique/ecoute/quelle-portee/plugin';
-import plugin97 from './musique/instruments/piano-nom/plugin';
-import plugin98 from './musique/instruments/piano-touche/plugin';
-import plugin99 from './musique/instruments/violon/plugin';
-import plugin100 from './musique/lecture/cle-de-fa/plugin';
-import plugin101 from './musique/lecture/cle-de-sol/plugin';
-import plugin102 from './musique/lecture/deux-cles/plugin';
-import plugin103 from './musique/lecture/place-note/plugin';
-import plugin104 from './musique/lecture/reperer/plugin';
-import plugin105 from './musique/rythme/combien-de-temps/plugin';
-import plugin106 from './musique/rythme/complete-mesure/plugin';
-import plugin107 from './musique/rythme/figures/plugin';
-import plugin108 from './qlm/matiere/change-etat/plugin';
-import plugin109 from './qlm/matiere/solide-liquide/plugin';
-import plugin110 from './qlm/temps/compte-calendrier/plugin';
-import plugin111 from './qlm/temps/jour-calendrier/plugin';
-import plugin112 from './qlm/temps/quel-jour/plugin';
-import plugin113 from './qlm/temps/quel-mois/plugin';
-import plugin114 from './qlm/temps/range-jours/plugin';
-import plugin115 from './qlm/temps/range-mois/plugin';
-import plugin116 from './qlm/temps/range-moments/plugin';
-import plugin117 from './qlm/temps/range-saisons/plugin';
-import plugin118 from './qlm/temps/saison-du-mois/plugin';
-import plugin119 from './qlm/vivant/aliments-transformes/plugin';
-import plugin120 from './qlm/vivant/besoins-plante/plugin';
-import plugin121 from './qlm/vivant/classe-animaux/plugin';
-import plugin122 from './qlm/vivant/classe-familles-aliments/plugin';
-import plugin123 from './qlm/vivant/cycle-vie/plugin';
-import plugin124 from './qlm/vivant/famille-aliment/plugin';
-import plugin125 from './qlm/vivant/origine-aliments/plugin';
-import plugin126 from './qlm/vivant/parties-plante/plugin';
-import plugin127 from './qlm/vivant/petit-animal/plugin';
-import plugin128 from './qlm/vivant/provenance-aliments/plugin';
-import plugin129 from './qlm/vivant/quel-sens/plugin';
-import plugin130 from './qlm/vivant/relie-sens/plugin';
-import plugin131 from './qlm/vivant/vivant-ou-pas/plugin';
+import plugin44 from './francais/vocabulaire/coche-radical/plugin';
+import plugin45 from './francais/vocabulaire/contraire-prefixe/plugin';
+import plugin46 from './francais/vocabulaire/deux-familles/plugin';
+import plugin47 from './francais/vocabulaire/ecris-radical/plugin';
+import plugin48 from './francais/vocabulaire/intrus-famille/plugin';
+import plugin49 from './francais/vocabulaire/meme-famille/plugin';
+import plugin50 from './francais/vocabulaire/range-alphabetique/plugin';
+import plugin51 from './francais/vocabulaire/relie-contraires/plugin';
+import plugin52 from './francais/vocabulaire/relie-familles/plugin';
+import plugin53 from './francais/vocabulaire/relie-synonymes/plugin';
+import plugin54 from './francais/vocabulaire/trouve-contraire/plugin';
+import plugin55 from './francais/vocabulaire/trouve-synonyme/plugin';
+import plugin56 from './maths/calcul/addition-posee/plugin';
+import plugin57 from './maths/calcul/calcul-mental/plugin';
+import plugin58 from './maths/calcul/soustraction-posee/plugin';
+import plugin59 from './maths/calcul/tables/plugin';
+import plugin60 from './maths/geometrie/alignes-oui-non/plugin';
+import plugin61 from './maths/geometrie/entoure-milieu/plugin';
+import plugin62 from './maths/geometrie/entoure-segments/plugin';
+import plugin63 from './maths/geometrie/longueurs-milieu/plugin';
+import plugin64 from './maths/geometrie/milieu-oui-non/plugin';
+import plugin65 from './maths/geometrie/nomme-segment/plugin';
+import plugin66 from './maths/geometrie/place-alignes/plugin';
+import plugin67 from './maths/geometrie/place-milieu/plugin';
+import plugin68 from './maths/geometrie/relie-alignes/plugin';
+import plugin69 from './maths/geometrie/trace-alignes/plugin';
+import plugin70 from './maths/geometrie/trace-segment-milieu/plugin';
+import plugin71 from './maths/geometrie/vocabulaire-segment/plugin';
+import plugin72 from './maths/mesures/compte-argent/plugin';
+import plugin73 from './maths/mesures/dans-combien/plugin';
+import plugin74 from './maths/mesures/heure-en-mots/plugin';
+import plugin75 from './maths/mesures/lis-heure/plugin';
+import plugin76 from './maths/mesures/mesure-segment/plugin';
+import plugin77 from './maths/mesures/moins-de-pieces/plugin';
+import plugin78 from './maths/mesures/paie/plugin';
+import plugin79 from './maths/mesures/quelle-horloge/plugin';
+import plugin80 from './maths/mesures/qui-a-le-plus/plugin';
+import plugin81 from './maths/mesures/regle-horloge/plugin';
+import plugin82 from './maths/mesures/rendre-monnaie/plugin';
+import plugin83 from './maths/mesures/unites-duree/plugin';
+import plugin84 from './maths/nombres/comparer-signe/plugin';
+import plugin85 from './maths/nombres/decomposer/plugin';
+import plugin86 from './maths/nombres/ecrire-chiffres/plugin';
+import plugin87 from './maths/nombres/ecrire-lettres/plugin';
+import plugin88 from './maths/nombres/encadrer/plugin';
+import plugin89 from './maths/nombres/lire-nombre/plugin';
+import plugin90 from './maths/nombres/ranger/plugin';
+import plugin91 from './maths/problemes/enonce-question/plugin';
+import plugin92 from './maths/problemes/mot-qui-regroupe/plugin';
+import plugin93 from './maths/problemes/parmi-les/plugin';
+import plugin94 from './maths/problemes/phrase-reponse/plugin';
+import plugin95 from './maths/problemes/quelle-operation/plugin';
+import plugin96 from './maths/problemes/relie-enonce/plugin';
+import plugin97 from './maths/problemes/resous-probleme/plugin';
+import plugin98 from './musique/ecoute/grave-aigu/plugin';
+import plugin99 from './musique/ecoute/monte-descend/plugin';
+import plugin100 from './musique/ecoute/quelle-portee/plugin';
+import plugin101 from './musique/instruments/piano-nom/plugin';
+import plugin102 from './musique/instruments/piano-touche/plugin';
+import plugin103 from './musique/instruments/violon/plugin';
+import plugin104 from './musique/lecture/cle-de-fa/plugin';
+import plugin105 from './musique/lecture/cle-de-sol/plugin';
+import plugin106 from './musique/lecture/deux-cles/plugin';
+import plugin107 from './musique/lecture/place-note/plugin';
+import plugin108 from './musique/lecture/reperer/plugin';
+import plugin109 from './musique/rythme/combien-de-temps/plugin';
+import plugin110 from './musique/rythme/complete-mesure/plugin';
+import plugin111 from './musique/rythme/figures/plugin';
+import plugin112 from './qlm/matiere/change-etat/plugin';
+import plugin113 from './qlm/matiere/solide-liquide/plugin';
+import plugin114 from './qlm/temps/compte-calendrier/plugin';
+import plugin115 from './qlm/temps/jour-calendrier/plugin';
+import plugin116 from './qlm/temps/quel-jour/plugin';
+import plugin117 from './qlm/temps/quel-mois/plugin';
+import plugin118 from './qlm/temps/range-jours/plugin';
+import plugin119 from './qlm/temps/range-mois/plugin';
+import plugin120 from './qlm/temps/range-moments/plugin';
+import plugin121 from './qlm/temps/range-saisons/plugin';
+import plugin122 from './qlm/temps/saison-du-mois/plugin';
+import plugin123 from './qlm/vivant/aliments-transformes/plugin';
+import plugin124 from './qlm/vivant/besoins-plante/plugin';
+import plugin125 from './qlm/vivant/classe-animaux/plugin';
+import plugin126 from './qlm/vivant/classe-familles-aliments/plugin';
+import plugin127 from './qlm/vivant/cycle-vie/plugin';
+import plugin128 from './qlm/vivant/famille-aliment/plugin';
+import plugin129 from './qlm/vivant/origine-aliments/plugin';
+import plugin130 from './qlm/vivant/parties-plante/plugin';
+import plugin131 from './qlm/vivant/petit-animal/plugin';
+import plugin132 from './qlm/vivant/provenance-aliments/plugin';
+import plugin133 from './qlm/vivant/quel-sens/plugin';
+import plugin134 from './qlm/vivant/relie-sens/plugin';
+import plugin135 from './qlm/vivant/vivant-ou-pas/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
@@ -272,6 +276,10 @@ export const plugins: AnyPlugin[] = [
   plugin129,
   plugin130,
   plugin131,
+  plugin132,
+  plugin133,
+  plugin134,
+  plugin135,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -320,11 +328,15 @@ export const pluginPathIds: string[] = [
   'francais.orthographe.t-muet',
   'francais.vocabulaire.avant-apres',
   'francais.vocabulaire.classe-familles',
+  'francais.vocabulaire.coche-radical',
   'francais.vocabulaire.contraire-prefixe',
+  'francais.vocabulaire.deux-familles',
+  'francais.vocabulaire.ecris-radical',
   'francais.vocabulaire.intrus-famille',
   'francais.vocabulaire.meme-famille',
   'francais.vocabulaire.range-alphabetique',
   'francais.vocabulaire.relie-contraires',
+  'francais.vocabulaire.relie-familles',
   'francais.vocabulaire.relie-synonymes',
   'francais.vocabulaire.trouve-contraire',
   'francais.vocabulaire.trouve-synonyme',

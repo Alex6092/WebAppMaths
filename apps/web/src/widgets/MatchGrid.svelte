@@ -83,7 +83,11 @@
     padding: 6px 0;
     min-width: 0;
   }
+  /* Au-dessus des cartes des deux colonnes : sans cela, celles de droite, qui viennent après
+     dans la page, cachent la moitié de leurs points. */
   .gutter {
+    position: relative;
+    z-index: 1;
     width: 100%;
     height: 100%;
     overflow: visible;
