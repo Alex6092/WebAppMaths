@@ -171,6 +171,19 @@ const FAMILLES_LESSON: LessonBlock[] = [
       'au début et à la fin : terre → __at__terr__ir__',
     ],
   },
+  'La plus grande partie commune à tous les mots de la famille s’appelle le **radical** :',
+  {
+    kind: 'example',
+    lines: ['__mont__er, __mont__agne, __mont__agnard → le radical est **mont**'],
+  },
+  'Attention aux mots qui **se ressemblent** sans avoir la **même idée** : ils ne sont pas de la famille !',
+  {
+    kind: 'example',
+    lines: [
+      '*loin* → éloigner ✅ ; *loi* ❌ (une loi, ce n’est pas loin)',
+      '*jardin* → jardinier ✅ ; *pelle* ❌ (on s’en sert au jardin, mais pas de partie commune)',
+    ],
+  },
 ];
 
 /** La leçon d'une paire d'homophones : l'astuce de chaque mot, et un exemple de chacun. */
