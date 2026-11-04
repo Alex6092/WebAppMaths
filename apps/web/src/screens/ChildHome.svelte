@@ -14,6 +14,11 @@
   const assignments = $derived(session.childState?.assignments ?? []);
   const evaluations = $derived(session.childState?.evaluations ?? []);
   const due = $derived(session.childState ? dueNotions() : []);
+  const withExercises = (ids: readonly string[]) =>
+    ids.filter((id) => registry.pluginsOfNotions([id]).length > 0);
+  /** La leçon en cours dans la classe, et ce que l'enseignant a noté « à retravailler ». */
+  const focus = $derived(withExercises(session.childState?.focusNotions ?? []));
+  const rework = $derived(withExercises(session.childState?.toRework ?? []));
 
   /** « pour demain », « pour lundi 3 novembre », « en retard ». */
   function dueLabel(dueOn: string): string {
@@ -97,7 +102,7 @@
       {#each assignments as a (a.id)}
         <div class="assignment" class:done={a.completedAt !== null}>
           <div class="assignment-text">
-            <strong>{a.title}</strong>
+            <strong>{a.from === 'ecole' ? '🏫 ' : ''}{a.title}</strong>
             <span
               class="due"
               class:late={a.completedAt === null && dueLabel(a.dueOn) === 'en retard'}
@@ -120,6 +125,18 @@
           {/if}
         </div>
       {/each}
+    </section>
+  {/if}
+
+  {#if focus.length}
+    <section class="lesson">
+      <div class="lesson-text">
+        <strong>📌 En ce moment en classe</strong>
+        <span>{focus.map((id) => registry.notion(id)?.title).join(' · ')}</span>
+      </div>
+      <button class="btn success" onclick={() => navigate(`/mix?n=${focus.join(',')}`)}
+        >Je m’entraîne</button
+      >
     </section>
   {/if}
 
@@ -155,6 +172,11 @@
     {#if (session.childState?.mistakes ?? 0) > 0}
       <button class="btn accent" onclick={() => navigate('/review')}
         >🔁 Revoir mes erreurs ({session.childState?.mistakes})</button
+      >
+    {/if}
+    {#if rework.length}
+      <button class="btn accent" onclick={() => navigate(`/mix?n=${rework.join(',')}`)}
+        >🏫 À retravailler ({rework.length} notion{rework.length > 1 ? 's' : ''})</button
       >
     {/if}
     {#if due.length}
@@ -305,6 +327,28 @@
   }
   .daily.done {
     border-color: #66bb6a;
+  }
+  .lesson {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 24px;
+    background: var(--surface);
+    border: 3px dashed var(--primary);
+    box-shadow: var(--shadow);
+  }
+  .lesson-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .lesson-text strong {
+    font-size: 1.2rem;
+    color: var(--primary-dark);
   }
   .daily-text {
     display: flex;

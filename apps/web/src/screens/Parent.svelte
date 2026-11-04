@@ -1,7 +1,9 @@
 <script lang="ts">
   import {
+    AVATARS,
     dayKey,
     GRADE_IDS,
+    type AdminSchoolDto,
     type ChildDto,
     type CreatedInvitation,
     type GradeId,
@@ -19,34 +21,18 @@
   import { navigate } from '../lib/router.svelte';
   import { isParentUnlocked, refreshMe, session, setMe } from '../lib/session.svelte';
 
-  const AVATARS = [
-    '🦄',
-    '🐱',
-    '🐶',
-    '🦊',
-    '🐼',
-    '🐸',
-    '🐵',
-    '🦁',
-    '🐯',
-    '🐰',
-    '🐻',
-    '🐨',
-    '🐧',
-    '🦋',
-    '🐢',
-    '🐬',
-    '🦖',
-    '🐙',
-  ];
-
   let password = $state('');
   let error = $state<string | null>(null);
   let unlocked = $state(isParentUnlocked());
 
   // Formulaire d'ajout ou de modification d'un profil.
   let editing = $state<ChildDto | null>(null);
-  let form = $state({ firstName: '', avatar: AVATARS[0]!, grade: 'CE1' as GradeId, coins: 0 });
+  let form = $state({
+    firstName: '',
+    avatar: AVATARS[0] as string,
+    grade: 'CE1' as GradeId,
+    coins: 0,
+  });
 
   let familyCode = $state<CreatedInvitation | null>(null);
   let invitations = $state<InvitationDto[]>([]);
@@ -61,8 +47,70 @@
   );
 
   $effect(() => {
-    if (unlocked && isAdmin) void loadInvitations();
+    if (unlocked && isAdmin) {
+      void loadInvitations();
+      void loadSchools();
+    }
   });
+
+  // --- Administration : écoles ---
+  let schools = $state<AdminSchoolDto[]>([]);
+  let schoolName = $state('');
+  let schoolCity = $state('');
+  let schoolCode = $state<{ school: string; invitation: CreatedInvitation } | null>(null);
+
+  async function loadSchools() {
+    try {
+      schools = await api.get<AdminSchoolDto[]>('admin/schools');
+    } catch (e) {
+      handle(e);
+    }
+  }
+
+  async function createSchool(event: SubmitEvent) {
+    event.preventDefault();
+    try {
+      const created = await api.post<{ id: number; invitation: CreatedInvitation }>(
+        'admin/schools',
+        { name: schoolName.trim(), ...(schoolCity.trim() ? { city: schoolCity.trim() } : {}) },
+      );
+      schoolCode = { school: schoolName.trim(), invitation: created.invitation };
+      schoolName = '';
+      schoolCity = '';
+      await loadSchools();
+    } catch (e) {
+      handle(e);
+    }
+  }
+
+  async function directionCode(school: AdminSchoolDto) {
+    try {
+      schoolCode = {
+        school: school.name,
+        invitation: await api.post<CreatedInvitation>(`admin/schools/${school.id}/invitations`),
+      };
+    } catch (e) {
+      handle(e);
+    }
+  }
+
+  async function deleteSchool(school: AdminSchoolDto) {
+    if (
+      !confirm(
+        `Supprimer l’école ${school.name} ? Ses classes disparaissent ; les élèves sans famille sont supprimés, les autres restent à leur famille.`,
+      )
+    )
+      return;
+    try {
+      await api.del(`admin/schools/${school.id}`);
+      await Promise.all([loadSchools(), refreshMe()]);
+    } catch (e) {
+      handle(e);
+    }
+  }
+
+  // --- Fiche de l'école ---
+  let pupilCode = $state('');
 
   /** Toute erreur « parent_locked » ramène au formulaire de mot de passe. */
   function handle(e: unknown) {
@@ -86,14 +134,21 @@
     editing = child;
     form = child
       ? { firstName: child.firstName, avatar: child.avatar, grade: child.grade, coins: child.coins }
-      : { firstName: '', avatar: AVATARS[0]!, grade: 'CE1', coins: 0 };
+      : { firstName: '', avatar: AVATARS[0], grade: 'CE1', coins: 0 };
   }
 
   async function saveChild(event: SubmitEvent) {
     event.preventDefault();
     error = null;
     try {
-      if (editing) await api.patch(`children/${editing.id}`, form);
+      if (editing)
+        await api.patch(`children/${editing.id}`, {
+          firstName: form.firstName,
+          avatar: form.avatar,
+          coins: form.coins,
+          // L'école règle la classe d'un élève inscrit.
+          ...(editing.classroom ? {} : { grade: form.grade }),
+        });
       else
         await api.post('children', {
           firstName: form.firstName,
@@ -109,7 +164,10 @@
   }
 
   async function removeChild(child: ChildDto) {
-    if (!confirm(`Supprimer le profil de ${child.firstName} et toute sa progression ?`)) return;
+    const message = child.classroom
+      ? `Retirer ${child.firstName} de la famille ? ${child.firstName} reste élève de ${child.classroom.name} : son profil et sa progression restent à l’école.`
+      : `Supprimer le profil de ${child.firstName} et toute sa progression ?`;
+    if (!confirm(message)) return;
     try {
       await api.del(`children/${child.id}`);
       await refreshMe();
@@ -216,6 +274,8 @@
   const date = (ms: number) => new Date(ms).toLocaleDateString('fr-FR');
   const inviteLink = (code: string) =>
     `${location.origin}${location.pathname}#/register?code=${code}`;
+  const activateLink = (code: string) =>
+    `${location.origin}${location.pathname}#/activer?code=${code}`;
 </script>
 
 <div class="screen">
@@ -281,7 +341,10 @@
             onclick={() => startEdit(child)}
           >
             <span class="avatar">{child.avatar}</span>
-            <span><strong>{child.firstName}</strong><br />{child.grade} · 💰 {child.coins}</span>
+            <span
+              ><strong>{child.firstName}</strong><br />{child.grade} · 💰 {child.coins}{#if child.classroom}<br
+                /><span class="school">🏫 {child.classroom.name}</span>{/if}</span
+            >
           </button>
         {/each}
         <button class="child add" class:active={editing === null} onclick={() => startEdit(null)}>
@@ -298,7 +361,7 @@
           </div>
           <div class="field">
             <label for="grade">Classe</label>
-            <select id="grade" bind:value={form.grade}>
+            <select id="grade" bind:value={form.grade} disabled={!!editing?.classroom}>
               {#each GRADE_IDS as grade (grade)}<option value={grade}>{grade}</option>{/each}
             </select>
           </div>
@@ -309,6 +372,12 @@
             </div>
           {/if}
         </div>
+        {#if editing?.classroom}
+          <p class="hint">
+            🏫 Élève de {editing.classroom.name} · {editing.classroom.schoolName} : l’école règle sa classe,
+            les notions vues et lui donne des devoirs ; son enseignant voit sa progression.
+          </p>
+        {/if}
         <div class="avatars" role="radiogroup" aria-label="Avatar">
           {#each AVATARS as avatar (avatar)}
             <button
@@ -325,11 +394,41 @@
           <button class="btn" type="submit">{editing ? 'Enregistrer' : 'Créer le profil'}</button>
           {#if editing}
             <button class="btn danger" type="button" onclick={() => editing && removeChild(editing)}
-              >Supprimer</button
+              >{editing.classroom ? 'Retirer de la famille' : 'Supprimer'}</button
             >
           {/if}
         </div>
       </form>
+    </section>
+
+    <section class="card">
+      <h2>🏫 Fiche de l’école</h2>
+      <p>
+        L’école de ton enfant t’a donné une fiche avec un QR code ? Scanne-la, ou saisis son code
+        ici : l’enfant rejoint ton compte (avec ses frères et sœurs).
+      </p>
+      <form
+        class="row"
+        onsubmit={(e) => {
+          e.preventDefault();
+          navigate(`/activer?code=${encodeURIComponent(pupilCode.trim())}`);
+        }}
+      >
+        <div class="field">
+          <label for="pupil-code">Code de la fiche</label>
+          <input
+            id="pupil-code"
+            bind:value={pupilCode}
+            placeholder="XXXX-XXXX-XXXX"
+            autocomplete="off"
+            required
+          />
+        </div>
+        <button class="btn small" type="submit">Continuer</button>
+      </form>
+      {#if session.me?.schools.length}
+        <button class="btn ghost small" onclick={() => navigate('/ecole')}>🏫 Espace école</button>
+      {/if}
     </section>
 
     <section class="card">
@@ -440,6 +539,61 @@
           </tbody>
         </table>
       </section>
+
+      <section class="card">
+        <h2>Administration : écoles</h2>
+        <form class="row" onsubmit={createSchool}>
+          <div class="field">
+            <label for="school-name">Nom de l’école</label>
+            <input
+              id="school-name"
+              bind:value={schoolName}
+              maxlength="80"
+              placeholder="École des Tilleuls"
+              required
+            />
+          </div>
+          <div class="field">
+            <label for="school-city">Ville (facultatif)</label>
+            <input id="school-city" bind:value={schoolCity} maxlength="80" />
+          </div>
+          <button class="btn small" type="submit">Créer l’école</button>
+        </form>
+        {#if schoolCode}
+          <p>Code de la direction de {schoolCode.school} :</p>
+          <p class="code">{schoolCode.invitation.code}</p>
+          <p class="hint">
+            Valable jusqu’au {date(schoolCode.invitation.expiresAt)} · lien : {activateLink(
+              schoolCode.invitation.code,
+            )}
+          </p>
+        {/if}
+        {#if schools.length}
+          <table>
+            <thead
+              ><tr><th>École</th><th>Équipe</th><th>Classes</th><th>Élèves</th><th></th></tr></thead
+            >
+            <tbody>
+              {#each schools as school (school.id)}
+                <tr>
+                  <td>{school.name}{school.city ? ` (${school.city})` : ''}</td>
+                  <td>{school.members}</td>
+                  <td>{school.classes}</td>
+                  <td>{school.pupils}</td>
+                  <td>
+                    <button class="btn ghost small" onclick={() => directionCode(school)}
+                      >Code direction</button
+                    >
+                    <button class="btn ghost small" onclick={() => deleteSchool(school)}
+                      >Supprimer</button
+                    >
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        {/if}
+      </section>
     {/if}
 
     <div class="row footer">
@@ -449,7 +603,7 @@
     </div>
   {/if}
   <p class="version">
-    {session.me?.family.name} · {session.me?.user.email} · version {session.me?.version}
+    {session.me?.family?.name} · {session.me?.user.email} · version {session.me?.version}
   </p>
 </div>
 
@@ -503,6 +657,10 @@
   }
   .child .avatar {
     font-size: 2rem;
+  }
+  .child .school {
+    color: var(--text-soft);
+    font-size: 0.85rem;
   }
   .child-form {
     display: flex;

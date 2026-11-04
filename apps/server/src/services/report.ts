@@ -11,7 +11,8 @@ import type { Db } from '../db/client';
 import { attempts, children, practiceSessions } from '../db/schema';
 import { toChildDto } from './family';
 import { dailyState } from './motivation';
-import { activeNotions } from './notions';
+import { latestAssessments } from './assessments';
+import { activeNotions, focusNotions } from './notions';
 import { childReviews } from './spaced';
 import { childMasteries } from './practice';
 
@@ -183,7 +184,7 @@ export function childReport(db: Db, child: ChildRow, now = new Date()): ChildRep
     }));
 
   return {
-    child: toChildDto(child),
+    child: toChildDto(db, child),
     notions: childMasteries(db, child.id),
     daily: dailyState(db, child.id, now),
     days,
@@ -192,6 +193,9 @@ export function childReport(db: Db, child: ChildRow, now = new Date()): ChildRep
     toReview: pendingMistakes(rows).length,
     timing: responseTimes(db, child.id),
     activeNotions: activeNotions(db, child),
+    notionsSetBy: child.classId !== null ? 'ecole' : 'famille',
+    focusNotions: focusNotions(db, child),
     reviews: childReviews(db, child.id),
+    assessments: latestAssessments(db, child.id),
   };
 }

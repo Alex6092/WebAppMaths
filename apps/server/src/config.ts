@@ -28,10 +28,19 @@ export interface Config {
   /** La taille du cache des phrases, en Mo. */
   ttsCacheMb: number;
   /**
-   * Connexions, inscriptions et déverrouillages permis par quart d'heure et par adresse IP (10).
-   * Les tests de bout en bout, qui se connectent tous depuis la même machine, en demandent plus.
+   * Essais de mot de passe permis par quart d'heure et par compte (10) : connexion (compte et
+   * adresse), déverrouillage de l'espace parent, suppression de la famille. Les tests de bout en
+   * bout, qui se connectent tous au même compte, en demandent plus.
    */
   authAttempts: number;
+  /**
+   * Requêtes d'authentification (connexion, inscription, codes, déverrouillage) permises par quart
+   * d'heure depuis une même adresse IP (300) : assez pour une réunion de parents sur le Wi-Fi de
+   * l'école, qui sortent tous par la même adresse.
+   */
+  authAttemptsPerIp: number;
+  /** Requêtes par minute et par appareil connecté (ou par adresse, sans session) : 600. */
+  requestsPerMinute: number;
 }
 
 export function normalizeBasePath(raw: string | undefined): string {
@@ -82,5 +91,7 @@ export function loadConfig(env = process.env): Config {
     ttsWorkers: Number(env.TTS_WORKERS ?? Math.max(1, Math.min(3, cpus().length - 1))),
     ttsCacheMb: Number(env.TTS_CACHE_MB ?? 500),
     authAttempts: Number(env.AUTH_ATTEMPTS ?? 10),
+    authAttemptsPerIp: Number(env.AUTH_ATTEMPTS_PER_IP ?? 300),
+    requestsPerMinute: Number(env.REQUESTS_PER_MINUTE ?? 600),
   };
 }

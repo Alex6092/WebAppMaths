@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from './app';
-import { loadConfig } from './config';
+import { loadConfig, type Config } from './config';
 import { openDb } from './db/client';
 import { ensureAdminInvitation } from './services/invitations';
 
@@ -14,9 +14,9 @@ const PASSWORD = 'motdepasse-solide';
 
 let app: Awaited<ReturnType<typeof buildApp>>;
 
-async function setup() {
+async function setup(overrides: Partial<Config> = {}) {
   const db = openDb(':memory:');
-  const config = { ...loadConfig({}), webDist: null, cookieSecure: false };
+  const config = { ...loadConfig({}), webDist: null, cookieSecure: false, ...overrides };
   ensureAdminInvitation(db, ADMIN_CODE);
   app = await buildApp(config, db, { logger: false });
   return app;
@@ -100,7 +100,7 @@ describe('comptes', () => {
     await setup();
     const { me } = await registerAdmin();
     expect(me.user).toMatchObject({ email: 'admin@example.org', role: 'admin' });
-    expect(me.family.name).toBe('Famille A');
+    expect(me.family?.name).toBe('Famille A');
     expect(me.parentVerifiedUntil).toBeGreaterThan(Date.now());
     const health = await app.inject({ url: '/api/health' });
     expect(health.json()).toMatchObject({ status: 'ok' });
@@ -147,6 +147,106 @@ describe('comptes', () => {
       );
     }
     expect(statuses.at(-1)).toBe(429);
+  });
+
+  describe('une école derrière une seule adresse IP', () => {
+    /** Crée n familles (comptes parents), invitées par l'administrateur. */
+    async function families(admin: Browser, n: number) {
+      const emails: string[] = [];
+      for (let i = 0; i < n; i++) {
+        const { code } = (await admin.send('POST', '/admin/invitations', {})).json<{
+          code: string;
+        }>();
+        const email = `parent${i}@example.org`;
+        const res = await new Browser().send('POST', '/auth/register', {
+          code,
+          email,
+          password: PASSWORD,
+        });
+        expect(res.statusCode).toBe(200);
+        emails.push(email);
+      }
+      return emails;
+    }
+
+    it('trente parents se connectent depuis la même adresse', async () => {
+      await setup();
+      const { browser: admin } = await registerAdmin();
+      const emails = await families(admin, 30);
+      for (const email of emails) {
+        const res = await new Browser().send('POST', '/auth/login', { email, password: PASSWORD });
+        expect(res.statusCode, email).toBe(200);
+      }
+    });
+
+    it('un compte bloqué ne bloque pas les autres', async () => {
+      await setup();
+      const { browser: admin } = await registerAdmin();
+      const [blocked, other] = await families(admin, 2);
+      const attempt = (email: string, password: string) =>
+        new Browser().send('POST', '/auth/login', { email, password });
+      for (let i = 0; i < 10; i++)
+        expect((await attempt(blocked!, 'mauvais-mot-de-passe')).statusCode).toBe(401);
+      const res = await attempt(blocked!, PASSWORD);
+      expect(res.statusCode).toBe(429);
+      expect(res.headers['retry-after']).toBeDefined();
+      expect(res.json().message).toMatch(/Trop d’essais/);
+      expect((await attempt(other!, PASSWORD)).statusCode).toBe(200);
+    });
+
+    it('un plafond par adresse sur toutes les routes de connexion', async () => {
+      await setup({ authAttemptsPerIp: 5 });
+      const visitor = new Browser();
+      const statuses = [];
+      // Connexions, aperçus de code et inscriptions comptent ensemble.
+      for (let i = 0; i < 3; i++) {
+        statuses.push(
+          (
+            await visitor.send('POST', '/auth/login', {
+              email: `x${i}@example.org`,
+              password: 'nope',
+            })
+          ).statusCode,
+        );
+        statuses.push(
+          (await visitor.send('POST', '/auth/invitation', { code: `AAAA-BBBB-CCC${i}` }))
+            .statusCode,
+        );
+      }
+      expect(statuses).toEqual([401, 400, 401, 400, 401, 429]);
+    });
+
+    it('le déverrouillage est limité par compte', async () => {
+      await setup();
+      const { browser } = await registerAdmin();
+      await browser.send('POST', '/auth/lock');
+      for (let i = 0; i < 10; i++)
+        expect(
+          (await browser.send('POST', '/auth/unlock', { password: 'mauvais' })).statusCode,
+        ).toBe(401);
+      expect((await browser.send('POST', '/auth/unlock', { password: PASSWORD })).statusCode).toBe(
+        429,
+      );
+    });
+
+    it('chaque appareil connecté a son quota de requêtes', async () => {
+      await setup({ requestsPerMinute: 5 });
+      const { browser: first } = await registerAdmin();
+      const second = new Browser();
+      await second.send('POST', '/auth/login', { email: 'admin@example.org', password: PASSWORD });
+      const me = async (b: Browser) => (await b.send('GET', '/auth/me')).statusCode;
+      const firstStatuses = [];
+      for (let i = 0; i < 6; i++) firstStatuses.push(await me(first));
+      expect(firstStatuses.at(-1)).toBe(429);
+      // Même adresse, autre appareil : son propre quota.
+      expect(await me(second)).toBe(200);
+      // Un cookie inventé n'ouvre pas de quota neuf : il compte avec l'adresse.
+      const forged = new Browser();
+      forged.cookie = 'wam_sid=invente';
+      const forgedStatuses = [];
+      for (let i = 0; i < 6; i++) forgedStatuses.push(await me(forged));
+      expect(forgedStatuses.at(-1)).toBe(429);
+    });
   });
 
   it('verrouille l’espace parent quand un enfant prend l’appareil', async () => {

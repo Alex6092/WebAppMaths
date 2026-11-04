@@ -5,6 +5,7 @@ import fastifyRateLimit from '@fastify/rate-limit';
 import fastifyStatic from '@fastify/static';
 import { sql } from 'drizzle-orm';
 import Fastify, { type FastifyError } from 'fastify';
+import { clientKey } from './auth/limits';
 import { SESSION_COOKIE, SessionStore } from './auth/session';
 import type { Config } from './config';
 import type { Db } from './db/client';
@@ -14,6 +15,7 @@ import { authRoutes } from './routes/auth';
 import { childRoutes } from './routes/child';
 import type { Deps } from './routes/deps';
 import { familyRoutes } from './routes/family';
+import { schoolRoutes } from './routes/school';
 import { ttsRoutes } from './routes/tts';
 import { createTts, type TtsService } from './tts/service';
 import { warmSpeech } from './tts/warm';
@@ -58,8 +60,10 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
   await app.register(fastifyCookie);
   await app.register(fastifyRateLimit, {
     global: true,
-    max: 600,
+    max: config.requestsPerMinute,
     timeWindow: '1 minute',
+    // Par appareil connecté (sinon par adresse) : les postes d'une école partagent une adresse.
+    keyGenerator: clientKey,
     errorResponseBuilder: (_req, context) => ({
       statusCode: 429,
       error: 'too_many_requests',
@@ -130,6 +134,7 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
       familyRoutes(api, deps);
       childRoutes(api, deps);
       adminRoutes(api, deps);
+      schoolRoutes(api, deps);
       ttsRoutes(api, deps);
     },
     { prefix: `${config.basePath}api` },

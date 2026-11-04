@@ -2,7 +2,8 @@
 
 Application d'apprentissage pour l'école élémentaire, puis le collège : exercices générés à
 l'infini, organisés par **matière → domaine → notion → exercice → niveaux**, avec un suivi de la
-progression par enfant, des ambiances à collectionner et des comptes famille.
+progression par enfant, des ambiances à collectionner, des comptes famille et des comptes école
+(établissements, enseignants, classes et élèves).
 
 L'app CP d'origine (« Maths Magiques ») est conservée dans [`legacy/index.html`](legacy/index.html).
 
@@ -47,6 +48,7 @@ d'invitation » pour créer le compte. La base locale est dans `data/app.db`.
 ## Documentation
 
 - [Ajouter un exercice](docs/ajouter-un-exercice.md)
+- [Les écoles : établissements, enseignants, classes et élèves](docs/ecoles.md)
 - [Déploiement au lycée et CI/CD](docs/deploiement.md)
 
 ## Note sur Node 20

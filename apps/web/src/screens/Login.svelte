@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { MeResponse } from '@app/core';
   import { api, errorMessage } from '../lib/api';
-  import { navigate } from '../lib/router.svelte';
+  import { navigate, route } from '../lib/router.svelte';
   import { setMe } from '../lib/session.svelte';
 
   let email = $state('');
@@ -15,7 +15,9 @@
     error = null;
     try {
       setMe(await api.post<MeResponse>('auth/login', { email, password }));
-      navigate('/');
+      // Après « J'ai déjà un compte » sur une fiche parent : retour à l'activation.
+      const next = route.query.get('next');
+      navigate(next?.startsWith('/') ? next : '/');
     } catch (e) {
       error = errorMessage(e);
     } finally {
@@ -28,7 +30,7 @@
   <div class="logo">🎒✨</div>
   <h1 class="title">Cartable magique</h1>
   <form class="card form" onsubmit={submit}>
-    <p class="subtitle">Connexion des parents</p>
+    <p class="subtitle">Connexion des parents et des enseignants</p>
     <div class="field">
       <label for="email">E-mail</label>
       <input id="email" type="email" autocomplete="username" bind:value={email} required />

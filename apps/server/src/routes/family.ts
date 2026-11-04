@@ -16,9 +16,10 @@ import { DEFAULT_THEME_ID } from '@app/themes';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { verifyPassword } from '../auth/crypto';
-import { requireParent, SESSION_COOKIE } from '../auth/session';
+import { createGuard, ipOf } from '../auth/limits';
+import { requireFamily, SESSION_COOKIE } from '../auth/session';
 import { children, exerciseStates, parentUsers } from '../db/schema';
-import { HttpError, notFound } from '../errors';
+import { conflict, HttpError, notFound } from '../errors';
 import {
   createEvaluation,
   deleteEvaluation,
@@ -29,6 +30,7 @@ import {
 import { getFamilyChild, toChildDto } from '../services/family';
 import { createInvitation } from '../services/invitations';
 import { createAssignment, deleteAssignment, listAssignments } from '../services/homework';
+import { forgetActiveChild } from '../services/school';
 import { setNotionActive } from '../services/notions';
 import { deleteFamily, exportFamily } from '../services/privacy';
 import { childReport } from '../services/report';
@@ -44,6 +46,12 @@ type ChildBody = { firstName: string; avatar: string; grade: GradeId };
 
 /** Gestion de la famille : réservée à l'espace parent déverrouillé. */
 export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
+  // Supprimer la famille demande le mot de passe : 10 essais par quart d'heure et par compte.
+  const deletePerAccount = createGuard(api, {
+    max: config.authAttempts,
+    keyOf: (req) => `delete-family:${req.auth?.user.id ?? ipOf(req)}`,
+  });
+
   api.post<{ Body: ChildBody }>(
     '/children',
     {
@@ -57,7 +65,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req): Promise<ChildDto> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const row = db
         .insert(children)
         .values({
@@ -70,7 +78,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
         })
         .returning()
         .get();
-      return toChildDto(row);
+      return toChildDto(db, row);
     },
   );
 
@@ -87,16 +95,18 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req): Promise<ChildDto> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const child = getFamilyChild(db, auth.familyId, req.params.id);
       const { firstName, ...rest } = req.body;
+      if (child.classId !== null && rest.grade && rest.grade !== child.grade)
+        throw conflict('grade_set_by_school', 'L’école règle la classe d’un élève inscrit.');
       const row = db
         .update(children)
         .set({ ...rest, ...(firstName ? { firstName: firstName.trim() } : {}) })
         .where(eq(children.id, child.id))
         .returning()
         .get();
-      return toChildDto(row);
+      return toChildDto(db, row);
     },
   );
 
@@ -104,10 +114,18 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     '/children/:id',
     { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
     async (req) => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const child = getFamilyChild(db, auth.familyId, req.params.id);
+      // Un élève inscrit reste à son école : il quitte seulement la famille.
+      if (child.classId !== null) {
+        db.transaction((tx) => {
+          tx.update(children).set({ familyId: null }).where(eq(children.id, child.id)).run();
+          forgetActiveChild(tx, child.id);
+        });
+        return { ok: true, detached: true };
+      }
       db.delete(children).where(eq(children.id, child.id)).run();
-      return { ok: true };
+      return { ok: true, detached: false };
     },
   );
 
@@ -116,7 +134,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     '/children/:id/report',
     { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
     async (req): Promise<ChildReport> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       return childReport(db, getFamilyChild(db, auth.familyId, req.params.id));
     },
   );
@@ -126,7 +144,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     '/children/:id/levels',
     { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
     async (req): Promise<Record<string, number>> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const child = getFamilyChild(db, auth.familyId, req.params.id);
       const rows = db
         .select({ pluginId: exerciseStates.pluginId, level: exerciseStates.level })
@@ -155,7 +173,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req) => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const child = getFamilyChild(db, auth.familyId, req.params.id);
       const plugin = registry.plugin(req.params.pluginId);
       if (!plugin) throw notFound('plugin_not_found', 'Exercice inconnu.');
@@ -190,7 +208,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req) => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const child = getFamilyChild(db, auth.familyId, req.params.id);
       return { activeNotions: setNotionActive(db, child, req.body.notionId, req.body.active) };
     },
@@ -201,7 +219,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     '/children/:id/assignments',
     { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
     async (req): Promise<AssignmentDto[]> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       return listAssignments(db, getFamilyChild(db, auth.familyId, req.params.id));
     },
   );
@@ -230,7 +248,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req): Promise<AssignmentDto> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       return createAssignment(db, getFamilyChild(db, auth.familyId, req.params.id), req.body);
     },
   );
@@ -246,7 +264,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req) => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       deleteAssignment(
         db,
         getFamilyChild(db, auth.familyId, req.params.id),
@@ -261,7 +279,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     '/children/:id/evaluations',
     { schema: { params: { type: 'object', properties: { id: { type: 'integer' } } } } },
     async (req): Promise<EvaluationDto[]> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       return listEvaluations(db, getFamilyChild(db, auth.familyId, req.params.id));
     },
   );
@@ -289,7 +307,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req): Promise<EvaluationDto> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       return createEvaluation(db, getFamilyChild(db, auth.familyId, req.params.id), req.body);
     },
   );
@@ -306,7 +324,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     '/children/:id/evaluations/:evaluationId',
     { schema: EVALUATION_PARAMS },
     async (req): Promise<EvaluationReport> => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const child = getFamilyChild(db, auth.familyId, req.params.id);
       return evaluationReport(db, child, getEvaluation(db, child, req.params.evaluationId));
     },
@@ -316,7 +334,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
     '/children/:id/evaluations/:evaluationId',
     { schema: EVALUATION_PARAMS },
     async (req) => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       deleteEvaluation(
         db,
         getFamilyChild(db, auth.familyId, req.params.id),
@@ -328,7 +346,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
 
   /** Toutes les données de la famille, en JSON. */
   api.get('/family/export', async (req, reply) => {
-    const auth = requireParent(req);
+    const auth = requireFamily(req);
     reply.header(
       'Content-Disposition',
       `attachment; filename="cartable-magique-${dayKey(new Date())}.json"`,
@@ -340,7 +358,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
   api.delete<{ Body: { password: string } }>(
     '/family',
     {
-      config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+      preHandler: deletePerAccount,
       schema: {
         body: {
           type: 'object',
@@ -351,7 +369,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
       },
     },
     async (req, reply) => {
-      const auth = requireParent(req);
+      const auth = requireFamily(req);
       const user = db.select().from(parentUsers).where(eq(parentUsers.id, auth.user.id)).get();
       if (!(await verifyPassword(user?.passwordHash ?? null, req.body.password)))
         throw new HttpError(401, 'bad_credentials', 'Mot de passe incorrect.');
@@ -363,7 +381,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
 
   /** Invite un second parent dans la famille. */
   api.post('/family/invitations', async (req) => {
-    const auth = requireParent(req);
+    const auth = requireFamily(req);
     return createInvitation(db, {
       role: 'parent',
       familyId: auth.familyId,

@@ -2,7 +2,7 @@ import type { ChildDto, ChildStateResponse, MeResponse } from '@app/core';
 import { api, ApiError } from './api';
 import { applyTheme } from './theme';
 
-/** État global : la famille connectée et l'enfant qui joue. */
+/** État global : la famille (ou l'enseignant) connectée et l'enfant qui joue. */
 export const session = $state({
   ready: false,
   me: null as MeResponse | null,
@@ -14,7 +14,9 @@ export function activeChild(): ChildDto | null {
   return me?.children.find((c) => c.id === me.activeChildId) ?? null;
 }
 
+/** Espace parent ou école ouvert ; un compte sans famille ne se verrouille pas. */
 export function isParentUnlocked(): boolean {
+  if (session.me && !session.me.family) return true;
   return (session.me?.parentVerifiedUntil ?? 0) > Date.now();
 }
 

@@ -63,7 +63,10 @@
       </div>
       {#if !key}
         <div class="identity">
-          <span>Prénom : <strong>{firstName}</strong></span>
+          <span
+            >Prénom : {#if firstName}<strong>{firstName}</strong>{:else}<span class="fill"
+              ></span>{/if}</span
+          >
           <span>Date : <span class="fill"></span></span>
         </div>
       {/if}

@@ -206,7 +206,7 @@ export function evaluationReport(db: Db, child: ChildRow, row: EvaluationRow): E
     const points = mine.filter((q) => q.correct).length;
     return { notionId, points, total: mine.length, code: evaluationCode(points, mine.length) };
   });
-  const dto = toChildDto(child);
+  const dto = toChildDto(db, child);
   return {
     ...evaluationDto(db, row),
     firstName: dto.firstName,

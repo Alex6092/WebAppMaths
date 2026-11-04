@@ -1,21 +1,9 @@
 import { registry } from '@app/content';
-import {
-  isDue,
-  NEW_MASTERY,
-  type GradeId,
-  type NotionMastery,
-  type NotionReview,
-  type NotionStatus,
-} from '@app/core';
+import { isDue, NEW_MASTERY, type GradeId, type NotionMastery, type NotionReview } from '@app/core';
 import { session } from './session.svelte';
 
-/** Les codes de l'école, dits avec les mots d'un enfant. */
-export const STATUS_LABELS: Record<NotionStatus, string> = {
-  new: 'À découvrir',
-  NA: 'À travailler',
-  ECA: 'En cours',
-  A: 'Acquis',
-};
+// Les codes de l'école, dits avec les mots d'un enfant (partagés avec le tableur de la classe).
+export { STATUS_LABELS } from '@app/core';
 
 export function masteryOf(notionId: string): NotionMastery {
   return session.childState?.notions[notionId] ?? NEW_MASTERY;

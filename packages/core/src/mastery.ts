@@ -8,6 +8,14 @@ import type { Rng } from './rng';
 /** new : jamais travaillée ; NA : non acquis ; ECA : en cours d'acquisition ; A : acquis. */
 export type NotionStatus = 'new' | 'NA' | 'ECA' | 'A';
 
+/** Les codes de l'école, dits avec les mots d'un enfant. */
+export const STATUS_LABELS: Record<NotionStatus, string> = {
+  new: 'À découvrir',
+  NA: 'À travailler',
+  ECA: 'En cours',
+  A: 'Acquis',
+};
+
 export interface AttemptRecord {
   pluginId: string;
   level: number;

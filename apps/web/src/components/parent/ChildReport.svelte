@@ -9,8 +9,16 @@
   import MistakeViewer from './MistakeViewer.svelte';
   import ResponseTimes from './ResponseTimes.svelte';
 
-  /** Le bilan d'un enfant : activité, acquisition des notions, erreurs fréquentes, séances. */
-  let { childId, onerror }: { childId: number; onerror: (e: unknown) => void } = $props();
+  /**
+   * Le bilan d'un enfant : activité, acquisition des notions (mesurée dans l'app, et l'avis de
+   * l'enseignant pour un élève inscrit), erreurs fréquentes, séances. Le même bilan sert au parent
+   * (source « famille ») et à l'enseignant (source « ecole »).
+   */
+  let {
+    childId,
+    onerror,
+    source = 'famille',
+  }: { childId: number; onerror: (e: unknown) => void; source?: 'famille' | 'ecole' } = $props();
 
   let report = $state<ChildReport | null>(null);
   let viewing = $state<MistakeDto | null>(null);
@@ -35,7 +43,8 @@
   $effect(() => {
     const id = childId;
     report = null;
-    api.get<ChildReport>(`children/${id}/report`).then((r) => {
+    const url = source === 'ecole' ? `pupils/${id}/report` : `children/${id}/report`;
+    api.get<ChildReport>(url).then((r) => {
       if (id === childId) report = r;
     }, onerror);
   });
@@ -68,6 +77,14 @@
   });
 
   const masteryOf = (id: string) => report?.notions[id] ?? NEW_MASTERY;
+  /** Les cases « vue en classe » : le parent les règle, sauf pour un élève inscrit. */
+  const canToggle = $derived(source === 'famille' && report?.notionsSetBy === 'famille');
+  const enrolled = $derived(report?.notionsSetBy === 'ecole');
+  const hasAssessments = $derived(Object.keys(report?.assessments ?? {}).length > 0);
+  const focusNotions = $derived(
+    (report?.focusNotions ?? []).map((id) => registry.notion(id)).filter((n) => !!n),
+  );
+  const day = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR');
   const STATUS_ORDER: NotionStatus[] = ['A', 'ECA', 'NA', 'new'];
   function countByStatus(ids: string[]) {
     return STATUS_ORDER.map((status) => ({
@@ -121,10 +138,47 @@
   <h3>⏱️ Temps de réponse</h3>
   <ResponseTimes timing={report.timing} />
 
+  {#snippet teacher(id: string)}
+    {@const a = report?.assessments[id]}
+    {#if a}
+      <span class="teacher {a.result}" title="{a.title}, le {day(a.assessedOn)}">🏫 {a.result}</span
+      >
+    {:else}
+      <span></span>
+    {/if}
+  {/snippet}
+
   <h3>Acquisition des notions ({report.child.grade})</h3>
-  <p class="muted hint">
-    ☑️ = vue en classe : « Tout mélanger » et le défi du jour ne prennent que ces notions.
-  </p>
+  {#if enrolled}
+    <p class="muted hint">
+      La jauge mesure le travail fait dans l’app, à l’école comme à la maison ; 🏫 est l’avis de
+      l’enseignant après une évaluation sur papier. ☑️ = vue en classe (réglé par l’enseignant).
+    </p>
+  {:else}
+    <p class="muted hint">
+      ☑️ = vue en classe : « Tout mélanger » et le défi du jour ne prennent que ces notions.
+    </p>
+  {/if}
+  {#if focusNotions.length > 0}
+    <div class="focus">
+      <h4>📌 En ce moment en classe</h4>
+      <ul class="notions" class:with-teacher={hasAssessments}>
+        {#each focusNotions as notion (notion!.id)}
+          {@const m = masteryOf(notion!.id)}
+          <li>
+            <span>📌</span>
+            <span class="notion-title" title={notion!.competence}>{notion!.title}</span>
+            <span class="meter" title="{m.mastery} / 100"
+              ><span style:width="{m.mastery}%"></span></span
+            >
+            <span class="attempts">{m.attempts} q.</span>
+            {#if hasAssessments}{@render teacher(notion!.id)}{/if}
+            <NotionBadge mastery={m} review={report.reviews[notion!.id]} />
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
   {#each subjects as { subject, domains } (subject.id)}
     {@const ids = domains.flatMap((d) => d.notions.map((n) => n.id))}
     <div class="subject">
@@ -139,22 +193,25 @@
       </h4>
       {#each domains as { domain, notions } (domain.id)}
         <p class="domain">{domain.icon} {domain.title}</p>
-        <ul class="notions">
+        <ul class="notions" class:with-teacher={hasAssessments}>
           {#each notions as notion (notion.id)}
             {@const m = masteryOf(notion.id)}
-            <li>
+            {@const seen = report.activeNotions.includes(notion.id)}
+            <li class:unseen={enrolled && !seen}>
               <input
                 type="checkbox"
-                checked={report.activeNotions.includes(notion.id)}
+                checked={seen}
+                disabled={!canToggle}
                 onchange={(e) => toggleSeen(notion.id, e.currentTarget.checked)}
                 aria-label="{notion.title} : vue en classe"
-                title="Vue en classe"
+                title={canToggle ? 'Vue en classe' : 'Vue en classe (réglé par l’enseignant)'}
               />
               <span class="notion-title" title={notion.competence}>{notion.title}</span>
               <span class="meter" title="{m.mastery} / 100"
                 ><span style:width="{m.mastery}%"></span></span
               >
               <span class="attempts">{m.attempts} q.</span>
+              {#if hasAssessments}{@render teacher(notion.id)}{/if}
               <NotionBadge mastery={m} review={report.reviews[notion.id]} />
             </li>
           {/each}
@@ -278,10 +335,44 @@
     gap: 10px;
     font-size: 0.92rem;
   }
+  .notions.with-teacher li {
+    grid-template-columns: 22px 1fr 90px 44px 64px 104px;
+  }
+  .notions li.unseen .notion-title {
+    color: var(--text-soft);
+  }
   .notions input {
     width: 18px;
     height: 18px;
     accent-color: var(--primary);
+  }
+  .focus {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: #f7f4fb;
+  }
+  .teacher {
+    justify-self: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .teacher.A {
+    background: #c8e6c9;
+    color: #1b5e20;
+  }
+  .teacher.ECA {
+    background: #bbdefb;
+    color: #0d47a1;
+  }
+  .teacher.NA {
+    background: #ffe0b2;
+    color: #b45309;
   }
   .hint {
     font-size: 0.85rem;
@@ -338,8 +429,9 @@
     border-bottom: 1px solid #eee;
   }
   @media (max-width: 520px) {
-    .notions li {
-      grid-template-columns: 22px 1fr auto;
+    .notions li,
+    .notions.with-teacher li {
+      grid-template-columns: 22px 1fr auto auto;
     }
     .meter,
     .attempts {

@@ -18,6 +18,7 @@ export * from './progression';
 export * from './question';
 export * from './registry';
 export * from './rng';
+export * from './school';
 export * from './spaced';
 export * from './speech';
 export * from './text';
