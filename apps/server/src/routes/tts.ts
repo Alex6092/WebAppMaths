@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { clientKey } from '../auth/limits';
 import { requireAuth } from '../auth/session';
 import { HttpError } from '../errors';
 import { TtsBusyError } from '../tts/pool';
@@ -33,7 +34,8 @@ export function ttsRoutes(api: FastifyInstance, { tts }: Deps): void {
         },
       },
       // Une phrase par question à peu près : 120 par minute laisse de la marge à une famille.
-      config: { rateLimit: { max: 120, timeWindow: '1 minute' } },
+      // Par appareil connecté : une classe entière sort par la même adresse.
+      config: { rateLimit: { max: 120, timeWindow: '1 minute', keyGenerator: clientKey } },
     },
     async (req, reply) => {
       requireAuth(req);

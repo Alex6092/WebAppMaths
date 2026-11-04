@@ -16,6 +16,7 @@ import { DEFAULT_THEME_ID } from '@app/themes';
 import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { verifyPassword } from '../auth/crypto';
+import { createGuard, ipOf } from '../auth/limits';
 import { requireFamily, SESSION_COOKIE } from '../auth/session';
 import { children, exerciseStates, parentUsers } from '../db/schema';
 import { conflict, HttpError, notFound } from '../errors';
@@ -45,6 +46,12 @@ type ChildBody = { firstName: string; avatar: string; grade: GradeId };
 
 /** Gestion de la famille : réservée à l'espace parent déverrouillé. */
 export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
+  // Supprimer la famille demande le mot de passe : 10 essais par quart d'heure et par compte.
+  const deletePerAccount = createGuard(api, {
+    max: config.authAttempts,
+    keyOf: (req) => `delete-family:${req.auth?.user.id ?? ipOf(req)}`,
+  });
+
   api.post<{ Body: ChildBody }>(
     '/children',
     {
@@ -351,7 +358,7 @@ export function familyRoutes(api: FastifyInstance, { db, config }: Deps): void {
   api.delete<{ Body: { password: string } }>(
     '/family',
     {
-      config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
+      preHandler: deletePerAccount,
       schema: {
         body: {
           type: 'object',

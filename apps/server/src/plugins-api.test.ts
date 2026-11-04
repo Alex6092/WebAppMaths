@@ -9,20 +9,20 @@ import { ensureAdminInvitation } from './services/invitations';
 it('chaque exercice, chaque niveau : le serveur enregistre les tentatives', async () => {
   const db = openDb(':memory:');
   ensureAdminInvitation(db, 'TEST-ADMN-CODE');
-  const app = await buildApp({ ...loadConfig({}), webDist: null, cookieSecure: false }, db, {
-    logger: false,
-  });
+  // Le test envoie bien plus de tentatives que la limite par minute d'un appareil (600), ce
+  // qu'aucun enfant ne fait.
+  const app = await buildApp(
+    { ...loadConfig({}), webDist: null, cookieSecure: false, requestsPerMinute: 1_000_000 },
+    db,
+    { logger: false },
+  );
   let cookie = '';
-  // Une adresse par exercice : le test envoie plus de tentatives que la limite par minute
-  // d'une seule adresse (600), ce qu'aucun enfant ne fait.
-  let address = '127.0.0.1';
   const send = async (method: 'GET' | 'POST', url: string, body?: unknown) => {
     const res = await app.inject({
       method,
       url: `/api${url}`,
       payload: body as never,
       headers: cookie ? { cookie } : {},
-      remoteAddress: address,
     });
     const s = res.cookies.find((c) => c.name === 'wam_sid');
     if (s) cookie = `wam_sid=${s.value}`;
@@ -41,8 +41,7 @@ it('chaque exercice, chaque niveau : le serveur enregistre les tentatives', asyn
 
   const failures: string[] = [];
   let seed = 1;
-  for (const [i, plugin] of registry.plugins.entries()) {
-    address = `10.0.${Math.floor(i / 250)}.${(i % 250) + 1}`;
+  for (const plugin of registry.plugins) {
     const session = (
       await send('POST', '/child/sessions', {
         mode: 'training',

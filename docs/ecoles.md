@@ -56,6 +56,15 @@ les devoirs de la classe et les avis de l'enseignant. Les parents en sont préve
 - Supprimé par sa famille (ou famille supprimée) : il quitte la famille et reste élève ; l'école peut
   imprimer une nouvelle fiche.
 
+## Plusieurs postes derrière la même adresse
+
+Dans une école, tous les postes (et les parents sur le Wi-Fi d'une réunion) sortent souvent par la
+même adresse IP. Les limites en tiennent compte : les essais de mot de passe sont comptés par
+compte (`AUTH_ATTEMPTS`, 10 par quart d'heure), les requêtes de connexion et d'activation par
+adresse ne sont plafonnées qu'à `AUTH_ATTEMPTS_PER_IP` (300 par quart d'heure), et le reste de
+l'app compte par appareil connecté (`REQUESTS_PER_MINUTE`, 600 par minute). Derrière un reverse
+proxy, `TRUST_PROXY` doit être réglé : sinon tout le monde a l'adresse du proxy.
+
 ## Données personnelles
 
 Avant d'utiliser l'app avec une classe, la direction inscrit ce traitement au registre de l'école

@@ -2,6 +2,7 @@ import type { InvitationPreview, RedeemRequest } from '@app/core';
 import type { FastifyInstance } from 'fastify';
 import { eq } from 'drizzle-orm';
 import { hashPassword, verifyPassword } from '../auth/crypto';
+import { createGuard, ipOf } from '../auth/limits';
 import { requireAuth, requireParent, SESSION_COOKIE, SESSION_TTL_MS } from '../auth/session';
 import { parentUsers } from '../db/schema';
 import { badRequest, conflict, HttpError } from '../errors';
@@ -25,8 +26,25 @@ const EMAIL = {
 } as const;
 const PASSWORD = { type: 'string', minLength: 8, maxLength: 200 } as const;
 export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps): void {
-  // Connexion, inscription, déverrouillage : 10 essais par quart d'heure et par adresse IP.
-  const STRICT_LIMIT = { rateLimit: { max: config.authAttempts, timeWindow: '15 minutes' } };
+  // Connexion, inscription, codes, déverrouillage : un plafond par adresse IP, assez haut pour
+  // toute une école derrière la même adresse, partagé par ces routes ; et pour les mots de passe,
+  // 10 essais par quart d'heure et par compte.
+  const perIp = createGuard(api, {
+    max: config.authAttemptsPerIp,
+    keyOf: (req) => `auth-ip:${ipOf(req)}`,
+  });
+  const loginPerAccount = createGuard(api, {
+    max: config.authAttempts,
+    // Avec l'adresse : un inconnu ne bloque pas le compte d'un parent depuis ailleurs.
+    keyOf: (req) =>
+      `login:${ipOf(req)}:${String((req.body as { email?: unknown }).email ?? '')
+        .trim()
+        .toLowerCase()}`,
+  });
+  const unlockPerAccount = createGuard(api, {
+    max: config.authAttempts,
+    keyOf: (req) => `unlock:${req.auth?.user.id ?? ipOf(req)}`,
+  });
   const cookieOptions = {
     path: config.basePath,
     httpOnly: true,
@@ -38,7 +56,7 @@ export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps)
   api.post<{ Body: { code: string; email: string; password: string; familyName?: string } }>(
     '/auth/register',
     {
-      config: STRICT_LIMIT,
+      preHandler: perIp,
       schema: {
         body: {
           type: 'object',
@@ -102,7 +120,7 @@ export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps)
   api.post<{ Body: { code: string } }>(
     '/auth/invitation',
     {
-      config: STRICT_LIMIT,
+      preHandler: perIp,
       schema: {
         body: {
           type: 'object',
@@ -122,7 +140,7 @@ export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps)
   api.post<{ Body: RedeemRequest }>(
     '/auth/redeem',
     {
-      config: STRICT_LIMIT,
+      preHandler: perIp,
       schema: {
         body: {
           type: 'object',
@@ -168,7 +186,7 @@ export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps)
   api.post<{ Body: { email: string; password: string } }>(
     '/auth/login',
     {
-      config: STRICT_LIMIT,
+      preHandler: [perIp, loginPerAccount],
       schema: {
         body: {
           type: 'object',
@@ -205,7 +223,7 @@ export function authRoutes(api: FastifyInstance, { db, config, sessions }: Deps)
   api.post<{ Body: { password: string } }>(
     '/auth/unlock',
     {
-      config: STRICT_LIMIT,
+      preHandler: [perIp, unlockPerAccount],
       schema: {
         body: {
           type: 'object',
