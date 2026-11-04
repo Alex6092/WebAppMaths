@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import {
     GRADE_IDS,
     schoolYearOf,
@@ -31,6 +32,15 @@
   let school = $state<SchoolDto | null>(null);
   let error = $state<string | null>(null);
   let unlocked = $state(isParentUnlocked());
+  // Le serveur a pu prolonger l'ouverture (10 minutes après la dernière action) : on relit l'état
+  // avant de redemander le mot de passe.
+  onMount(() => {
+    if (!unlocked)
+      refreshMe().then(
+        () => (unlocked = isParentUnlocked()),
+        () => {},
+      );
+  });
   let password = $state('');
 
   function handle(e: unknown) {
@@ -210,7 +220,10 @@
 
   {#if !unlocked}
     <form class="card narrow" onsubmit={unlock}>
-      <p>Saisis ton mot de passe pour ouvrir l’espace école (10 minutes).</p>
+      <p>
+        Saisis ton mot de passe pour ouvrir l’espace école : il se verrouille après 10 minutes sans
+        action.
+      </p>
       <div class="field">
         <label for="pw">Mot de passe</label>
         <input

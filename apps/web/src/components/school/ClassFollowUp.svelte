@@ -5,6 +5,7 @@
   import { api } from '../../lib/api';
   import { downloadFile } from '../../lib/download';
   import NotionBadge from '../NotionBadge.svelte';
+  import TeacherCode from '../TeacherCode.svelte';
   import ChildReport from '../parent/ChildReport.svelte';
 
   /**
@@ -56,6 +57,9 @@
           <th>Dernière fois</th>
           <th>Devoirs</th>
           <th>À revoir</th>
+          <th title="Notions notées ECA ou NA par l’enseignant ces 6 dernières semaines"
+            >🏫 À retravailler</th
+          >
           {#each focus as n (n!.id)}<th class="notion" title={n!.competence}>📌 {n!.title}</th
             >{/each}
         </tr>
@@ -75,8 +79,15 @@
             <td>{since(row.lastActiveAt)}</td>
             <td>{row.homeworkTotal ? `${row.homeworkDone}/${row.homeworkTotal}` : '—'}</td>
             <td>{row.toReview || '—'}</td>
+            <td class:rework={row.toRework > 0}>{row.toRework || '—'}</td>
             {#each focus as n (n!.id)}
-              <td><NotionBadge mastery={row.focus[n!.id] ?? NEW_MASTERY} /></td>
+              {@const avis = row.focusAssessments[n!.id]}
+              <td>
+                <span class="cell">
+                  <NotionBadge mastery={row.focus[n!.id] ?? NEW_MASTERY} />
+                  {#if avis}<TeacherCode assessment={avis} />{/if}
+                </span>
+              </td>
             {/each}
           </tr>
         {/each}
@@ -146,6 +157,15 @@
     color: var(--primary-dark);
     font-weight: 700;
     text-align: left;
+  }
+  .cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rework {
+    color: #b45309;
+    font-weight: 700;
   }
   .quiet {
     color: #c62828;

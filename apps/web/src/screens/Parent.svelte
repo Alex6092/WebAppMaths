@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import {
     AVATARS,
     dayKey,
@@ -24,6 +25,15 @@
   let password = $state('');
   let error = $state<string | null>(null);
   let unlocked = $state(isParentUnlocked());
+  // Le serveur a pu prolonger l'ouverture (10 minutes après la dernière action) : on relit l'état
+  // avant de redemander le mot de passe.
+  onMount(() => {
+    if (!unlocked)
+      refreshMe().then(
+        () => (unlocked = isParentUnlocked()),
+        () => {},
+      );
+  });
 
   // Formulaire d'ajout ou de modification d'un profil.
   let editing = $state<ChildDto | null>(null);
@@ -307,7 +317,10 @@
 
   {#if !unlocked}
     <form class="card narrow" onsubmit={unlock}>
-      <p>Saisis ton mot de passe pour ouvrir l’espace parent (10 minutes).</p>
+      <p>
+        Saisis ton mot de passe pour ouvrir l’espace parent : il se verrouille après 10 minutes sans
+        action.
+      </p>
       <div class="field">
         <label for="pw">Mot de passe</label>
         <input

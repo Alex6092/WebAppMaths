@@ -482,6 +482,10 @@ export interface ClassOverview {
     toReview: number;
     /** Acquisition des notions de la leçon en cours. */
     focus: Record<string, NotionMastery>;
+    /** Notions à retravailler : dernier avis de l'enseignant ECA ou NA, depuis moins de 6 semaines. */
+    toRework: number;
+    /** Le dernier avis de l'enseignant sur chaque notion de la leçon en cours. */
+    focusAssessments: Record<string, AssessmentDto>;
   }[];
 }
 

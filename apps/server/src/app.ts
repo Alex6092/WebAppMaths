@@ -6,7 +6,7 @@ import fastifyStatic from '@fastify/static';
 import { sql } from 'drizzle-orm';
 import Fastify, { type FastifyError } from 'fastify';
 import { clientKey } from './auth/limits';
-import { SESSION_COOKIE, SessionStore } from './auth/session';
+import { extendUnlock, SESSION_COOKIE, SessionStore } from './auth/session';
 import type { Config } from './config';
 import type { Db } from './db/client';
 import { HttpError } from './errors';
@@ -109,6 +109,13 @@ export async function buildApp(config: Config, db: Db, options: AppOptions = {})
   await app.register(
     async (api) => {
       api.decorateRequest('auth', null);
+      api.decorateRequest('parentSpaceUsed', false);
+
+      // L'espace parent ou école se verrouille après 10 minutes sans action (pas 10 minutes
+      // après le mot de passe) : chaque requête réussie qui l'utilise repousse le verrou.
+      api.addHook('onResponse', async (req, reply) => {
+        extendUnlock(sessions, req, reply.statusCode);
+      });
 
       // Protection CSRF : une requête qui modifie quelque chose doit venir de l'app elle-même.
       api.addHook('onRequest', async (req, reply) => {
