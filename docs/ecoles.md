@@ -49,6 +49,24 @@ les devoirs de la classe et les avis de l'enseignant. Les parents en sont préve
 - **Suivi** : questions faites sur 7 jours, dernière activité, devoirs, erreurs à revoir et
   acquisition de la leçon en cours ; un clic ouvre le bilan de l'élève (le même que celui du parent).
 
+## Passer à l'année suivante
+
+La direction prépare la rentrée dans l'onglet **Rentrée** de l'espace école :
+
+1. Elle crée les classes de l'année suivante (onglet Classes, année « … (rentrée) ») et leur
+   affecte leurs enseignants, qui peuvent déjà les préparer (notions, nouveaux élèves).
+2. Pour chaque élève de l'année qui finit, elle choisit sa classe de l'année suivante — au niveau
+   suivant par défaut, ou au même niveau s'il est maintenu — ou « quitte l'école ». Un raccourci
+   envoie toute une classe d'un coup. Les choix sont enregistrés au fur et à mesure : on peut
+   préparer en juin et finir plus tard.
+3. Quand plus aucun élève n'est « à répartir », elle **fait la rentrée** (fin juin ou début
+   septembre, comme elle veut) : les élèves passent dans leur nouvelle classe, sans les devoirs de
+   l'ancienne pas encore faits ; leur progression, leurs avis passés et leur famille restent. Ceux
+   qui quittent l'école restent à leur famille, ou sont supprimés si aucun parent n'a activé leur
+   fiche. Les classes de l'année qui finit sont supprimées.
+
+Une fiche parent imprimée pour une classe vaut jusqu'au 31 août de l'année de cette classe.
+
 ## Quand un élève part
 
 - Retiré de la classe (ou classe supprimée) : s'il a une famille, il lui reste, sans les devoirs de

@@ -100,7 +100,7 @@ export function deleteSchool(db: Db, schoolId: number): void {
   });
 }
 
-function classroomDto(db: Pick<Db, 'select'>, row: ClassRow): ClassroomDto {
+export function classroomDto(db: Pick<Db, 'select'>, row: ClassRow): ClassroomDto {
   return {
     id: row.id,
     name: row.name,
@@ -279,6 +279,13 @@ export interface ClassInput {
   focusNotions?: string[];
 }
 
+/** « 2026-2027 » : deux années qui se suivent. */
+function checkSchoolYear(schoolYear: string | undefined): void {
+  if (schoolYear === undefined) return;
+  const [start, end] = schoolYear.split('-').map(Number);
+  if (end !== start! + 1) throw badRequest('invalid_year', 'Année scolaire invalide.');
+}
+
 /** Les enseignants choisis doivent être membres de l'école. */
 function checkTeachers(db: Pick<Db, 'select'>, schoolId: number, teacherIds: number[]): number[] {
   const ids = [...new Set(teacherIds)];
@@ -306,6 +313,7 @@ export function createClass(
   input: ClassInput & { name: string; grades: GradeId[] },
 ): ClassroomDto {
   const role = requireSchoolRole(db, auth, schoolId);
+  checkSchoolYear(input.schoolYear);
   const teacherIds = checkTeachers(
     db,
     schoolId,
@@ -338,6 +346,7 @@ export function updateClass(
   input: ClassInput,
 ): ClassroomDetail {
   const row = getManagedClass(db, auth, classId);
+  checkSchoolYear(input.schoolYear);
   const teacherIds =
     input.teacherIds !== undefined ? checkTeachers(db, row.schoolId, input.teacherIds) : null;
   db.transaction((tx) => {
@@ -490,6 +499,19 @@ export function updatePupil(
   return pupilDto(db, row);
 }
 
+/** Les devoirs de la classe pas encore faits, quand l'élève change de classe ou la quitte. */
+export function dropPendingClassHomework(tx: Tx, childId: number): void {
+  tx.delete(assignments)
+    .where(
+      and(
+        eq(assignments.childId, childId),
+        isNotNull(assignments.batch),
+        isNull(assignments.completedAt),
+      ),
+    )
+    .run();
+}
+
 /**
  * Un élève quitte sa classe : s'il a une famille, il lui reste (sans les devoirs de la classe pas
  * encore faits) ; sinon, son profil n'appartient qu'à l'école et il est supprimé.
@@ -502,15 +524,7 @@ export function removeFromClass(tx: Tx, pupil: ChildRow): 'detached' | 'deleted'
     tx.delete(children).where(eq(children.id, pupil.id)).run();
     return 'deleted';
   }
-  tx.delete(assignments)
-    .where(
-      and(
-        eq(assignments.childId, pupil.id),
-        isNotNull(assignments.batch),
-        isNull(assignments.completedAt),
-      ),
-    )
-    .run();
+  dropPendingClassHomework(tx, pupil.id);
   tx.update(children).set({ classId: null, lastName: null }).where(eq(children.id, pupil.id)).run();
   return 'detached';
 }
@@ -530,8 +544,9 @@ export function issuePupilCodes(
   const pupils = classPupils(db, row.id).filter(
     (p) => p.familyId === null && (!wanted || wanted.has(p.id)),
   );
-  const end = schoolYearEnd(schoolYearOf(new Date())).getTime();
-  // Au moins un mois de validité, même fin août.
+  // Jusqu'à la fin de l'année de la classe (une classe de l'année suivante, préparée en juin,
+  // garde ses fiches toute l'année), et au moins un mois, même fin août.
+  const end = schoolYearEnd(row.schoolYear).getTime();
   const expiresAt = Math.max(end, Date.now() + 30 * 24 * 3600 * 1000);
   return db.transaction((tx) =>
     pupils.map((p) => {

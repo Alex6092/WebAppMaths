@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     GRADE_IDS,
+    schoolYearOf,
     type ClassroomDto,
     type CreatedInvitation,
     type GradeId,
@@ -9,6 +10,7 @@
     type SchoolRole,
   } from '@app/core';
   import ClassPage from '../components/school/ClassPage.svelte';
+  import Rollover from '../components/school/Rollover.svelte';
   import { api, ApiError, errorMessage } from '../lib/api';
   import { toast } from '../lib/effects.svelte';
   import { navigate, route } from '../lib/router.svelte';
@@ -20,7 +22,10 @@
    */
   const schoolId = $derived(Number(route.segments[1]) || session.me?.schools[0]?.id || 0);
   const classId = $derived(route.segments[2] === 'classe' ? Number(route.segments[3]) : null);
-  const tab = $derived(route.query.get('onglet') === 'equipe' ? 'equipe' : 'classes');
+  const tab = $derived.by(() => {
+    const onglet = route.query.get('onglet');
+    return onglet === 'equipe' || onglet === 'rentree' ? onglet : 'classes';
+  });
 
   let school = $state<SchoolDto | null>(null);
   let error = $state<string | null>(null);
@@ -67,6 +72,17 @@
   // --- Nouvelle classe ---
   let className = $state('');
   let classGrades = $state<GradeId[]>(['CP']);
+  /** L'année en cours, ou la suivante (pour préparer la rentrée). */
+  const currentYear = schoolYearOf(new Date());
+  const nextYear = `${Number(currentYear.split('-')[1])}-${Number(currentYear.split('-')[1]) + 1}`;
+  let classYear = $state(currentYear);
+  /** Les classes par année scolaire, de la plus ancienne à la plus récente. */
+  const years = $derived(
+    [...new Set(school?.classes.map((c) => c.schoolYear) ?? [])].sort().map((year) => ({
+      year,
+      classes: school?.classes.filter((c) => c.schoolYear === year) ?? [],
+    })),
+  );
 
   async function addClass(event: SubmitEvent) {
     event.preventDefault();
@@ -74,6 +90,7 @@
       const created = await api.post<ClassroomDto>(`schools/${schoolId}/classes`, {
         name: className.trim(),
         grades: classGrades,
+        schoolYear: classYear,
       });
       className = '';
       await Promise.all([load(), refreshMe()]);
@@ -199,16 +216,23 @@
     <nav class="tabs">
       <a href="#/ecole/{school.id}" class:active={tab === 'classes'}>Classes</a>
       <a href="#/ecole/{school.id}?onglet=equipe" class:active={tab === 'equipe'}>Équipe</a>
+      {#if isDirection}
+        <a href="#/ecole/{school.id}?onglet=rentree" class:active={tab === 'rentree'}>Rentrée</a>
+      {/if}
     </nav>
 
     {#if tab === 'classes'}
       <section class="card">
-        <h2>Classes {school.classes[0] ? `· ${school.classes[0].schoolYear}` : ''}</h2>
         {#if school.classes.length === 0}
+          <h2>Classes</h2>
           <p class="muted">Pas encore de classe.</p>
-        {:else}
+        {/if}
+        {#each years as { year, classes } (year)}
+          <h2>
+            {year > currentYear ? `Année prochaine : ${year}` : `Classes · ${year}`}
+          </h2>
           <div class="classes">
-            {#each school.classes as c (c.id)}
+            {#each classes as c (c.id)}
               {@const mine = c.teacherIds.includes(session.me?.user.id ?? 0)}
               <a class="class" href="#/ecole/{school.id}/classe/{c.id}" class:mine>
                 <strong>{c.name}</strong>
@@ -221,7 +245,7 @@
               </a>
             {/each}
           </div>
-        {/if}
+        {/each}
         <form class="add" onsubmit={addClass}>
           <h3>Nouvelle classe</h3>
           <div class="row">
@@ -234,6 +258,13 @@
                 placeholder="CE1 B"
                 required
               />
+            </div>
+            <div class="field small-field">
+              <label for="class-year">Année</label>
+              <select id="class-year" bind:value={classYear}>
+                <option value={currentYear}>{currentYear}</option>
+                <option value={nextYear}>{nextYear} (rentrée)</option>
+              </select>
             </div>
             <fieldset class="grades">
               <legend>Niveaux</legend>
@@ -256,6 +287,8 @@
           {#if !isDirection}<p class="muted small">Tu seras l’enseignant de cette classe.</p>{/if}
         </form>
       </section>
+    {:else if tab === 'rentree'}
+      <Rollover {school} onerror={handle} onchange={load} />
     {:else}
       <section class="card">
         <h2>Équipe</h2>

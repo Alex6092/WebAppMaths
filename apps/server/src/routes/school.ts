@@ -13,6 +13,9 @@ import {
   type NewPupil,
   type PupilCode,
   type PupilDto,
+  type RolloverChoice,
+  type RolloverDto,
+  type RolloverResult,
   type SchoolDto,
   type SchoolRole,
 } from '@app/core';
@@ -31,6 +34,7 @@ import {
   saveClassAssessment,
 } from '../services/classwork';
 import { setClassNotions } from '../services/notions';
+import { applyRollover, rolloverDto, setRolloverChoices } from '../services/rollover';
 import { childReport } from '../services/report';
 import {
   addPupils,
@@ -169,6 +173,54 @@ export function schoolRoutes(api: FastifyInstance, { db }: Deps): void {
       removeMember(db, requireParent(req), req.params.id, req.params.userId);
       return { ok: true };
     },
+  );
+
+  // --- Rentrée (direction) ---
+
+  api.get<{ Params: { id: number } }>(
+    '/schools/:id/rollover',
+    { schema: ID_PARAMS },
+    async (req): Promise<RolloverDto> => rolloverDto(db, requireParent(req), req.params.id),
+  );
+
+  api.put<{ Params: { id: number }; Body: { choices: RolloverChoice[] } }>(
+    '/schools/:id/rollover',
+    {
+      schema: {
+        ...ID_PARAMS,
+        body: {
+          type: 'object',
+          required: ['choices'],
+          additionalProperties: false,
+          properties: {
+            choices: {
+              type: 'array',
+              minItems: 1,
+              maxItems: 400,
+              items: {
+                type: 'object',
+                required: ['pupilId'],
+                additionalProperties: false,
+                properties: {
+                  pupilId: ID,
+                  classId: { type: ['integer', 'null'] },
+                  grade: { type: 'string', enum: [...GRADE_IDS] },
+                  leaves: { type: 'boolean' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (req): Promise<RolloverDto> =>
+      setRolloverChoices(db, requireParent(req), req.params.id, req.body.choices),
+  );
+
+  api.post<{ Params: { id: number } }>(
+    '/schools/:id/rollover/apply',
+    { schema: ID_PARAMS },
+    async (req): Promise<RolloverResult> => applyRollover(db, requireParent(req), req.params.id),
   );
 
   // --- Classes ---

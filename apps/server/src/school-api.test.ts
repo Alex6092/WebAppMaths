@@ -1,5 +1,6 @@
 import { registry } from '@app/content';
 import {
+  schoolYearOf,
   dayKey,
   generateQuestion,
   type AdminSchoolDto,
@@ -15,6 +16,8 @@ import {
   type MeResponse,
   type PupilCode,
   type PupilDto,
+  type RolloverDto,
+  type RolloverResult,
   type SchoolDto,
 } from '@app/core';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -520,5 +523,177 @@ describe('travail de la classe', () => {
     // L'admin supprime l'école : rien ne casse.
     await admin.ok('DELETE', `/admin/schools/${schoolId}`);
     expect((await teacher.browser.ok<MeResponse>('GET', '/auth/me')).schools).toEqual([]);
+  });
+});
+
+describe('rentrée', () => {
+  it('la direction répartit les élèves puis fait la rentrée', async () => {
+    const { admin, schoolId, direction, teacher, classroom } = await schoolWithClass();
+    const from = schoolYearOf(new Date());
+    const start = Number(from.split('-')[0]);
+    const to = `${start + 1}-${start + 2}`;
+    const pupils = await teacher.browser.ok<PupilDto[]>('POST', `/classes/${classroom.id}/pupils`, {
+      pupils: ['Léo', 'Jade', 'Zoé', 'Inès', 'Noah'].map((firstName) => ({ firstName })),
+    });
+    const [leo, jade, zoe, ines, noah] = pupils as [
+      PupilDto,
+      PupilDto,
+      PupilDto,
+      PupilDto,
+      PupilDto,
+    ];
+    // Léo et Jade ont une famille.
+    const codes = await teacher.browser.ok<PupilCode[]>(
+      'POST',
+      `/classes/${classroom.id}/pupil-codes`,
+      { pupilIds: [leo.id, jade.id] },
+    );
+    const codeOf = (id: number) => codes.find((c) => c.pupilId === id)!.code;
+    const leoParents = await register(codeOf(leo.id), 'leo@example.org');
+    const jadeParents = await register(codeOf(jade.id), 'jade@example.org');
+    // Un devoir de classe pas fini, et un avis de l'enseignante.
+    await teacher.browser.ok('POST', `/classes/${classroom.id}/assignments`, {
+      title: 'Tables',
+      notions: ['maths.calcul.tables'],
+      questions: 5,
+      dueOn: dayKey(new Date()),
+    });
+    await teacher.browser.ok('POST', `/classes/${classroom.id}/assessments`, {
+      title: 'Évaluation de juin',
+      assessedOn: dayKey(new Date()),
+      notions: ['maths.calcul.tables'],
+      results: { [leo.id]: { 'maths.calcul.tables': 'A' } },
+    });
+
+    // Les classes de l'année suivante.
+    const ce2 = await direction.browser.ok<ClassroomDto>('POST', `/schools/${schoolId}/classes`, {
+      name: 'CE2 A',
+      grades: ['CE2'],
+      schoolYear: to,
+      teacherIds: [teacher.me.user.id],
+    });
+    const mixed = await direction.browser.ok<ClassroomDto>('POST', `/schools/${schoolId}/classes`, {
+      name: 'CE1-CE2',
+      grades: ['CE1', 'CE2'],
+      schoolYear: to,
+    });
+    expect(
+      (
+        await direction.browser.send('POST', `/schools/${schoolId}/classes`, {
+          name: 'X',
+          grades: ['CE1'],
+          schoolYear: '2026-2030',
+        })
+      ).json().error,
+    ).toBe('invalid_year');
+
+    // Seule la direction prépare la rentrée.
+    expect((await teacher.browser.send('GET', `/schools/${schoolId}/rollover`)).statusCode).toBe(
+      403,
+    );
+    const empty = await direction.browser.ok<RolloverDto>('GET', `/schools/${schoolId}/rollover`);
+    expect(empty).toMatchObject({ from, to });
+    expect(empty.fromClasses).toHaveLength(1);
+    expect(empty.fromClasses[0]!.pupils.map((p) => p.choice)).toEqual([
+      null,
+      null,
+      null,
+      null,
+      null,
+    ]);
+    expect(empty.toClasses.map((c) => c.name)).toEqual(['CE1-CE2', 'CE2 A']);
+
+    // Toute la classe en CE2 A (niveau suivant par défaut), puis les cas particuliers.
+    const choose = (choices: unknown[]) =>
+      direction.browser.send('PUT', `/schools/${schoolId}/rollover`, { choices });
+    await choose(pupils.map((p) => ({ pupilId: p.id, classId: ce2.id })));
+    await choose([
+      { pupilId: noah.id, classId: mixed.id, grade: 'CE1' }, // maintenu en CE1
+      { pupilId: jade.id, leaves: true },
+      { pupilId: zoe.id, leaves: true },
+      { pupilId: ines.id, classId: null }, // à répartir
+    ]);
+    expect((await choose([{ pupilId: leo.id, classId: ce2.id, grade: 'CE1' }])).json().error).toBe(
+      'invalid_grade',
+    );
+    expect((await choose([{ pupilId: leo.id, classId: classroom.id }])).json().error).toBe(
+      'invalid_class',
+    );
+    // Supprimer une classe d'arrivée remet ses élèves à répartir.
+    const temp = await direction.browser.ok<ClassroomDto>('POST', `/schools/${schoolId}/classes`, {
+      name: 'Temporaire',
+      grades: ['CE2'],
+      schoolYear: to,
+    });
+    await choose([{ pupilId: ines.id, classId: temp.id }]);
+    await direction.browser.ok('DELETE', `/classes/${temp.id}`);
+    const planned = await direction.browser.ok<RolloverDto>('GET', `/schools/${schoolId}/rollover`);
+    const choiceOf = (id: number) =>
+      planned.fromClasses[0]!.pupils.find((p) => p.id === id)!.choice;
+    expect(choiceOf(leo.id)).toEqual({ classId: ce2.id, grade: 'CE2' });
+    expect(choiceOf(noah.id)).toEqual({ classId: mixed.id, grade: 'CE1' });
+    expect(choiceOf(jade.id)).toBe('quitte');
+    expect(choiceOf(ines.id)).toBeNull();
+
+    // Une autre école ne voit rien.
+    const other = await admin.ok<{ invitation: CreatedInvitation }>('POST', '/admin/schools', {
+      name: 'Autre école',
+    });
+    const stranger = await register(other.invitation.code, 'autre@example.org');
+    expect((await stranger.browser.send('GET', `/schools/${schoolId}/rollover`)).statusCode).toBe(
+      404,
+    );
+
+    // Pas de rentrée tant qu'un élève est à répartir.
+    const refused = await direction.browser.send('POST', `/schools/${schoolId}/rollover/apply`);
+    expect(refused.statusCode).toBe(409);
+    expect(refused.json().message).toMatch(/1 élève à répartir/);
+    await choose([{ pupilId: ines.id, classId: mixed.id }]);
+    expect(
+      await direction.browser.ok<RolloverResult>('POST', `/schools/${schoolId}/rollover/apply`),
+    ).toEqual({ moved: 3, detached: 1, deleted: 1 });
+
+    // Léo : nouvelle classe, nouveau niveau, sans l'ancien devoir, avec l'avis passé.
+    const leoMe = await leoParents.browser.ok<MeResponse>('GET', '/auth/me');
+    expect(leoMe.children).toMatchObject([
+      { id: leo.id, grade: 'CE2', classroom: { id: ce2.id, name: 'CE2 A' } },
+    ]);
+    await leoParents.browser.ok('POST', '/auth/active-child', { childId: leo.id });
+    expect(
+      (await leoParents.browser.ok<ChildStateResponse>('GET', '/child/state')).assignments,
+    ).toEqual([]);
+    const report = await teacher.browser.ok<ChildReport>('GET', `/pupils/${leo.id}/report`);
+    expect(report.assessments['maths.calcul.tables']?.title).toBe('Évaluation de juin');
+    // Jade est partie : elle reste à sa famille, sans classe.
+    expect((await jadeParents.browser.ok<MeResponse>('GET', '/auth/me')).children).toMatchObject([
+      { id: jade.id, classroom: null },
+    ]);
+    // L'ancienne classe a disparu ; Noah (maintenu) et Inès sont en CE1-CE2.
+    expect((await teacher.browser.send('GET', `/classes/${classroom.id}`)).statusCode).toBe(404);
+    const mixedNow = await direction.browser.ok<ClassroomDetail>('GET', `/classes/${mixed.id}`);
+    expect(mixedNow.pupilList.map((p) => [p.firstName, p.grade])).toEqual([
+      ['Inès', 'CE2'],
+      ['Noah', 'CE1'],
+    ]);
+    expect(
+      (await teacher.browser.ok<MeResponse>('GET', '/auth/me')).schools[0]!.classes.map(
+        (c) => c.name,
+      ),
+    ).toEqual(['CE2 A']);
+    // Les fiches de la nouvelle classe valent jusqu'à la fin de sa propre année.
+    const [noahCode] = await direction.browser.ok<PupilCode[]>(
+      'POST',
+      `/classes/${mixed.id}/pupil-codes`,
+      { pupilIds: [noah.id] },
+    );
+    expect(new Date(noahCode!.expiresAt)).toEqual(new Date(start + 2, 7, 31, 23, 59, 59));
+    // L'année suivante commence : plus rien à répartir.
+    const next = await direction.browser.ok<RolloverDto>('GET', `/schools/${schoolId}/rollover`);
+    expect(next.from).toBe(to);
+    expect(next.fromClasses.flatMap((c) => c.pupils.map((p) => p.choice))).toEqual([
+      null,
+      null,
+      null,
+    ]);
   });
 });

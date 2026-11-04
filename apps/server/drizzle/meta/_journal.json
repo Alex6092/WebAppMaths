@@ -36,6 +36,13 @@
       "when": 1793801621091,
       "tag": "0004_ecoles",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793807440783,
+      "tag": "0005_rentree",
+      "breakpoints": true
     }
   ]
 }

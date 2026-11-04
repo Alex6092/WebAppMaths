@@ -393,3 +393,18 @@ export const notionAssessments = sqliteTable(
     index('notion_assessment_class_idx').on(t.classId, t.batch),
   ],
 );
+
+/**
+ * Préparation de la rentrée : la classe de l'année suivante choisie par la direction pour un
+ * élève, et son niveau, ou son départ de l'école. Effacé une fois la rentrée faite.
+ */
+export const rolloverChoices = sqliteTable('rollover_choice', {
+  childId: integer('child_id')
+    .primaryKey()
+    .references(() => children.id, { onDelete: 'cascade' }),
+  /** Supprimer la classe d'arrivée remet l'élève « à répartir ». */
+  toClassId: integer('to_class_id').references(() => classrooms.id, { onDelete: 'cascade' }),
+  grade: text('grade').$type<GradeId>(),
+  leaves: integer('leaves', { mode: 'boolean' }).notNull().default(false),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+});

@@ -485,6 +485,40 @@ export interface ClassOverview {
   }[];
 }
 
+/** Le choix de la direction pour un élève à la rentrée : une classe et un niveau, ou il part. */
+export type RolloverChoiceDto = { classId: number; grade: GradeId } | 'quitte' | null;
+
+/** Préparer la rentrée : les classes de l'année qui finit, et celles de l'année suivante. */
+export interface RolloverDto {
+  /** L'année qui finit (« 2026-2027 ») et la suivante. */
+  from: string;
+  to: string;
+  fromClasses: {
+    id: number;
+    name: string;
+    grades: GradeId[];
+    pupils: (PupilDto & { choice: RolloverChoiceDto })[];
+  }[];
+  toClasses: ClassroomDto[];
+}
+
+/** Un choix : classId (avec un niveau facultatif), leaves, ou ni l'un ni l'autre (à répartir). */
+export interface RolloverChoice {
+  pupilId: number;
+  classId?: number | null;
+  grade?: GradeId;
+  leaves?: boolean;
+}
+
+export interface RolloverResult {
+  /** Élèves passés dans leur nouvelle classe. */
+  moved: number;
+  /** Élèves partis qui restent à leur famille. */
+  detached: number;
+  /** Élèves partis sans famille : supprimés. */
+  deleted: number;
+}
+
 export interface ApiError {
   error: string;
   message: string;

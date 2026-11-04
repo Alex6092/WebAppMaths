@@ -23,3 +23,8 @@ export function isGrade(value: unknown): value is GradeId {
 export function gradeIndex(id: GradeId): number {
   return GRADE_IDS.indexOf(id);
 }
+
+/** La classe suivante dans la scolarité (CE1 → CE2), null après la 3e. */
+export function nextGrade(id: GradeId): GradeId | null {
+  return GRADE_IDS[gradeIndex(id) + 1] ?? null;
+}
