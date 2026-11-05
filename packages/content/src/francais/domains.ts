@@ -298,6 +298,77 @@ const LETTRE_T_LESSON: LessonBlock[] = [
   },
 ];
 
+// La lettre D, d'après ORTHO 5 et la fiche de la dictée 5 de la classe.
+const LETTRE_D_LESSON: LessonBlock[] = [
+  'La lettre **d** se prononce [d] presque toujours… sauf à la fin de beaucoup de mots :',
+  {
+    kind: 'table',
+    columns: [
+      {
+        title: 'j’entends [d]',
+        color: '#e3f2fd',
+        cells: [
+          'un **d**ragon, **d**emain',
+          'un ca**d**eau, mala**d**e',
+          'le su**d**, un plai**d**',
+        ],
+      },
+      { title: 'dd', color: '#fff3e0', cells: ['une a**dd**ition'] },
+      {
+        title: 'je ne l’entends pas',
+        color: '#eeeeee',
+        cells: ['un lézar**d**, un pie**d**', 'gran**d**, froi**d**', 'je pren**d**s, il ven**d**'],
+      },
+    ],
+  },
+  'Pour savoir s’il y a un **d muet** à la fin, je cherche le **féminin** ou un mot de la **même famille** : on y entend le d.',
+  {
+    kind: 'example',
+    lines: [
+      'grande → gran**d** ; froide → froi**d**',
+      'bavarder → bavar**d** ; regarder → un regar**d**',
+    ],
+  },
+  'Les verbes en **-dre** gardent leur d : je pren**d**s, tu appren**d**s, il ven**d**, elle atten**d**.',
+];
+
+// Le présent des verbes en -er (la dictée 5 : « donner → je donne »).
+const PRESENT_ER_LESSON: LessonBlock[] = [
+  'Au **présent**, les verbes en **-er** comme *chanter* prennent toujours les mêmes terminaisons :',
+  {
+    kind: 'table',
+    columns: [
+      { title: 'personne', cells: ['je', 'tu', 'il, elle, on', 'nous', 'vous', 'ils, elles'] },
+      {
+        title: 'chanter',
+        color: MOMENT_COLOR.present,
+        cells: [
+          'chant**e**',
+          'chant**es**',
+          'chant**e**',
+          'chant**ons**',
+          'chant**ez**',
+          'chant**ent**',
+        ],
+      },
+    ],
+  },
+  'Devant une **voyelle** (a, e, i, o, u) ou un h muet, **je** devient **j’** :',
+  { kind: 'example', lines: ['adorer → **j’**adore ; habiter → **j’**habite'] },
+  'Attention : *manger* garde un **e** et *commencer* prend un **ç** devant -ons : nous mang**e**ons, nous commen**ç**ons.',
+];
+
+// Lire des syllabes et des mots (l'entraînement à la lecture des fiches de dictée).
+const DECODER_LESSON: LessonBlock[] = [
+  'Pour lire une syllabe, je regarde **chaque lettre**, de **gauche à droite**, et je les **assemble** :',
+  {
+    kind: 'example',
+    lines: ['d + r + on → **dron**', 'd + o + b → **dob** ; b + o + d → **bod**'],
+  },
+  'Attention aux lettres qui se ressemblent : **b** et **d** (le ventre du b regarde à droite, celui du d à gauche), **p** et **q**, **m** et **n**.',
+  'L’**ordre** des lettres compte : *dar* et *rad* ne se lisent pas pareil !',
+];
+
 const CONTRAIRES_LESSON: LessonBlock[] = [
   'Des **contraires** sont des mots qui veulent dire **l’inverse**.',
   { kind: 'example', lines: ['chaud ≠ froid ; ouvrir ≠ fermer ; le jour ≠ la nuit'] },
@@ -364,6 +435,14 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Utiliser le bon temps dans une phrase.',
     lesson: CONJ2_LESSON,
+  },
+  {
+    id: 'francais.conjugaison.present-er',
+    domain: 'francais.conjugaison',
+    title: 'Le présent des verbes en -er',
+    grades: ['CE1'],
+    competence: 'Conjuguer au présent les verbes en -er.',
+    lesson: PRESENT_ER_LESSON,
   },
   {
     id: 'francais.grammaire.phrase',
@@ -454,6 +533,14 @@ export const notions: Notion[] = [
     competence: 'Savoir que la lettre t fait [t], [s], ou ne s’entend pas.',
     lesson: LETTRE_T_LESSON,
   },
+  {
+    id: 'francais.orthographe.lettre-d',
+    domain: 'francais.orthographe',
+    title: 'La lettre d',
+    grades: ['CE1'],
+    competence: 'Savoir que la lettre d fait [d], ou ne s’entend pas à la fin du mot.',
+    lesson: LETTRE_D_LESSON,
+  },
   ...CLASS_DICTATIONS.map(classDictationNotion),
   {
     id: 'francais.oral.comprendre-histoire',
@@ -462,6 +549,14 @@ export const notions: Notion[] = [
     grades: ['CP', 'CE1', 'CE2'],
     competence: 'Écouter pour comprendre un texte lu par un adulte.',
     lesson: ECOUTE_LESSON,
+  },
+  {
+    id: 'francais.lecture.decoder',
+    domain: 'francais.lecture',
+    title: 'Lire les syllabes et les mots',
+    grades: ['CP', 'CE1'],
+    competence: 'Déchiffrer des syllabes et des mots.',
+    lesson: DECODER_LESSON,
   },
   {
     id: 'francais.lecture.comprendre-texte',

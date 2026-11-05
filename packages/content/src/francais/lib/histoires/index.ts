@@ -12,6 +12,7 @@ import { gateauMamie } from './gateau-mamie';
 import { hanselGretel } from './hansel-gretel';
 import { chatLeo, piqueNique, plage, potager, veloRouge, zoo } from './lecture-cp';
 import { lievreTortue } from './lievre-tortue';
+import { lilaTao } from './lila-tao';
 import { lionSouris } from './lion-souris';
 import { lumierePhare } from './lumiere-phare';
 import { moufle } from './moufle';
@@ -132,6 +133,7 @@ export const STORIES: Story[] = [
   septChevreaux,
   petitDragon,
   veterinaire,
+  lilaTao,
   // Niveau 3 : CE1, avec des « pourquoi ? ».
   robePapillons,
   chaperonRouge,

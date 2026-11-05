@@ -88,7 +88,48 @@ export const DICTEE_4: ClassDictation = {
   ],
 };
 
-export const CLASS_DICTATIONS: readonly ClassDictation[] = [DICTEE_4];
+export const DICTEE_5: ClassDictation = {
+  number: 5,
+  title: 'La lettre D',
+  lists: [
+    {
+      label: 'Liste 1 (pour vendredi)',
+      words: [
+        noun('un', 'drapeau'),
+        noun('le', 'nord'),
+        noun('la', 'Suède', true),
+        other('adjectif', 'beau', 'un beau dessin'),
+        other('verbe', 'décider', 'décider vite'),
+      ],
+    },
+    {
+      label: 'Liste 2 (pour lundi)',
+      words: [
+        noun('une', 'légende'),
+        noun('le', 'froid'),
+        noun('un', 'fjord'),
+        other('adverbe', 'dehors', 'jouer dehors'),
+        other('verbe', 'raconter', 'raconter une histoire'),
+      ],
+    },
+  ],
+  sentences: [
+    'La Suède est au nord.',
+    'Le drapeau de la Suède est beau.',
+    'Papa raconte une légende.',
+    'Dehors, il fait très froid.',
+    'Nous voyons un beau fjord.',
+    'Lila décide de jouer dehors.',
+    'Au nord, le froid arrive vite.',
+    'Tom dessine un drapeau bleu.',
+    'Mamie raconte une légende du nord.',
+    'Le bateau entre dans le fjord.',
+    'Je mets un bonnet contre le froid.',
+    'Le maître décide de sortir dehors.',
+  ],
+};
+
+export const CLASS_DICTATIONS: readonly ClassDictation[] = [DICTEE_4, DICTEE_5];
 
 const idOf = (d: ClassDictation) => `francais.orthographe.dictee-${d.number}`;
 /** « une carte », « l’Italie », « postal » */
