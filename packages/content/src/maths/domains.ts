@@ -1,5 +1,6 @@
 import type { Domain, FigPoint, LessonBlock, LessonColumn, Notion } from '@app/core';
 import { PLACE_COLORS, type Place } from './lib/couleurs';
+import { housePairs } from './lib/maisons';
 
 export const domains: Domain[] = [
   { id: 'maths.nombres', subject: 'maths', title: 'Nombres', icon: '🔢', order: 1 },
@@ -219,6 +220,26 @@ export const notions: Notion[] = [
         labels: [20, 30, 40, 50],
         points: [24, 34, 44],
       },
+    ],
+  },
+  {
+    id: 'maths.calcul.sommes-10-11',
+    domain: 'maths.calcul',
+    title: 'Les sommes égales à 10 et 11',
+    grades: ['CP', 'CE1'],
+    competence: 'Connaître par cœur les additions de deux nombres qui font 10 et 11.',
+    lesson: [
+      'Ces additions sont à connaître **par cœur** : elles aident à calculer vite et à passer par 10.',
+      {
+        kind: 'table',
+        columns: ([10, 11] as const).map((house) => ({
+          title: `🏠 la maison du ${house}`,
+          cells: housePairs(house).map(([a, b]) => `${a} + ${b} = **${house}**`),
+        })),
+      },
+      'Si je **retourne** l’addition, le résultat ne change pas : 3 + 7 = 7 + 3 = 10.',
+      'Pour faire **11**, j’ajoute 1 à une addition de la maison du 10 : 3 + 7 = 10, donc 3 + **8** = 11.',
+      '5 + 6, c’est **presque le double** de 5 : 5 + 5 + 1 = 11.',
     ],
   },
   {
