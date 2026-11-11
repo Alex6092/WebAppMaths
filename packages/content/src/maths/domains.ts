@@ -243,6 +243,27 @@ export const notions: Notion[] = [
     ],
   },
   {
+    id: 'maths.calcul.sommes-12-13',
+    domain: 'maths.calcul',
+    title: 'Les sommes égales à 12 et 13',
+    grades: ['CE1'],
+    competence: 'Connaître par cœur les additions de deux nombres qui font 12 et 13.',
+    lesson: [
+      'Comme pour le 10 et le 11, ces additions sont à connaître **par cœur**.',
+      {
+        kind: 'table',
+        columns: ([12, 13] as const).map((house) => ({
+          title: `🏡 la maison du ${house}`,
+          cells: housePairs(house).map(([a, b]) => `${a} + ${b} = **${house}**`),
+        })),
+      },
+      'Si je **retourne** l’addition, le résultat ne change pas : 5 + 7 = 7 + 5 = 12.',
+      'Pour faire **13**, j’ajoute 1 à une addition de la maison du 12 : 5 + 7 = 12, donc 5 + **8** = 13.',
+      'Je peux aussi **passer par 10** : 9 + 3, c’est 9 + 1 = 10, et il reste 2 : 10 + 2 = **12**.',
+      '6 + 7, c’est **presque le double** de 6 : 6 + 6 + 1 = 13.',
+    ],
+  },
+  {
     id: 'maths.calcul.tables',
     domain: 'maths.calcul',
     title: 'Tables de multiplication',
