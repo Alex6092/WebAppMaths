@@ -65,87 +65,90 @@ import plugin60 from './francais/vocabulaire/trouve-contraire/plugin';
 import plugin61 from './francais/vocabulaire/trouve-synonyme/plugin';
 import plugin62 from './maths/calcul/addition-posee/plugin';
 import plugin63 from './maths/calcul/calcul-mental/plugin';
-import plugin64 from './maths/calcul/complete-maison/plugin';
-import plugin65 from './maths/calcul/range-maisons/plugin';
-import plugin66 from './maths/calcul/relie-maisons/plugin';
-import plugin67 from './maths/calcul/soustraction-posee/plugin';
-import plugin68 from './maths/calcul/tables/plugin';
-import plugin69 from './maths/geometrie/alignes-oui-non/plugin';
-import plugin70 from './maths/geometrie/entoure-milieu/plugin';
-import plugin71 from './maths/geometrie/entoure-segments/plugin';
-import plugin72 from './maths/geometrie/longueurs-milieu/plugin';
-import plugin73 from './maths/geometrie/milieu-oui-non/plugin';
-import plugin74 from './maths/geometrie/nomme-segment/plugin';
-import plugin75 from './maths/geometrie/place-alignes/plugin';
-import plugin76 from './maths/geometrie/place-milieu/plugin';
-import plugin77 from './maths/geometrie/relie-alignes/plugin';
-import plugin78 from './maths/geometrie/trace-alignes/plugin';
-import plugin79 from './maths/geometrie/trace-segment-milieu/plugin';
-import plugin80 from './maths/geometrie/vocabulaire-segment/plugin';
-import plugin81 from './maths/mesures/compte-argent/plugin';
-import plugin82 from './maths/mesures/dans-combien/plugin';
-import plugin83 from './maths/mesures/heure-en-mots/plugin';
-import plugin84 from './maths/mesures/lis-heure/plugin';
-import plugin85 from './maths/mesures/mesure-segment/plugin';
-import plugin86 from './maths/mesures/moins-de-pieces/plugin';
-import plugin87 from './maths/mesures/paie/plugin';
-import plugin88 from './maths/mesures/quelle-horloge/plugin';
-import plugin89 from './maths/mesures/qui-a-le-plus/plugin';
-import plugin90 from './maths/mesures/regle-horloge/plugin';
-import plugin91 from './maths/mesures/rendre-monnaie/plugin';
-import plugin92 from './maths/mesures/unites-duree/plugin';
-import plugin93 from './maths/nombres/comparer-signe/plugin';
-import plugin94 from './maths/nombres/decomposer/plugin';
-import plugin95 from './maths/nombres/ecrire-chiffres/plugin';
-import plugin96 from './maths/nombres/ecrire-lettres/plugin';
-import plugin97 from './maths/nombres/encadrer/plugin';
-import plugin98 from './maths/nombres/lire-nombre/plugin';
-import plugin99 from './maths/nombres/ranger/plugin';
-import plugin100 from './maths/problemes/enonce-question/plugin';
-import plugin101 from './maths/problemes/mot-qui-regroupe/plugin';
-import plugin102 from './maths/problemes/parmi-les/plugin';
-import plugin103 from './maths/problemes/phrase-reponse/plugin';
-import plugin104 from './maths/problemes/quelle-operation/plugin';
-import plugin105 from './maths/problemes/relie-enonce/plugin';
-import plugin106 from './maths/problemes/resous-probleme/plugin';
-import plugin107 from './musique/ecoute/grave-aigu/plugin';
-import plugin108 from './musique/ecoute/monte-descend/plugin';
-import plugin109 from './musique/ecoute/quelle-portee/plugin';
-import plugin110 from './musique/instruments/piano-nom/plugin';
-import plugin111 from './musique/instruments/piano-touche/plugin';
-import plugin112 from './musique/instruments/violon/plugin';
-import plugin113 from './musique/lecture/cle-de-fa/plugin';
-import plugin114 from './musique/lecture/cle-de-sol/plugin';
-import plugin115 from './musique/lecture/deux-cles/plugin';
-import plugin116 from './musique/lecture/place-note/plugin';
-import plugin117 from './musique/lecture/reperer/plugin';
-import plugin118 from './musique/rythme/combien-de-temps/plugin';
-import plugin119 from './musique/rythme/complete-mesure/plugin';
-import plugin120 from './musique/rythme/figures/plugin';
-import plugin121 from './qlm/matiere/change-etat/plugin';
-import plugin122 from './qlm/matiere/solide-liquide/plugin';
-import plugin123 from './qlm/temps/compte-calendrier/plugin';
-import plugin124 from './qlm/temps/jour-calendrier/plugin';
-import plugin125 from './qlm/temps/quel-jour/plugin';
-import plugin126 from './qlm/temps/quel-mois/plugin';
-import plugin127 from './qlm/temps/range-jours/plugin';
-import plugin128 from './qlm/temps/range-mois/plugin';
-import plugin129 from './qlm/temps/range-moments/plugin';
-import plugin130 from './qlm/temps/range-saisons/plugin';
-import plugin131 from './qlm/temps/saison-du-mois/plugin';
-import plugin132 from './qlm/vivant/aliments-transformes/plugin';
-import plugin133 from './qlm/vivant/besoins-plante/plugin';
-import plugin134 from './qlm/vivant/classe-animaux/plugin';
-import plugin135 from './qlm/vivant/classe-familles-aliments/plugin';
-import plugin136 from './qlm/vivant/cycle-vie/plugin';
-import plugin137 from './qlm/vivant/famille-aliment/plugin';
-import plugin138 from './qlm/vivant/origine-aliments/plugin';
-import plugin139 from './qlm/vivant/parties-plante/plugin';
-import plugin140 from './qlm/vivant/petit-animal/plugin';
-import plugin141 from './qlm/vivant/provenance-aliments/plugin';
-import plugin142 from './qlm/vivant/quel-sens/plugin';
-import plugin143 from './qlm/vivant/relie-sens/plugin';
-import plugin144 from './qlm/vivant/vivant-ou-pas/plugin';
+import plugin64 from './maths/calcul/complete-maison-12-13/plugin';
+import plugin65 from './maths/calcul/complete-maison/plugin';
+import plugin66 from './maths/calcul/range-maisons-12-13/plugin';
+import plugin67 from './maths/calcul/range-maisons/plugin';
+import plugin68 from './maths/calcul/relie-maisons-12-13/plugin';
+import plugin69 from './maths/calcul/relie-maisons/plugin';
+import plugin70 from './maths/calcul/soustraction-posee/plugin';
+import plugin71 from './maths/calcul/tables/plugin';
+import plugin72 from './maths/geometrie/alignes-oui-non/plugin';
+import plugin73 from './maths/geometrie/entoure-milieu/plugin';
+import plugin74 from './maths/geometrie/entoure-segments/plugin';
+import plugin75 from './maths/geometrie/longueurs-milieu/plugin';
+import plugin76 from './maths/geometrie/milieu-oui-non/plugin';
+import plugin77 from './maths/geometrie/nomme-segment/plugin';
+import plugin78 from './maths/geometrie/place-alignes/plugin';
+import plugin79 from './maths/geometrie/place-milieu/plugin';
+import plugin80 from './maths/geometrie/relie-alignes/plugin';
+import plugin81 from './maths/geometrie/trace-alignes/plugin';
+import plugin82 from './maths/geometrie/trace-segment-milieu/plugin';
+import plugin83 from './maths/geometrie/vocabulaire-segment/plugin';
+import plugin84 from './maths/mesures/compte-argent/plugin';
+import plugin85 from './maths/mesures/dans-combien/plugin';
+import plugin86 from './maths/mesures/heure-en-mots/plugin';
+import plugin87 from './maths/mesures/lis-heure/plugin';
+import plugin88 from './maths/mesures/mesure-segment/plugin';
+import plugin89 from './maths/mesures/moins-de-pieces/plugin';
+import plugin90 from './maths/mesures/paie/plugin';
+import plugin91 from './maths/mesures/quelle-horloge/plugin';
+import plugin92 from './maths/mesures/qui-a-le-plus/plugin';
+import plugin93 from './maths/mesures/regle-horloge/plugin';
+import plugin94 from './maths/mesures/rendre-monnaie/plugin';
+import plugin95 from './maths/mesures/unites-duree/plugin';
+import plugin96 from './maths/nombres/comparer-signe/plugin';
+import plugin97 from './maths/nombres/decomposer/plugin';
+import plugin98 from './maths/nombres/ecrire-chiffres/plugin';
+import plugin99 from './maths/nombres/ecrire-lettres/plugin';
+import plugin100 from './maths/nombres/encadrer/plugin';
+import plugin101 from './maths/nombres/lire-nombre/plugin';
+import plugin102 from './maths/nombres/ranger/plugin';
+import plugin103 from './maths/problemes/enonce-question/plugin';
+import plugin104 from './maths/problemes/mot-qui-regroupe/plugin';
+import plugin105 from './maths/problemes/parmi-les/plugin';
+import plugin106 from './maths/problemes/phrase-reponse/plugin';
+import plugin107 from './maths/problemes/quelle-operation/plugin';
+import plugin108 from './maths/problemes/relie-enonce/plugin';
+import plugin109 from './maths/problemes/resous-probleme/plugin';
+import plugin110 from './musique/ecoute/grave-aigu/plugin';
+import plugin111 from './musique/ecoute/monte-descend/plugin';
+import plugin112 from './musique/ecoute/quelle-portee/plugin';
+import plugin113 from './musique/instruments/piano-nom/plugin';
+import plugin114 from './musique/instruments/piano-touche/plugin';
+import plugin115 from './musique/instruments/violon/plugin';
+import plugin116 from './musique/lecture/cle-de-fa/plugin';
+import plugin117 from './musique/lecture/cle-de-sol/plugin';
+import plugin118 from './musique/lecture/deux-cles/plugin';
+import plugin119 from './musique/lecture/place-note/plugin';
+import plugin120 from './musique/lecture/reperer/plugin';
+import plugin121 from './musique/rythme/combien-de-temps/plugin';
+import plugin122 from './musique/rythme/complete-mesure/plugin';
+import plugin123 from './musique/rythme/figures/plugin';
+import plugin124 from './qlm/matiere/change-etat/plugin';
+import plugin125 from './qlm/matiere/solide-liquide/plugin';
+import plugin126 from './qlm/temps/compte-calendrier/plugin';
+import plugin127 from './qlm/temps/jour-calendrier/plugin';
+import plugin128 from './qlm/temps/quel-jour/plugin';
+import plugin129 from './qlm/temps/quel-mois/plugin';
+import plugin130 from './qlm/temps/range-jours/plugin';
+import plugin131 from './qlm/temps/range-mois/plugin';
+import plugin132 from './qlm/temps/range-moments/plugin';
+import plugin133 from './qlm/temps/range-saisons/plugin';
+import plugin134 from './qlm/temps/saison-du-mois/plugin';
+import plugin135 from './qlm/vivant/aliments-transformes/plugin';
+import plugin136 from './qlm/vivant/besoins-plante/plugin';
+import plugin137 from './qlm/vivant/classe-animaux/plugin';
+import plugin138 from './qlm/vivant/classe-familles-aliments/plugin';
+import plugin139 from './qlm/vivant/cycle-vie/plugin';
+import plugin140 from './qlm/vivant/famille-aliment/plugin';
+import plugin141 from './qlm/vivant/origine-aliments/plugin';
+import plugin142 from './qlm/vivant/parties-plante/plugin';
+import plugin143 from './qlm/vivant/petit-animal/plugin';
+import plugin144 from './qlm/vivant/provenance-aliments/plugin';
+import plugin145 from './qlm/vivant/quel-sens/plugin';
+import plugin146 from './qlm/vivant/relie-sens/plugin';
+import plugin147 from './qlm/vivant/vivant-ou-pas/plugin';
 import * as domains0 from './anglais/domains';
 import * as domains1 from './francais/domains';
 import * as domains2 from './maths/domains';
@@ -298,6 +301,9 @@ export const plugins: AnyPlugin[] = [
   plugin142,
   plugin143,
   plugin144,
+  plugin145,
+  plugin146,
+  plugin147,
 ];
 
 /** Identifiant attendu de chaque plugin, déduit de son dossier. */
@@ -366,8 +372,11 @@ export const pluginPathIds: string[] = [
   'francais.vocabulaire.trouve-synonyme',
   'maths.calcul.addition-posee',
   'maths.calcul.calcul-mental',
+  'maths.calcul.complete-maison-12-13',
   'maths.calcul.complete-maison',
+  'maths.calcul.range-maisons-12-13',
   'maths.calcul.range-maisons',
+  'maths.calcul.relie-maisons-12-13',
   'maths.calcul.relie-maisons',
   'maths.calcul.soustraction-posee',
   'maths.calcul.tables',
