@@ -1,11 +1,12 @@
 <script lang="ts">
   import { registry } from '@app/content';
   import { initialLevel, type Notion } from '@app/core';
+  import { onMount } from 'svelte';
   import ChildBar from '../components/ChildBar.svelte';
   import LessonCard from '../components/LessonCard.svelte';
   import MixPicker from '../components/MixPicker.svelte';
   import NotionBadge from '../components/NotionBadge.svelte';
-  import { isSeen, masteryOf, reviewOf } from '../lib/notions';
+  import { isSeen, masteryOf, practicePlugins, reviewOf } from '../lib/notions';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, session } from '../lib/session.svelte';
 
@@ -17,18 +18,18 @@
       .domainsOf(subjectId)
       .map((domain) => ({
         domain,
-        plugins: registry.pluginsOfDomain(domain.id),
+        plugins: practicePlugins(registry.pluginsOfDomain(domain.id)),
         notions: registry.notionsInScope(domain.id, activeChild()?.grade),
       }))
-      .filter((d) => d.plugins.length > 0),
+      .filter((d) => d.plugins.length > 0 || d.notions.length > 0),
   );
+  const hasExercises = $derived(domains.some((d) => d.plugins.length > 0));
 
   let lesson = $state<Notion | null>(null);
   let picker = $state(false);
 
-  // L'acquisition des notions vient de l'état de l'enfant : on le charge s'il manque.
-  $effect(() => {
-    if (!session.childState) void loadChildState();
+  onMount(() => {
+    loadChildState().catch(() => {});
   });
 
   function levelOf(pluginId: string): number {
@@ -45,7 +46,7 @@
 
   {#if subject}
     <h1 class="title" style:color={subject.color}>{subject.icon} {subject.title}</h1>
-    {#if domains.length}
+    {#if hasExercises}
       <button class="btn accent" onclick={() => (picker = true)}>🎲 Mélange : je choisis</button>
     {/if}
 
@@ -53,9 +54,11 @@
       <section class="domain">
         <div class="domain-head">
           <h2>{domain.icon} {domain.title}</h2>
-          <button class="btn ghost small" onclick={() => navigate(`/mix/${domain.id}`)}
-            >🎲 Mélanger</button
-          >
+          {#if plugins.length}
+            <button class="btn ghost small" onclick={() => navigate(`/mix/${domain.id}`)}
+              >🎲 Mélanger</button
+            >
+          {/if}
         </div>
         {#if notions.length}
           <div class="notions">
@@ -73,6 +76,9 @@
           </div>
         {/if}
         <div class="exercises">
+          {#if session.childState && !plugins.length}
+            <p>Aucun exercice disponible pour l’instant.</p>
+          {/if}
           {#each plugins as plugin (plugin.id)}
             {@const level = levelOf(plugin.id)}
             <button class="exercise" onclick={() => navigate(`/exercise/${plugin.id}`)}>
@@ -89,7 +95,7 @@
         </div>
       </section>
     {:else}
-      <div class="card">Les exercices de cette matière arrivent bientôt !</div>
+      {#if session.childState}<div class="card">Aucun exercice disponible pour l’instant.</div>{/if}
     {/each}
   {:else}
     <div class="card">Matière inconnue.</div>

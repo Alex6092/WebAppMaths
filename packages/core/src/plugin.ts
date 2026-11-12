@@ -71,6 +71,11 @@ export interface ExercisePlugin<W extends WidgetId = WidgetId, P = unknown, D = 
 
 export type AnyPlugin = ExercisePlugin<any, any, any>;
 
+/** En autonomie, toutes les notions travaillées par l’exercice doivent être actives. */
+export function canPractice(plugin: AnyPlugin, activeNotions: ReadonlySet<string>): boolean {
+  return plugin.notions.length > 0 && plugin.notions.every((id) => activeNotions.has(id));
+}
+
 /** Type les paramètres des niveaux : `levels: defineLevels<Params>([...])`. */
 export function defineLevels<P>(levels: LevelDef<P>[]): LevelDef<P>[] {
   return levels;

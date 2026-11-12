@@ -8,7 +8,6 @@
     getWidget,
     initialLevel,
     maxTries,
-    mixablePlugins,
     pickMixPlugin,
     questionSignature,
     questionSpeech,
@@ -31,9 +30,9 @@
   import LessonCard from '../components/LessonCard.svelte';
   import NotionBadge from '../components/NotionBadge.svelte';
   import SpeakButton from '../components/SpeakButton.svelte';
-  import { api, errorMessage } from '../lib/api';
+  import { api, ApiError, errorMessage } from '../lib/api';
   import { celebrateBadges } from '../lib/badges';
-  import { dueNotions, masteryOf, reviewOf } from '../lib/notions';
+  import { dueNotions, masteryOf, practicePlugins, reviewOf } from '../lib/notions';
   import { confetti, praise, toast } from '../lib/effects.svelte';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, session, setCoins } from '../lib/session.svelte';
@@ -74,7 +73,7 @@
   /** Questions du devoir ou de l'évaluation. */
   let serverTotal = $state(0);
   /** Une série de questions comptées (mélange, défi, erreurs, devoir, évaluation), et sa longueur. */
-  const series = $derived(Boolean(mix) || replaying || homework !== undefined);
+  const series = $derived(Boolean(mix) || daily || replaying || homework !== undefined);
   const seriesLength = $derived(
     review
       ? reviewItems.length
@@ -84,14 +83,14 @@
           ? DAILY_LENGTH
           : 10,
   );
-  // Le défi du jour et les devoirs mélangent les notions choisies par le serveur.
+  // La séance utilise les notions et les exercices renvoyés par le serveur.
   let serverNotions = $state.raw<string[] | null>(null);
-  const mixIds = $derived(serverNotions ?? mix);
-  // Une histoire à écouter est trop longue pour un mélange ; un devoir la garde (le parent l'a choisie).
+  let serverPluginIds = $state.raw<string[]>([]);
+  const mixIds = $derived(serverNotions);
   const mixPlugins = $derived.by(() => {
-    if (!mixIds) return [];
-    const all = registry.pluginsOfNotions(mixIds);
-    return homework !== undefined ? all : mixablePlugins(all);
+    if (homework !== undefined) return registry.pluginsOfNotions(mixIds ?? []);
+    const ids = new Set(serverPluginIds);
+    return registry.plugins.filter((candidate) => ids.has(candidate.id));
   });
   // Dans un mélange, l'exercice change à chaque question.
   let plugin = $state.raw<AnyPlugin | undefined>(
@@ -108,7 +107,7 @@
 
   /** Retour : la matière de l'exercice, ou celle du mélange s'il n'en touche qu'une. */
   const backPath = $derived.by(() => {
-    if (replaying || homework !== undefined) return '/home';
+    if (daily || replaying || homework !== undefined) return '/home';
     const ids = mix ?? plugin?.notions.slice(0, 1) ?? [];
     const subjects = new Set(
       ids.map((id) => registry.domain(registry.notion(id)?.domain ?? '')?.subject),
@@ -159,7 +158,11 @@
   });
 
   async function start() {
-    if (!replaying && homework === undefined && (mix ? mixPlugins.length === 0 : !plugin)) return;
+    if (!series && !plugin) return;
+    if (mix?.length === 0) {
+      loadError = 'Aucun exercice disponible pour l’instant.';
+      return;
+    }
     try {
       const state = session.childState ?? (await loadChildState());
       if (plugin && !mix && !replaying)
@@ -180,7 +183,8 @@
       );
       sessionId = started.id;
       reviewItems = started.items ?? [];
-      if (started.notions?.length) serverNotions = started.notions;
+      serverNotions = started.notions ?? null;
+      serverPluginIds = started.pluginIds ?? [];
       serverTotal = started.total ?? 0;
       // Le défi du jour, les devoirs et les évaluations reprennent là où ils s'étaient arrêtés.
       questionNumber = started.answered;
@@ -188,10 +192,13 @@
       nextQuestion();
     } catch (error) {
       loadError = errorMessage(error);
+      if (error instanceof ApiError && error.code === 'practice_unavailable')
+        void loadChildState().catch(() => {});
     }
   }
 
   function nextQuestion() {
+    if (loadError) return;
     // Une question à revoir (ou d'évaluation) garde son exercice, son niveau et sa graine.
     let replay: number | null = null;
     if (replaying) {
@@ -202,11 +209,15 @@
       replay = item.seed;
     } else if (mixIds) {
       if (questionNumber >= seriesLength) return void finish();
+      if (!mixPlugins.length) {
+        loadError = 'Aucun exercice disponible pour l’instant.';
+        return;
+      }
       const state = session.childState;
       const next = pickMixPlugin(
         createRng(randomSeed()),
         mixPlugins,
-        mixIds!,
+        mixIds,
         state?.notions ?? {},
         plugin?.id,
         new Set(dueNotions()),
@@ -312,7 +323,7 @@
       }
       if (res.daily && session.childState) session.childState.daily = res.daily;
       // Le compteur « à revoir » de l'accueil : une question réparée, ou une nouvelle erreur.
-      if (session.childState) {
+      if (session.childState && practicePlugins([plugin]).length) {
         if (review && res.firstTryCorrect) session.childState.mistakes--;
         if (!review && !res.firstTryCorrect) session.childState.mistakes++;
       }
@@ -357,7 +368,15 @@
       }
       return true;
     } catch (error) {
-      toast(errorMessage(error));
+      if (error instanceof ApiError && error.code === 'practice_unavailable') {
+        stopSpeaking();
+        loadError = error.message;
+        question = null;
+        lessonOpen = false;
+        void loadChildState().catch(() => {});
+      } else {
+        toast(errorMessage(error));
+      }
       return false;
     } finally {
       saving = false;
@@ -383,7 +402,7 @@
   }
 
   function onkeydown(event: KeyboardEvent) {
-    if (event.key !== 'Enter' || summary) return;
+    if (event.key !== 'Enter' || summary || loadError) return;
     event.preventDefault();
     if (phase === 'success' || phase === 'revealed') {
       if (!saving) nextQuestion();
@@ -394,7 +413,7 @@
 <svelte:window {onkeydown} />
 
 <div class="screen">
-  <ChildBar back={{ label: 'J’ai fini', onclick: finish }}>
+  <ChildBar back={{ label: loadError ? 'Retour' : 'J’ai fini', onclick: finish }}>
     {#if series}
       <span class="badge"
         >{isEvaluation ? '📋' : review ? '🔁' : homework !== undefined ? '📝' : daily ? '🎯' : '🎲'}
@@ -404,12 +423,10 @@
     {#if !isEvaluation}<span class="badge" title={levelLabel}>Niveau {level}</span>{/if}
   </ChildBar>
 
-  {#if mix && mixPlugins.length === 0}
-    <div class="card">Il n’y a rien à mélanger ici pour l’instant.</div>
-  {:else if !mix && !replaying && homework === undefined && !plugin}
+  {#if loadError}
+    <div class="error-msg" role="alert">{loadError}</div>
+  {:else if !series && !plugin}
     <div class="card">Cet exercice n’existe pas (ou plus).</div>
-  {:else if loadError}
-    <div class="error-msg">{loadError}</div>
   {:else if question && plugin}
     <h1 class="exercise-title">{plugin.icon} {plugin.title}</h1>
     {#if isEvaluation}

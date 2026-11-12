@@ -1,5 +1,6 @@
 import { registry } from '@app/content';
 import {
+  canPractice,
   dayKey,
   previousDay,
   type ChildReport,
@@ -81,6 +82,17 @@ function pendingMistakes(rows: readonly AttemptRow[]): MistakeDto[] {
 
 export function reviewQueue(db: Db, childId: number, now = new Date()): MistakeDto[] {
   return pendingMistakes(recentAttempts(db, childId, now));
+}
+
+export function practiceReviewQueue(
+  db: Db,
+  child: ChildRow,
+  active: ReadonlySet<string>,
+): MistakeDto[] {
+  return reviewQueue(db, child.id).filter(({ pluginId }) => {
+    const plugin = registry.plugin(pluginId);
+    return plugin !== undefined && canPractice(plugin, active);
+  });
 }
 
 /** Questions gardées par exercice pour suivre le temps de réponse. */
