@@ -4,6 +4,7 @@ import { MOMENT_COLOR, PINK } from './lib/couleurs';
 import { CLASS_DICTATIONS, classDictationNotion } from './lib/dictee-classe';
 import { PAIRS, type HomophonePair } from './lib/homophones';
 import { capitalize, indicatorsOf } from './lib/indicateurs';
+import { P_GROUPS, P_NOTION } from './lib/lettre-p';
 import { RULE_TEXT } from './lib/pluriel';
 
 export const domains: Domain[] = [
@@ -540,6 +541,21 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Savoir que la lettre d fait [d], ou ne s’entend pas à la fin du mot.',
     lesson: LETTRE_D_LESSON,
+  },
+  {
+    id: P_NOTION,
+    domain: 'francais.orthographe',
+    title: 'La lettre p',
+    grades: ['CE1'],
+    competence: 'Repérer la lettre p et reconnaître p, pp, ph et p muet.',
+    lesson: [
+      'Je regarde les lettres qui entourent le **p**. Dans *photo*, le **p** et le **h** forment ensemble le son [f].',
+      {
+        kind: 'table',
+        columns: P_GROUPS.map(({ label, words }) => ({ title: label, cells: words.slice(0, 3) })),
+      },
+      'À la fin de certains mots, le **p** reste muet. J’entends le [p] dans *loupe*, et il est muet dans *loup*.',
+    ],
   },
   ...CLASS_DICTATIONS.map(classDictationNotion),
   {

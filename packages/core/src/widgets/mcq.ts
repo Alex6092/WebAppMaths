@@ -51,6 +51,15 @@ export const mcqWidget: WidgetDef<'mcq'> = {
     const choices = q.choices.map((c) => c.label).join(', ');
     // La case « {?} » est lue comme un silence : le choix reste à faire.
     const prompt = q.prompt?.replace(/\{\?\}/g, '…');
-    return mathToSpeech([prompt, choices].filter(Boolean).join('. '));
+    const table = q.table;
+    const rows = table?.rows.map((row) => {
+      const cells = table.columns.map(({ label, unit }, i) =>
+        [label, row.values[i], unit?.spoken].filter(Boolean).join(' '),
+      );
+      return `${row.label} : ${cells.join(', ')}`;
+    });
+    return mathToSpeech(
+      [prompt, table?.caption, ...(rows ?? []), choices].filter(Boolean).join('. '),
+    );
   },
 };

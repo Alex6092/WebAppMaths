@@ -111,7 +111,9 @@ export function buildWorksheet(
         if (seen.has(signature)) continue;
         seen.add(signature);
         items.push({ seed, question });
-        if (items.length === 1) wanted = SHEET_ITEMS[question.widget];
+        if (items.length === 1) {
+          wanted = question.widget === 'mcq' && question.table ? 2 : SHEET_ITEMS[question.widget];
+        }
       }
       const instructions = new Set(items.map((i) => i.question.instruction));
       exercises.push({

@@ -129,7 +129,50 @@ export const DICTEE_5: ClassDictation = {
   ],
 };
 
-export const CLASS_DICTATIONS: readonly ClassDictation[] = [DICTEE_4, DICTEE_5];
+export const DICTEE_6: ClassDictation = {
+  number: 6,
+  title: 'La lettre P',
+  lists: [
+    {
+      label: 'Liste 1 (pour vendredi)',
+      words: [
+        noun('le', 'loup'),
+        noun('un', 'groupe'),
+        noun('une', 'photo'),
+        other('adjectif', 'petit', 'un petit loup'),
+        other('verbe', 'apporter', 'apporter une photo'),
+        other('verbe', 'montrer', 'montrer une photo'),
+      ],
+    },
+    {
+      label: 'Liste 2 (pour lundi)',
+      words: [
+        noun('une', 'espèce'),
+        noun('une', 'proie'),
+        noun('l’', 'hémisphère'),
+        other('adjectif', 'présent', 'un élève présent'),
+        other('adjectif', 'nord', 'le côté nord'),
+        other('verbe', 'chasser', 'chasser une proie'),
+      ],
+    },
+  ],
+  sentences: [
+    'Un groupe regarde la photo du loup.',
+    'Les élèves apportent des photos.',
+    'Lina montre un petit loup.',
+    'Le loup chasse une proie.',
+    'Cette espèce vit dans le nord.',
+    'Léo montre l’hémisphère nord.',
+    'Chaque élève présent apporte une photo.',
+    'Les petits loups restent en groupe.',
+    'Elles montrent une photo à la classe.',
+    'Le loup est présent dans l’hémisphère nord.',
+    'Les loups chassent parfois en groupe.',
+    'La petite proie se cache sous une feuille.',
+  ],
+};
+
+export const CLASS_DICTATIONS: readonly ClassDictation[] = [DICTEE_4, DICTEE_5, DICTEE_6];
 
 const idOf = (d: ClassDictation) => `francais.orthographe.dictee-${d.number}`;
 /** « une carte », « l’Italie », « postal » */

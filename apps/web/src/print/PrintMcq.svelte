@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { McqAnswer, McqQuestion } from '@app/core';
+  import QuestionTable from '../components/QuestionTable.svelte';
   import PictureView from '../pictures/PictureView.svelte';
   import PaperFigure from './PaperFigure.svelte';
 
@@ -31,6 +32,9 @@
   </p>
 {:else}
   {#if question.prompt}<p class="prompt">{question.prompt}</p>{/if}
+{/if}
+{#if question.table}<QuestionTable table={question.table} />{/if}
+{#if !slotted}
   <ul class="choices {question.layout ?? 'row'}">
     {#each question.choices as choice (choice.id)}
       <li>

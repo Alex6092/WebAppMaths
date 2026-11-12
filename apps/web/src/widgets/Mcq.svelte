@@ -1,4 +1,5 @@
 <script lang="ts">
+  import QuestionTable from '../components/QuestionTable.svelte';
   import FigureView from '../geometry/FigureView.svelte';
   import PictureView from '../pictures/PictureView.svelte';
   import { isLocked, type WidgetProps } from './types';
@@ -75,6 +76,8 @@
 {:else if question.prompt}
   <div class="prompt">{question.prompt}</div>
 {/if}
+
+{#if question.table}<QuestionTable table={question.table} />{/if}
 
 <div
   class="choices {question.layout ?? 'grid'}"

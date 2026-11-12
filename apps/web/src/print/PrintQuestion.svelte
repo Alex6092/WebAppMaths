@@ -22,7 +22,11 @@
   import PrintWords from './PrintWords.svelte';
 
   /** Une question sur papier ; avec solution, son corrigé (en rouge). */
-  let { question, solution = null }: { question: PluginQuestion; solution?: unknown } = $props();
+  let {
+    question,
+    solution = null,
+    explanation,
+  }: { question: PluginQuestion; solution?: unknown; explanation?: string } = $props();
 
   // Chaque widget reçoit la réponse attendue de son propre type.
   const key = <Q extends Question>(_q: Q) => solution as AnswerOf<Q> | null;
@@ -68,6 +72,8 @@
   <PrintComprehension {question} solution={key(question)} />
 {/if}
 
+{#if explanation}<p class="explanation">{explanation}</p>{/if}
+
 <style>
   .text {
     margin: 0 0 0.1cm;
@@ -79,5 +85,9 @@
     margin: 0 0 0.1cm;
     font-size: 11pt;
     color: #d32f2f;
+  }
+  .explanation {
+    margin: 0.1cm 0 0;
+    font-size: 10.5pt;
   }
 </style>

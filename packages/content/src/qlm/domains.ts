@@ -2,6 +2,7 @@ import type { Domain, LessonBlock, Notion } from '@app/core';
 import { FAMILY_LABEL, FOOD_FAMILIES, FOODS } from './lib/aliments';
 import { BABIES, COVER_LABEL, LIFE_CYCLES } from './lib/animaux';
 import { CHANGE_RULE, STATE_ICON, WATERS } from './lib/eau';
+import { FOOD_ROLES, FOOD_ROLES_NOTION, NUTRIENT_TABLE_NOTION } from './lib/nutriments';
 import {
   DAY_MOMENTS,
   DAYS,
@@ -317,5 +318,42 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Classer les aliments en familles.',
     lesson: FAMILLES_LESSON,
+  },
+  {
+    id: FOOD_ROLES_NOTION,
+    domain: 'qlm.vivant',
+    title: 'Le rôle des aliments',
+    grades: ['CE1'],
+    competence:
+      'Associer les aliments bâtisseurs, énergétiques et protecteurs à leur rôle et aux nutriments étudiés.',
+    lesson: [
+      'Notre corps a besoin d’aliments pour grandir, bouger et bien fonctionner. Un aliment peut apporter plusieurs nutriments.',
+      ...FOOD_ROLES.map(
+        ({ label, role, nutrients }) =>
+          `Les aliments **${label.toLowerCase()}** ${role}. On les associe notamment à ces éléments : **${nutrients.join(' et ')}**.`,
+      ),
+      'Le poulet apporte des protéines, le yaourt du calcium, le pain des glucides et l’huile des lipides. Les fruits et légumes apportent notamment des vitamines et des fibres.',
+    ],
+  },
+  {
+    id: NUTRIENT_TABLE_NOTION,
+    domain: 'qlm.vivant',
+    title: 'Lire un tableau de nutriments',
+    grades: ['CE1'],
+    competence:
+      'Lire une valeur dans un tableau et trouver l’aliment le plus riche pour une colonne.',
+    lesson: [
+      'Pour comparer deux aliments, je regarde des portions de **même masse**, ici **100 grammes** de chaque aliment.',
+      {
+        kind: 'table',
+        columns: [
+          { title: 'Aliment', cells: ['Poulet', 'Yaourt nature'] },
+          { title: 'Protéines (g)', cells: ['30', '4'] },
+          { title: 'Calcium (mg)', cells: ['12', '127'] },
+        ],
+      },
+      'Les **lignes** donnent les aliments et les **colonnes** indiquent ce qu’on cherche. Pour trouver l’aliment le plus riche en calcium, je compare les nombres de la colonne **calcium**. Ici, le yaourt nature arrive en tête avec 127 mg.',
+      'Les valeurs de l’exercice sont des exemples arrondis. **g** veut dire gramme et **mg** veut dire milligramme.',
+    ],
   },
 ];
