@@ -141,6 +141,15 @@ export interface McqChoice {
   /** Une horloge ou un porte-monnaie à choisir (« Quelle horloge indique 3 h ? »). */
   picture?: Picture;
 }
+
+/** Données à consulter avant de choisir, avec un en-tête pour chaque ligne et chaque colonne. */
+export interface McqTable {
+  caption: string;
+  rowHeading: string;
+  columns: { label: string; unit?: { symbol: string; spoken: string } }[];
+  rows: { label: string; values: string[] }[];
+}
+
 /** Choix unique ou multiple (VRAI/FAUX, COCHE, signe <, >, =…). */
 export interface McqQuestion extends QuestionBase {
   widget: 'mcq';
@@ -151,6 +160,7 @@ export interface McqQuestion extends QuestionBase {
   layout?: 'row' | 'grid' | 'list';
   figure?: Figure;
   picture?: Picture;
+  table?: McqTable;
 }
 export interface McqAnswer {
   selected: string[];

@@ -1,5 +1,6 @@
 import type { Domain, FigPoint, LessonBlock, LessonColumn, Notion } from '@app/core';
 import { PLACE_COLORS, type Place } from './lib/couleurs';
+import { LENGTH_NOTION } from './lib/longueurs';
 import { housePairs } from './lib/maisons';
 
 export const domains: Domain[] = [
@@ -446,6 +447,19 @@ export const notions: Notion[] = [
       'Je pose le **0** de ma règle exactement sur une extrémité du segment, le bord de la règle le long du segment.',
       'Je lis le nombre en face de l’autre extrémité : c’est la longueur, en **cm**.',
       measuredSegment(5, 'Le 0 est sur A. En face de B, je lis 5 : [AB] mesure **5 cm**.'),
+    ],
+  },
+  {
+    id: LENGTH_NOTION,
+    domain: 'maths.mesures',
+    title: 'Comparer des longueurs',
+    grades: ['CE1'],
+    competence: 'Convertir des mètres en centimètres pour comparer des longueurs.',
+    lesson: [
+      'Le **mètre** s’écrit **m** et le **centimètre** s’écrit **cm**. Un mètre vaut **100 centimètres**.',
+      { kind: 'example', lines: ['1 m = 100 cm', '1 m 3 cm = 100 cm + 3 cm = 103 cm'] },
+      'Je mets les deux longueurs en **centimètres**. Ensuite, je compare les nombres et je choisis le signe **<**, **>** ou **=**.',
+      { kind: 'example', lines: ['115 cm > 103 cm', '1 m 5 cm = 105 cm'] },
     ],
   },
   {

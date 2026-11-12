@@ -42,14 +42,19 @@
   function columnWidth(e: SheetExercise): string {
     const first = e.items[0]?.question;
     if (!first || withFigure(first)) return '100%';
-    // Une horloge à lire tient dans une colonne ; des pièces ou des horloges à choisir, non.
-    if (first.widget === 'mcq' && first.choices.some((c) => c.picture)) return '100%';
+    // Un tableau ou un QCM avec des images dans les choix prend la largeur de la fiche.
+    if (first.widget === 'mcq' && (first.table || first.choices.some((c) => c.picture)))
+      return '100%';
     if ('picture' in first && first.picture)
       return first.picture.kind === 'clock' ? '5.6cm' : '100%';
     return COLUMN[first.widget] ?? '100%';
   }
-  const solutionOf = (e: SheetExercise, i: number) =>
-    registry.plugin(e.pluginId)?.solve(e.items[i]!.question) ?? null;
+  function correction(e: SheetExercise, question: PluginQuestion, key: boolean) {
+    const plugin = key ? registry.plugin(e.pluginId) : undefined;
+    const solution = plugin?.solve(question) ?? null;
+    const explanation = plugin?.printExplanation ? plugin.explain?.(question, solution) : undefined;
+    return { solution, explanation };
+  }
 </script>
 
 {#snippet page(key: boolean)}
@@ -99,12 +104,13 @@
         </h2>
         <div class="items" style:--col={columnWidth(e)}>
           {#each e.items as item, i (item.seed)}
+            {@const answer = correction(e, item.question, key)}
             <div class="item">
               {#if e.items.length > 1}<span class="letter">{String.fromCharCode(97 + i)})</span
                 >{/if}
               <div class="body">
                 {#if !e.instruction}<p class="own">{item.question.instruction}</p>{/if}
-                <PrintQuestion question={item.question} solution={key ? solutionOf(e, i) : null} />
+                <PrintQuestion question={item.question} {...answer} />
               </div>
             </div>
           {/each}

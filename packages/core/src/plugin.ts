@@ -56,6 +56,8 @@ export interface ExercisePlugin<W extends WidgetId = WidgetId, P = unknown, D = 
   check?(q: PluginQuestion<W, D>, answer: AnswerMap[W]): CheckResult;
   /** Explication affichée après une erreur. */
   explain?(q: PluginQuestion<W, D>, answer: AnswerMap[W]): string | undefined;
+  /** Imprimer l’explication avec la solution sur le corrigé de la fiche. */
+  printExplanation?: boolean;
   /** Contraintes du niveau vérifiées par le test de contrat ; renvoie un message d'erreur. */
   invariants?(q: PluginQuestion<W, D>, ctx: GenerateContext<P>): string | undefined;
   /** Clé qui identifie deux questions identiques (par défaut : le JSON de la question). */
