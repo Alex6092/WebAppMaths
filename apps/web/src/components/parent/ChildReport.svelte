@@ -184,6 +184,10 @@
       </ul>
     </div>
   {/if}
+  <p class="muted">
+    Un exercice est accessible en autonomie quand toutes ses notions sont cochées. Les leçons, les
+    devoirs et les évaluations restent accessibles.
+  </p>
   <label class="only-seen">
     <input
       type="checkbox"

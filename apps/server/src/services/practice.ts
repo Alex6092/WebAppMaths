@@ -1,6 +1,7 @@
 import { registry } from '@app/content';
 import {
   applyResult,
+  canPractice,
   coinsFor,
   DAILY_BONUS,
   DAILY_LENGTH,
@@ -10,6 +11,7 @@ import {
   initialLevel,
   isGrade,
   masteryByNotion,
+  mixablePlugins,
   newLevelState,
   type AttemptRequest,
   type AssignmentDto,
@@ -29,12 +31,12 @@ import { findReward } from '@app/themes';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import type { Db } from '../db/client';
 import { attempts, children, exerciseStates, practiceSessions, rewardsOwned } from '../db/schema';
-import { badRequest, conflict, notFound } from '../errors';
+import { badRequest, conflict, forbidden, notFound } from '../errors';
 import { getEvaluation, progressEvaluation, remainingItems } from './evaluation';
 import { assignmentDto, getAssignment, progressAssignment } from './homework';
 import { awardBadges, dailyState, todaysDailySession } from './motivation';
-import { activeNotions, gradeNotions } from './notions';
-import { REVIEW_LENGTH, reviewQueue } from './report';
+import { activeNotions } from './notions';
+import { practiceReviewQueue, REVIEW_LENGTH } from './report';
 import { updateReviews } from './spaced';
 
 type ChildRow = typeof children.$inferSelect;
@@ -80,12 +82,23 @@ export function childMasteries(
 
 const MAX_MIX_NOTIONS = 200;
 
+const NO_PRACTICE = 'Aucun exercice disponible pour l’instant.';
+const LOCKED_EXERCISE = 'Cet exercice n’est pas disponible pour toi en ce moment.';
+const practiceUnavailable = (message: string) => forbidden('practice_unavailable', message);
+
+function practiceMix(notions: string[], active: ReadonlySet<string>) {
+  const plugins = registry
+    .pluginsOfNotions(notions)
+    .filter((plugin) => canPractice(plugin, active));
+  if (!plugins.length) throw practiceUnavailable(NO_PRACTICE);
+  return { notions, pluginIds: mixablePlugins(plugins).map((plugin) => plugin.id) };
+}
+
 export function startSession(
   db: Db,
   child: ChildRow,
   input: StartSessionRequest,
 ): StartSessionResponse {
-  let selection: Record<string, unknown>;
   if (input.mode === 'evaluation') {
     // Une évaluation reprend aux questions qui restent.
     const evaluation = getEvaluation(db, child, input.selection.evaluationId);
@@ -129,8 +142,9 @@ export function startSession(
       total: assignment.questions,
     };
   }
+  const active = new Set(activeNotions(db, child));
   if (input.mode === 'review') {
-    const items: ReviewItem[] = reviewQueue(db, child.id)
+    const items: ReviewItem[] = practiceReviewQueue(db, child, active)
       .slice(0, REVIEW_LENGTH)
       .map(({ pluginId, level, seed }) => ({ pluginId, level, seed }));
     if (items.length === 0)
@@ -142,42 +156,46 @@ export function startSession(
       .get();
     return { id: row.id, answered: 0, items };
   }
+  let selection: Record<string, unknown>;
+  let mix: ReturnType<typeof practiceMix> | undefined;
   if (input.mode === 'daily') {
     // Le défi du jour reprend là où il s'était arrêté ; une fois réussi, il revient demain.
     const day = dayKey(new Date());
     const today = todaysDailySession(db, child.id, day);
     if (today && today.nQuestions >= DAILY_LENGTH)
       throw conflict('daily_done', 'Tu as déjà réussi le défi du jour : reviens demain !');
+    mix = practiceMix([...active], active);
+    selection = { day, ...mix };
     if (today) {
       db.update(practiceSessions)
-        .set({ endedAt: null })
+        .set({ endedAt: null, selection })
         .where(eq(practiceSessions.id, today.id))
         .run();
-      const notions = today.selection.notions;
       return {
         id: today.id,
         answered: today.nQuestions,
-        notions: Array.isArray(notions) ? (notions as string[]) : [],
+        ...mix,
       };
     }
-    // Les notions vues en classe (toutes celles de la classe si le parent n'en a coché aucune).
-    const seen = activeNotions(db, child);
-    selection = { day, notions: seen.length ? seen : gradeNotions(child) };
   } else if (input.mode === 'training') {
     const { pluginId } = input.selection;
-    if (typeof pluginId !== 'string' || !registry.plugin(pluginId))
-      throw notFound('unknown_plugin', 'Exercice inconnu.');
+    const plugin = typeof pluginId === 'string' ? registry.plugin(pluginId) : undefined;
+    if (!plugin) throw notFound('unknown_plugin', 'Exercice inconnu.');
+    if (!canPractice(plugin, active)) throw practiceUnavailable(LOCKED_EXERCISE);
     selection = { pluginId };
   } else {
     const notions = [...new Set(input.selection.notions ?? [])];
     if (
       notions.length === 0 ||
       notions.length > MAX_MIX_NOTIONS ||
-      notions.some((id) => !registry.notion(id)) ||
-      registry.pluginsOfNotions(notions).length === 0
+      notions.some((id) => !registry.notion(id))
     )
       throw badRequest('invalid_selection', 'Choisis au moins une notion avec des exercices.');
-    selection = { notions };
+    mix = practiceMix(
+      notions.filter((id) => active.has(id)),
+      active,
+    );
+    selection = mix;
   }
   const row = db
     .insert(practiceSessions)
@@ -187,7 +205,7 @@ export function startSession(
   return {
     id: row.id,
     answered: 0,
-    ...(input.mode === 'daily' ? { notions: selection.notions as string[] } : {}),
+    ...mix,
   };
 }
 
@@ -210,6 +228,9 @@ function belongsToSession(
     );
   }
   if (session.mode === 'mix' || session.mode === 'daily' || session.mode === 'homework') {
+    const pluginIds = session.selection.pluginIds;
+    if (session.mode !== 'homework' && Array.isArray(pluginIds))
+      return pluginIds.includes(pluginId);
     const notions = session.selection.notions;
     return Array.isArray(notions) && pluginNotions.some((n) => notions.includes(n));
   }
@@ -256,6 +277,13 @@ export function recordAttempt(db: Db, child: ChildRow, input: AttemptRequest): A
     .get();
   if (!session || session.endedAt)
     throw notFound('session_not_found', 'Séance introuvable ou terminée.');
+  if (
+    session.mode !== 'homework' &&
+    session.mode !== 'evaluation' &&
+    !canPractice(plugin, new Set(activeNotions(db, child)))
+  ) {
+    throw practiceUnavailable(LOCKED_EXERCISE);
+  }
   // Une évaluation : une question de la liste, pas encore répondue, et un seul essai.
   const evaluation =
     session.mode === 'evaluation'

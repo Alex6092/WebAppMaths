@@ -1,5 +1,13 @@
 import { registry } from '@app/content';
-import { isDue, NEW_MASTERY, type GradeId, type NotionMastery, type NotionReview } from '@app/core';
+import {
+  canPractice,
+  isDue,
+  NEW_MASTERY,
+  type AnyPlugin,
+  type GradeId,
+  type NotionMastery,
+  type NotionReview,
+} from '@app/core';
 import { session } from './session.svelte';
 
 // Les codes de l'école, dits avec les mots d'un enfant (partagés avec le tableur de la classe).
@@ -15,31 +23,33 @@ export function reviewOf(notionId: string): NotionReview | undefined {
 
 /** Notions à réviser aujourd'hui (révision espacée). */
 export function dueNotions(now = Date.now()): string[] {
-  return Object.entries(session.childState?.reviews ?? {})
-    .filter(([, review]) => isDue(review, now))
-    .map(([id]) => id);
+  return playableNotions(
+    Object.entries(session.childState?.reviews ?? {})
+      .filter(([, review]) => isDue(review, now))
+      .map(([id]) => id),
+  );
 }
 
 /**
- * Les notions d'un mélange : une portée (all, matière, domaine, notion) ou une liste « a,b,c ».
- * Une portée ne garde que les notions vues en classe (toutes, si aucune n'est encore vue).
+ * Les notions demandées pour un mélange. Le serveur les croise avec les réglages actuels.
  */
 export function mixNotions(
   scope: string | undefined,
   list: string | null,
   grade: GradeId,
 ): string[] {
-  if (list) return list.split(',').filter((id) => registry.notion(id));
-  const ids = registry.notionsInScope(scope ?? 'all', grade).map((n) => n.id);
-  return seenAmong(ids);
+  if (list !== null) return list.split(',').filter((id) => registry.notion(id));
+  return registry.notionsInScope(scope ?? 'all', grade).map((n) => n.id);
 }
 
-/** Celles des notions qui sont vues en classe, ou toutes si aucune ne l'est. */
-export function seenAmong(ids: string[]): string[] {
-  const active = session.childState?.activeNotions;
-  if (!active) return ids;
-  const seen = ids.filter((id) => active.includes(id));
-  return seen.length ? seen : ids;
+export function practicePlugins(plugins: readonly AnyPlugin[] = registry.plugins): AnyPlugin[] {
+  const active = new Set(session.childState?.activeNotions);
+  return plugins.filter((plugin) => canPractice(plugin, active));
+}
+
+export function playableNotions(ids: readonly string[]): string[] {
+  const playable = new Set(practicePlugins().flatMap((plugin) => plugin.notions));
+  return ids.filter((id) => playable.has(id));
 }
 
 /** La notion est-elle vue en classe ? (oui tant que l'état de l'enfant n'est pas chargé) */

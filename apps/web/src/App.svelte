@@ -5,7 +5,13 @@
   import { mixNotions } from './lib/notions';
   import { pwa, startPwa } from './lib/pwa.svelte';
   import { navigate, route } from './lib/router.svelte';
-  import { activeChild, loadChildState, refreshMe, session } from './lib/session.svelte';
+  import {
+    activeChild,
+    isParentUnlocked,
+    loadChildState,
+    refreshMe,
+    session,
+  } from './lib/session.svelte';
   import Badges from './screens/Badges.svelte';
   import ChildHome from './screens/ChildHome.svelte';
   import Exercise from './screens/Exercise.svelte';
@@ -58,7 +64,9 @@
     // « activer » : le lien du QR code d'une fiche parent (ou d'une invitation d'enseignant).
     if (!session.me) return first === 'register' || first === 'activer' ? 'register' : 'login';
     if (first === 'dev' && route.segments[1] === 'gallery') {
-      return import.meta.env.DEV || session.me.user.role === 'admin' ? 'gallery' : 'redirect';
+      return import.meta.env.DEV || (session.me.user.role === 'admin' && isParentUnlocked())
+        ? 'gallery'
+        : 'redirect';
     }
     if (first === 'activer') return 'activate';
     if (first === 'ecole') return session.me.schools.length > 0 ? 'school' : 'redirect';
@@ -137,7 +145,7 @@
     />
   {/key}
 {:else if view === 'daily'}
-  <Exercise daily mix={mixNotions('all', null, activeChild()?.grade ?? 'CE1')} />
+  <Exercise daily />
 {:else if view === 'homework'}
   {#key route.segments[1]}<Exercise homework={Number(route.segments[1])} />{/key}
 {:else if view === 'evaluation'}

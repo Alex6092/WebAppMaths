@@ -69,7 +69,7 @@ export interface ChildStateResponse {
   daily: DailyState;
   /** Questions ratées qui restent à revoir. */
   mistakes: number;
-  /** Notions vues en classe : « Tout mélanger » et le défi du jour ne prennent qu'elles. */
+  /** Notions du niveau de l’enfant ouvertes à l’entraînement en autonomie. */
   activeNotions: string[];
   /** Devoirs à faire, et ceux finis ces derniers jours. */
   assignments: AssignmentDto[];
@@ -204,8 +204,10 @@ export interface StartSessionResponse {
    * qui restent à faire.
    */
   items?: ReviewItem[];
-  /** Pour le défi du jour et un devoir : les notions qu'il mélange. */
+  /** Notions retenues pour un mélange, un défi du jour ou un devoir. */
   notions?: string[];
+  /** Exercices disponibles dans le mélange ou le défi du jour. */
+  pluginIds?: string[];
   /** Pour un devoir ou une évaluation : le nombre de questions à faire. */
   total?: number;
 }

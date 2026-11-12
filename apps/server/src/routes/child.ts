@@ -30,7 +30,7 @@ import { childEvaluations, evaluationReport, getEvaluation } from '../services/e
 import { childAssignments } from '../services/homework';
 import { activeNotions, focusNotions } from '../services/notions';
 import { notionsToRework } from '../services/assessments';
-import { reviewQueue } from '../services/report';
+import { practiceReviewQueue } from '../services/report';
 import { childReviews } from '../services/spaced';
 import type { Deps } from './deps';
 
@@ -56,6 +56,7 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
       .where(eq(rewardsOwned.childId, child.id))
       .all();
     const notions = childMasteries(db, child.id);
+    const active = activeNotions(db, child);
     // Rattrape les badges mérités avant leur arrivée (ou gagnés sur un autre appareil).
     awardBadges(db, child.id, notions);
     return {
@@ -71,8 +72,8 @@ export function childRoutes(api: FastifyInstance, { db }: Deps): void {
       themes: unlockedThemes(db, child.id),
       badges: earnedBadges(db, child.id),
       daily: dailyState(db, child.id),
-      mistakes: reviewQueue(db, child.id).length,
-      activeNotions: activeNotions(db, child),
+      mistakes: practiceReviewQueue(db, child, new Set(active)).length,
+      activeNotions: active,
       assignments: childAssignments(db, child),
       reviews: childReviews(db, child.id),
       evaluations: childEvaluations(db, child),

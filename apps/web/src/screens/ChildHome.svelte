@@ -4,7 +4,7 @@
   import { getTheme } from '@app/themes';
   import { onMount } from 'svelte';
   import ChildBar from '../components/ChildBar.svelte';
-  import { dueNotions } from '../lib/notions';
+  import { dueNotions, playableNotions, practicePlugins } from '../lib/notions';
   import { navigate } from '../lib/router.svelte';
   import { activeChild, loadChildState, selectChild, session } from '../lib/session.svelte';
 
@@ -14,11 +14,10 @@
   const assignments = $derived(session.childState?.assignments ?? []);
   const evaluations = $derived(session.childState?.evaluations ?? []);
   const due = $derived(session.childState ? dueNotions() : []);
-  const withExercises = (ids: readonly string[]) =>
-    ids.filter((id) => registry.pluginsOfNotions([id]).length > 0);
   /** La leçon en cours dans la classe, et ce que l'enseignant a noté « à retravailler ». */
-  const focus = $derived(withExercises(session.childState?.focusNotions ?? []));
-  const rework = $derived(withExercises(session.childState?.toRework ?? []));
+  const focus = $derived(playableNotions(session.childState?.focusNotions ?? []));
+  const rework = $derived(playableNotions(session.childState?.toRework ?? []));
+  const hasExercises = $derived(practicePlugins().length > 0);
 
   /** « pour demain », « pour lundi 3 novembre », « en retard ». */
   function dueLabel(dueOn: string): string {
@@ -36,10 +35,13 @@
     loadChildState().catch(() => {});
   });
 
-  const subjects = registry.subjects.map((subject) => ({
-    subject,
-    count: registry.pluginsOfSubject(subject.id).length,
-  }));
+  const subjects = $derived(
+    registry.subjects.map((subject) => ({
+      subject,
+      count: practicePlugins(registry.pluginsOfSubject(subject.id)).length,
+      hasLessons: registry.notionsInScope(subject.id, activeChild()?.grade).length > 0,
+    })),
+  );
 
   async function switchProfile() {
     await selectChild(null);
@@ -53,16 +55,21 @@
   <div class="banner">{theme.banner}</div>
 
   <div class="subjects">
-    {#each subjects as { subject, count } (subject.id)}
+    {#each subjects as { subject, count, hasLessons } (subject.id)}
       <button
         class="subject"
         style:--subject-color={subject.color}
-        disabled={count === 0}
+        disabled={count === 0 && !hasLessons}
         onclick={() => navigate(`/subject/${subject.id}`)}
       >
         <span class="icon">{subject.icon}</span>
         <span class="name">{subject.title}</span>
-        <span class="count">{count ? `${count} exercice${count > 1 ? 's' : ''}` : 'Bientôt !'}</span
+        <span class="count"
+          >{count
+            ? `${count} exercice${count > 1 ? 's' : ''}`
+            : hasLessons
+              ? 'Leçons'
+              : 'Bientôt !'}</span
         >
       </button>
     {/each}
@@ -145,6 +152,8 @@
       <strong>🎯 Défi du jour</strong>
       {#if dailyDone}
         <span>Réussi ! Reviens demain pour un nouveau défi.</span>
+      {:else if session.childState && !hasExercises}
+        <span>Aucun exercice disponible pour l’instant.</span>
       {:else if daily && daily.answered > 0}
         <span>{daily.answered}/{DAILY_LENGTH} questions : continue !</span>
       {:else}
@@ -160,7 +169,7 @@
     </div>
     {#if dailyDone}
       <span class="check">✅</span>
-    {:else}
+    {:else if hasExercises}
       <button class="btn success" onclick={() => navigate('/daily')}
         >{daily && daily.answered > 0 ? 'Continuer' : 'C’est parti !'}</button
       >
@@ -168,7 +177,9 @@
   </div>
 
   <div class="actions">
-    <button class="btn" onclick={() => navigate('/mix/all')}>🎲 Tout mélanger</button>
+    {#if hasExercises}<button class="btn" onclick={() => navigate('/mix/all')}
+        >🎲 Tout mélanger</button
+      >{/if}
     {#if (session.childState?.mistakes ?? 0) > 0}
       <button class="btn accent" onclick={() => navigate('/review')}
         >🔁 Revoir mes erreurs ({session.childState?.mistakes})</button

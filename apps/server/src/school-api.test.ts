@@ -445,6 +445,15 @@ describe('travail de la classe', () => {
     // L'enfant, à la maison.
     const state = await parents.browser.ok<ChildStateResponse>('GET', '/child/state');
     expect(state.activeNotions).not.toContain(geometry[1]);
+    const blockedPlugin = registry.pluginsOfNotion(geometry[1]!)[0]!.id;
+    expect(
+      (
+        await parents.browser.send('POST', '/child/sessions', {
+          mode: 'training',
+          selection: { pluginId: blockedPlugin },
+        })
+      ).json().error,
+    ).toBe('practice_unavailable');
     expect(state.focusNotions).toEqual(['maths.calcul.tables']);
     expect(state.toRework).toEqual(['maths.calcul.tables']);
     expect(state.assignments).toMatchObject([{ title: 'Tables de 2', from: 'ecole' }]);

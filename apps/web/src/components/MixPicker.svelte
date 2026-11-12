@@ -2,7 +2,7 @@
   import { registry } from '@app/content';
   import { untrack } from 'svelte';
   import { SvelteSet } from 'svelte/reactivity';
-  import { masteryOf, reviewOf, seenAmong } from '../lib/notions';
+  import { masteryOf, playableNotions, reviewOf } from '../lib/notions';
   import { navigate } from '../lib/router.svelte';
   import { activeChild } from '../lib/session.svelte';
   import NotionBadge from './NotionBadge.svelte';
@@ -10,16 +10,15 @@
   /** Choisir les notions d'un mélange. */
   let { scope, onclose }: { scope: string; onclose: () => void } = $props();
 
-  const notions = $derived(registry.notionsInScope(scope, activeChild()?.grade));
+  const inScope = $derived(registry.notionsInScope(scope, activeChild()?.grade));
+  const allowed = $derived(new Set(playableNotions(inScope.map((n) => n.id))));
+  const notions = $derived(inScope.filter((n) => allowed.has(n.id)));
   const groups = $derived(
     registry.domains
       .map((domain) => ({ domain, notions: notions.filter((n) => n.domain === domain.id) }))
       .filter((g) => g.notions.length > 0),
   );
-  // Les notions vues en classe sont cochées au départ.
-  const chosen = new SvelteSet<string>(
-    untrack(() => seenAmong(registry.notionsInScope(scope, activeChild()?.grade).map((n) => n.id))),
-  );
+  const chosen = new SvelteSet<string>(untrack(() => notions.map((n) => n.id)));
 
   function toggle(id: string) {
     if (chosen.has(id)) chosen.delete(id);
@@ -41,6 +40,7 @@
 <div class="overlay" role="presentation" onclick={(e) => e.target === e.currentTarget && onclose()}>
   <div class="card picker" role="dialog" aria-modal="true" aria-label="Mélange">
     <h2>🎲 Je choisis ce que je mélange</h2>
+    {#if !notions.length}<p>Aucun exercice disponible pour l’instant.</p>{/if}
     <div class="row">
       <button class="btn ghost small" onclick={() => setAll(true)}>Tout</button>
       <button class="btn ghost small" onclick={() => setAll(false)}>Rien</button>
