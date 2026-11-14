@@ -14,11 +14,16 @@ const RIDDLES = [
   ['Je suis un animal à huit bras que l’on trouve dans la mer.', 'poulpe', 'pieuvre'],
   ['Je suis un liquide épais et sucré, parfois à la menthe.', 'sirop'],
   ['On me remet au vainqueur d’une compétition.', 'trophée', 'coupe'],
+  ['Je suis un animal de la mer très joueur, qui saute hors de l’eau.', 'dauphin'],
+  ['On glisse une lettre dans moi avant de la poster.', 'enveloppe'],
+  ['Je suis le nombre qui vient juste après six.', 'sept'],
+  ['Je suis un animal sauvage qui hurle à la lune.', 'loup'],
+  ['Je suis un panneau rouge : la voiture doit s’arrêter.', 'stop'],
 ] as const;
 
 export default definePlugin('fill-blank', {
   id: 'francais.orthographe.lettre-p-devinettes',
-  version: 1,
+  version: 2,
   title: 'Devinettes avec la lettre p',
   description: 'Trouve et écris un mot qui contient la lettre p.',
   icon: '🔍',

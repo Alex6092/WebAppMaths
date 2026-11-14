@@ -55,8 +55,8 @@ export default definePlugin<'fill-blank', Params, Data>('fill-blank', {
   description: 'Donner → je donne, adorer → j’adore : les verbes en -er au présent.',
   icon: '🗣️',
   notions: ['francais.conjugaison.present-er', 'francais.orthographe.dictee-5'],
-  // La classe en est à « je » (dictée 5) : à relever quand la leçon du présent arrivera.
-  expectedLevel: 1,
+  // La leçon CONJ 3 donne toutes les personnes, avec manger et commencer.
+  expectedLevel: 3,
   levels: defineLevels<Params>([
     { label: 'Avec « je »', grade: 'CE1', params: { persons: [0], soft: false } },
     { label: 'je, tu, il, elle', grade: 'CE1', params: { persons: [0, 1, 2], soft: false } },

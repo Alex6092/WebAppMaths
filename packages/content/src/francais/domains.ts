@@ -4,7 +4,7 @@ import { MOMENT_COLOR, PINK } from './lib/couleurs';
 import { CLASS_DICTATIONS, classDictationNotion } from './lib/dictee-classe';
 import { PAIRS, type HomophonePair } from './lib/homophones';
 import { capitalize, indicatorsOf } from './lib/indicateurs';
-import { P_GROUPS, P_NOTION } from './lib/lettre-p';
+import { P_LESSON_GROUPS, P_NOTION } from './lib/lettre-p';
 import { RULE_TEXT } from './lib/pluriel';
 
 export const domains: Domain[] = [
@@ -333,30 +333,51 @@ const LETTRE_D_LESSON: LessonBlock[] = [
   'Les verbes en **-dre** gardent leur d : je pren**d**s, tu appren**d**s, il ven**d**, elle atten**d**.',
 ];
 
-// Le présent des verbes en -er (la dictée 5 : « donner → je donne »).
+// CONJ 3 : « Le présent de l'indicatif des verbes du premier groupe ».
 const PRESENT_ER_LESSON: LessonBlock[] = [
-  'Au **présent**, les verbes en **-er** comme *chanter* prennent toujours les mêmes terminaisons :',
+  'Les verbes du **1er groupe** sont les verbes qui se terminent par **-er** à l’infinitif : *jouer, sauter, préparer, ranger…*',
+  'Attention : *aller* finit par -er, mais il n’est pas du 1er groupe.',
+  'Pour conjuguer un verbe, je trouve le **radical** (j’enlève -er), puis j’ajoute la **terminaison** :',
+  { kind: 'example', lines: ['jouer → **jou** / er → nous **jou**__ons__'] },
+  'Au **présent**, les terminaisons du 1er groupe sont toujours les mêmes :',
   {
     kind: 'table',
     columns: [
       { title: 'personne', cells: ['je', 'tu', 'il, elle, on', 'nous', 'vous', 'ils, elles'] },
       {
-        title: 'chanter',
+        title: 'terminaison',
         color: MOMENT_COLOR.present,
+        cells: ['-**e**', '-**es**', '-**e**', '-**ons**', '-**ez**', '-**ent**'],
+      },
+      {
+        title: 'jouer',
         cells: [
-          'chant**e**',
-          'chant**es**',
-          'chant**e**',
-          'chant**ons**',
-          'chant**ez**',
-          'chant**ent**',
+          'je jou**e**',
+          'tu jou**es**',
+          'il jou**e**',
+          'nous jou**ons**',
+          'vous jou**ez**',
+          'ils jou**ent**',
         ],
       },
     ],
   },
-  'Devant une **voyelle** (a, e, i, o, u) ou un h muet, **je** devient **j’** :',
-  { kind: 'example', lines: ['adorer → **j’**adore ; habiter → **j’**habite'] },
-  'Attention : *manger* garde un **e** et *commencer* prend un **ç** devant -ons : nous mang**e**ons, nous commen**ç**ons.',
+  {
+    kind: 'example',
+    lines: [
+      'je saut**e** ; tu prépar**es** ; elle rang**e**',
+      'nous donn**ons** ; vous gagn**ez** ; ils conjugu**ent**',
+    ],
+  },
+  'Devant une **voyelle** (a, e, i, o, u) ou un h muet, **je** devient **j’** : **j’**adore, **j’**habite.',
+  'Je fais **attention au son** avec les verbes en **-ger** et **-cer** : devant -ons, je garde le son.',
+  {
+    kind: 'example',
+    lines: [
+      'manger → nous mang**e**ons (sans le e, on lirait « mangon »)',
+      'commencer → nous commen**ç**ons (sans le ç, on lirait « commenkon »)',
+    ],
+  },
 ];
 
 // Lire des syllabes et des mots (l'entraînement à la lecture des fiches de dictée).
@@ -438,11 +459,27 @@ export const notions: Notion[] = [
     lesson: CONJ2_LESSON,
   },
   {
+    id: 'francais.conjugaison.premier-groupe',
+    domain: 'francais.conjugaison',
+    title: 'Les verbes du 1er groupe',
+    grades: ['CE1'],
+    competence: 'Reconnaître les verbes du 1er groupe (infinitif en -er).',
+    lesson: PRESENT_ER_LESSON,
+  },
+  {
+    id: 'francais.conjugaison.radical-terminaison',
+    domain: 'francais.conjugaison',
+    title: 'Le radical et la terminaison',
+    grades: ['CE1'],
+    competence: 'Repérer le radical et la terminaison d’un verbe.',
+    lesson: PRESENT_ER_LESSON,
+  },
+  {
     id: 'francais.conjugaison.present-er',
     domain: 'francais.conjugaison',
     title: 'Le présent des verbes en -er',
     grades: ['CE1'],
-    competence: 'Conjuguer au présent les verbes en -er.',
+    competence: 'Conjuguer au présent les verbes du 1er groupe.',
     lesson: PRESENT_ER_LESSON,
   },
   {
@@ -549,12 +586,26 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Repérer la lettre p et reconnaître p, pp, ph et p muet.',
     lesson: [
-      'Je regarde les lettres qui entourent le **p**. Dans *photo*, le **p** et le **h** forment ensemble le son [f].',
+      'La lettre **p** fait presque toujours le son **[p]** : au début, au milieu, et même parfois à la fin du mot (*un slip, stop*).',
+      'Je regarde les lettres qui l’entourent : **pp** fait aussi [p], mais **ph** fait le son **[f]**.',
       {
         kind: 'table',
-        columns: P_GROUPS.map(({ label, words }) => ({ title: label, cells: words.slice(0, 3) })),
+        columns: P_LESSON_GROUPS.slice(0, 3).map(({ label, color, words }) => ({
+          title: label,
+          color,
+          cells: words.slice(0, 4),
+        })),
       },
-      'À la fin de certains mots, le **p** reste muet. J’entends le [p] dans *loupe*, et il est muet dans *loup*.',
+      'Parfois, le **p** ne s’entend pas : il est **muet** devant un **t**, ou à la **fin** du mot.',
+      {
+        kind: 'table',
+        columns: P_LESSON_GROUPS.slice(3).map(({ label, color, words }) => ({
+          title: label,
+          color,
+          cells: words.slice(0, 3),
+        })),
+      },
+      'J’entends le [p] dans *une loupe*, mais il est muet dans *un loup*.',
     ],
   },
   ...CLASS_DICTATIONS.map(classDictationNotion),
