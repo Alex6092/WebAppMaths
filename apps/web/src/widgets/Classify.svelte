@@ -89,7 +89,7 @@
 {/snippet}
 
 {#if question.layout === 'table'}
-  <table class="table">
+  <table class="table" class:many={question.categories.length > 4}>
     <thead>
       <tr>
         <th></th>
@@ -314,6 +314,23 @@
     .box {
       width: 40px;
       height: 40px;
+    }
+    /* Cinq colonnes (la lettre p) : on resserre pour tenir sur un téléphone. */
+    .table.many th,
+    .table.many td {
+      padding: 6px 2px;
+    }
+    .table.many th {
+      font-size: 0.75rem;
+    }
+    .table.many td.label {
+      padding-left: 8px;
+      font-size: 0.95rem;
+    }
+    .table.many .box {
+      width: 34px;
+      height: 34px;
+      font-size: 1.2rem;
     }
   }
 </style>

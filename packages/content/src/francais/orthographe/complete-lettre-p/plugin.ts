@@ -31,6 +31,46 @@ const LETTERS = [
   ['une _oule dans le poulailler', 'p'],
 ] as const;
 
+// ORTHO 6 : p, pp ou ph, et le p muet qu'il ne faut pas oublier (compter, beaucoup).
+const LESSON = [
+  ['une _oule', 'p'],
+  ['_ouvoir', 'p'],
+  ['un ser_ent', 'p'],
+  ['sim_le', 'p'],
+  ['un sli_', 'p'],
+  ['sto_', 'p'],
+  ['s’a_eler', 'pp'],
+  ['une envelo_e', 'pp'],
+  ['a_orter', 'pp'],
+  ['une na_e', 'pp'],
+  ['un hi_opotame', 'pp'],
+  ['une _oto', 'ph'],
+  ['un _are', 'ph'],
+  ['un télé_one', 'ph'],
+  ['un dau_in', 'ph'],
+  ['un élé_ant', 'ph'],
+  ['com_ter', 'p'],
+  ['se_t', 'p'],
+  ['dom_ter', 'p'],
+  ['un lou_', 'p'],
+  ['beaucou_', 'p'],
+  ['tro_', 'p'],
+] as const;
+
+type Bank = 'p-ph' | 'mixed' | 'lesson';
+
+const BANKS: Record<Bank, readonly (readonly [string, string])[]> = {
+  'p-ph': SPELLINGS,
+  mixed: LETTERS,
+  lesson: LESSON,
+};
+
+const OPTIONS: Record<Bank, string[]> = {
+  'p-ph': ['p', 'ph'],
+  mixed: ['t', 'd', 'p'],
+  lesson: ['p', 'pp', 'ph'],
+};
+
 export default definePlugin('fill-blank', {
   id: 'francais.orthographe.complete-lettre-p',
   version: 1,
@@ -38,20 +78,21 @@ export default definePlugin('fill-blank', {
   description: 'Choisis les lettres qui manquent dans les mots.',
   icon: '✏️',
   notions: [P_NOTION, DICTEE_6_NOTION],
-  expectedLevel: 2,
-  levels: defineLevels([
-    { label: 'p ou ph', grade: 'CE1', params: { mixed: false } },
-    { label: 't, d ou p', grade: 'CE1', params: { mixed: true } },
+  expectedLevel: 3,
+  levels: defineLevels<{ bank: Bank }>([
+    { label: 'p ou ph', grade: 'CE1', params: { bank: 'p-ph' } },
+    { label: 't, d ou p', grade: 'CE1', params: { bank: 'mixed' } },
+    { label: 'p, pp ou ph', grade: 'CE1', params: { bank: 'lesson' } },
   ]),
 
   generate({ rng, params }) {
-    const bank: readonly (readonly [string, string])[] = params.mixed ? LETTERS : SPELLINGS;
-    const [text, letter] = rng.pick(bank);
+    const [text, letter] = rng.pick(BANKS[params.bank]);
+    const options = OPTIONS[params.bank];
     return {
       widget: 'fill-blank',
-      instruction: params.mixed ? 'COMPLÈTE avec t, d ou p.' : 'COMPLÈTE avec p ou ph.',
+      instruction: `COMPLÈTE avec ${options.slice(0, -1).join(', ')} ou ${options.at(-1)}.`,
       prompt: text.replace('_', '{0}'),
-      blanks: [{ kind: 'choice', options: params.mixed ? ['t', 'd', 'p'] : ['p', 'ph'] }],
+      blanks: [{ kind: 'choice', options }],
       data: { text, letter },
     };
   },
