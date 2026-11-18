@@ -5,6 +5,7 @@ import { CLASS_DICTATIONS, classDictationNotion } from './lib/dictee-classe';
 import { PAIRS, type HomophonePair } from './lib/homophones';
 import { capitalize, indicatorsOf } from './lib/indicateurs';
 import { P_LESSON_GROUPS, P_NOTION } from './lib/lettre-p';
+import { COMMON_PICK, DETERMINANT_NOTION, NOM_NOTION, PROPER_PICK } from './lib/nom-determinant';
 import { RULE_TEXT } from './lib/pluriel';
 
 export const domains: Domain[] = [
@@ -137,6 +138,61 @@ const PHRASE_LESSON: LessonBlock[] = [
       '*Aujourd’hui je mange une glace.* → c’est une phrase',
     ],
   },
+];
+
+// Leçon « Le nom » du cahier : nom propre, nom commun.
+const NOM_LESSON: LessonBlock[] = [
+  'Un **nom** est un mot qui désigne une **personne**, un **animal**, une **chose** ou un **lieu**.',
+  {
+    kind: 'table',
+    columns: [
+      {
+        title: 'noms propres',
+        color: PROPER_PICK.color,
+        cells: [
+          'des **lieux** particuliers : villes, pays, départements…',
+          '*France, Paris, Haute-Savoie*',
+          'des **personnes** : prénom, nom de famille',
+          '*Jules Dupont*',
+        ],
+      },
+      {
+        title: 'noms communs',
+        color: COMMON_PICK.color,
+        cells: [
+          'des personnes, des animaux, des choses ou des lieux **en général**',
+          '*un train, une tortue, la piscine*',
+        ],
+      },
+    ],
+  },
+  'Les indices pour les reconnaître :',
+  {
+    kind: 'list',
+    items: [
+      'Les **noms propres** prennent une **majuscule**, même au milieu de la phrase. Ils sont **invariables**.',
+      'Les **noms communs** sont **précédés d’un déterminant** : un, une, des, le, la, les…',
+    ],
+  },
+  { kind: 'example', lines: ['*Le __chat__ de __Léa__ dort sur le __canapé__.*'] },
+];
+
+// Leçon « Le déterminant » du cahier.
+const DETERMINANT_LESSON: LessonBlock[] = [
+  'Le **déterminant** est un petit mot qui est toujours placé **devant le nom**.',
+  { kind: 'example', lines: ['**le** chat – **les** enfants – **un** jouet – **une** étagère'] },
+  'Les **articles** sont les déterminants que l’on utilise le plus : **le, la, les, l’, un, une, des**.',
+  'Le déterminant permet de savoir si le nom est **masculin** ou **féminin**, et s’il est **singulier** ou **pluriel** :',
+  {
+    kind: 'table',
+    columns: [
+      { title: 'le nom est', cells: ['masculin', 'féminin', 'pluriel'] },
+      { title: 'le, la, les', cells: ['**le** chat', '**la** fleur', '**les** chats'] },
+      { title: 'un, une, des', cells: ['**un** chat', '**une** fleur', '**des** fleurs'] },
+    ],
+  },
+  'Attention : devant un nom qui commence par une **voyelle**, « le » et « la » se transforment en **l’** :',
+  { kind: 'example', lines: ['le arbre ❌ → **l’**arbre ✅', '**l’**école, **l’**enfant'] },
 ];
 
 // Leçon « La ponctuation » du cahier.
@@ -505,6 +561,22 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Utiliser le point, le point d’exclamation et le point d’interrogation.',
     lesson: PONCTUATION_LESSON,
+  },
+  {
+    id: NOM_NOTION,
+    domain: 'francais.grammaire',
+    title: 'Le nom : propre ou commun',
+    grades: ['CE1'],
+    competence: 'Identifier les noms, et distinguer noms propres et noms communs.',
+    lesson: NOM_LESSON,
+  },
+  {
+    id: DETERMINANT_NOTION,
+    domain: 'francais.grammaire',
+    title: 'Le déterminant',
+    grades: ['CE1'],
+    competence: 'Identifier le déterminant et choisir le bon déterminant devant un nom.',
+    lesson: DETERMINANT_LESSON,
   },
   {
     id: 'francais.vocabulaire.familles',
