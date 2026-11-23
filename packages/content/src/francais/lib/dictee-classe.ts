@@ -1,4 +1,12 @@
-import { defineLevels, definePlugin, type Blank, type LessonBlock, type Notion } from '@app/core';
+import {
+  compareBlanks,
+  defineLevels,
+  definePlugin,
+  normalizeText,
+  type Blank,
+  type LessonBlock,
+  type Notion,
+} from '@app/core';
 import { sentenceWords } from './dictee';
 
 /**
@@ -19,6 +27,8 @@ export interface ClassWord {
   context?: string;
   /** Un nom propre : la majuscule compte (l’Italie). */
   proper?: boolean;
+  /** Une autre orthographe admise (maitresse / maîtresse, depuis les rectifications de 1990). */
+  alt?: string;
 }
 
 export interface ClassList {
@@ -35,11 +45,12 @@ export interface ClassDictation {
   sentences: string[];
 }
 
-const noun = (det: string, word: string, proper = false): ClassWord => ({
+const noun = (det: string, word: string, proper = false, alt?: string): ClassWord => ({
   det,
   word,
   nature: 'nom',
   ...(proper ? { proper } : {}),
+  ...(alt ? { alt } : {}),
 });
 const other = (nature: Nature, word: string, context: string): ClassWord => ({
   word,
@@ -172,7 +183,57 @@ export const DICTEE_6: ClassDictation = {
   ],
 };
 
-export const CLASS_DICTATIONS: readonly ClassDictation[] = [DICTEE_4, DICTEE_5, DICTEE_6];
+export const DICTEE_7: ClassDictation = {
+  number: 7,
+  title: 'La lettre A',
+  lists: [
+    {
+      label: 'Liste 1 (pour vendredi)',
+      words: [
+        noun('un', 'continent'),
+        // La fiche l'écrit sans accent : les deux orthographes sont admises.
+        noun('la', 'maitresse', false, 'maîtresse'),
+        other('adjectif', 'grand', 'un grand continent'),
+        other('adjectif', 'nouveau', 'un nouveau livre'),
+        other('adverbe', 'beaucoup', 'beaucoup de livres'),
+        other('verbe', 'aimer', 'aimer lire'),
+      ],
+    },
+    {
+      label: 'Liste 2 (pour lundi)',
+      words: [
+        noun('une', 'étape'),
+        other('adjectif', 'prochain', 'le prochain voyage'),
+        other('adverbe', 'maintenant', 'partir maintenant'),
+        other('adverbe', 'autour', 'autour de la table'),
+        other('verbe', 'annoncer', 'annoncer une nouvelle'),
+        other('verbe', 'travailler', 'travailler en classe'),
+      ],
+    },
+  ],
+  sentences: [
+    'La maitresse montre un continent.',
+    'L’Asie est un grand continent.',
+    'Nous aimons beaucoup lire.',
+    'La maitresse annonce une nouvelle.',
+    'Maintenant, les élèves travaillent.',
+    'Lila a un nouveau cartable.',
+    'La prochaine étape est en Asie.',
+    'Les enfants dansent autour de l’arbre.',
+    'Tao aime beaucoup les voyages.',
+    'Maintenant, nous partons en voyage.',
+    'Le maître annonce la prochaine étape.',
+    'Nous travaillons autour de la table.',
+  ],
+};
+
+export const CLASS_DICTATIONS: readonly ClassDictation[] = [DICTEE_4, DICTEE_5, DICTEE_6, DICTEE_7];
+
+/** Les autres orthographes admises, mot par mot (maitresse → maîtresse). */
+const alternatives = (d: ClassDictation) =>
+  new Map(
+    d.lists.flatMap((l) => l.words.flatMap((w) => (w.alt ? [[w.word, w.alt] as const] : []))),
+  );
 
 const idOf = (d: ClassDictation) => `francais.orthographe.dictee-${d.number}`;
 /** « une carte », « l’Italie », « postal » */
@@ -282,6 +343,26 @@ export function classDictationPlugin(d: ClassDictation) {
     },
 
     solve: (q) => ({ values: [...q.data.values] }),
+
+    check(q, answer) {
+      const alt = alternatives(d);
+      if (alt.size === 0)
+        return compareBlanks(
+          q,
+          q.data.values.map((v) => [v]),
+          answer,
+        );
+      return compareBlanks(
+        q,
+        q.data.values.map((v) => {
+          const other = alt.get(normalizeText(v));
+          // Une majuscule en début de phrase : « Maitresse » → « Maîtresse ».
+          const capital = other && v[0] !== v[0]!.toLowerCase();
+          return other ? [v, capital ? other[0]!.toUpperCase() + other.slice(1) : other] : [v];
+        }),
+        answer,
+      );
+    },
 
     explain: (q) => `On écrit : « ${q.data.text} »`,
 
