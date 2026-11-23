@@ -9,6 +9,8 @@ import { VERBS } from './verbes';
 export const PREMIER_GROUPE_NOTION = 'francais.conjugaison.premier-groupe';
 export const RADICAL_NOTION = 'francais.conjugaison.radical-terminaison';
 export const PRESENT_ER_NOTION = 'francais.conjugaison.present-er';
+/** aller : en -er, mais pas du 1er groupe (je vais, ils vont). */
+export const ALLER_NOTION = 'francais.conjugaison.present-aller';
 
 /** Les verbes des exemples de la leçon. */
 export const LESSON_VERBS = ['jouer', 'sauter', 'préparer', 'donner', 'gagner', 'conjuguer'];

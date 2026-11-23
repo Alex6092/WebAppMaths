@@ -4,7 +4,9 @@ import { MOMENT_COLOR, PINK } from './lib/couleurs';
 import { CLASS_DICTATIONS, classDictationNotion } from './lib/dictee-classe';
 import { PAIRS, type HomophonePair } from './lib/homophones';
 import { capitalize, indicatorsOf } from './lib/indicateurs';
+import { A_COLORS, A_LESSON_GROUPS, A_NOTION } from './lib/lettre-a';
 import { P_LESSON_GROUPS, P_NOTION } from './lib/lettre-p';
+import { ALLER_NOTION } from './lib/premier-groupe';
 import { COMMON_PICK, DETERMINANT_NOTION, NOM_NOTION, PROPER_PICK } from './lib/nom-determinant';
 import { RULE_TEXT } from './lib/pluriel';
 
@@ -436,6 +438,56 @@ const PRESENT_ER_LESSON: LessonBlock[] = [
   },
 ];
 
+// La lettre A, d'après ORTHO 7 et la fiche de la dictée 7 de la classe.
+const LETTRE_A_LESSON: LessonBlock[] = [
+  'Toute seule, la lettre **a** fait le son **[a]**, même avec un accent :',
+  {
+    kind: 'table',
+    columns: A_LESSON_GROUPS.slice(0, 3).map(({ label, words }) => ({
+      title: label,
+      color: A_COLORS.a.color,
+      cells: words.map((w) => w.replace(/[aâà]/, (m) => `**${m}**`)),
+    })),
+  },
+  'Avec d’autres lettres, elle fait **d’autres sons** :',
+  {
+    kind: 'list',
+    items: [
+      '**au**, **eau** font [o] : un pré**au**, **au**ssi, un agn**eau**',
+      '**ai** fait [è] : **ai**mer, du l**ai**t, une m**ai**son',
+      '**ail**, **aille** font [aj] : un port**ail**, du trav**ail**, une bat**aille**',
+      '**an**, **am** font [an] : m**an**ger, bl**an**c, une **am**poule',
+      '**ain**, **aim** font [in] : du p**ain**, une m**ain**, la f**aim**',
+    ],
+  },
+  'Devant **m**, **b** et **p**, on écrit **am** : une **am**poule, une j**am**be, une l**am**pe.',
+];
+
+// Le verbe aller au présent (dictée 7 : « la classe va, les enfants vont »).
+const ALLER_LESSON: LessonBlock[] = [
+  'Le verbe **aller** finit par -er, mais il ne se conjugue **pas** comme les verbes du 1er groupe :',
+  {
+    kind: 'table',
+    columns: [
+      { title: 'personne', cells: ['je', 'tu', 'il, elle, on', 'nous', 'vous', 'ils, elles'] },
+      {
+        title: 'aller',
+        color: MOMENT_COLOR.present,
+        cells: ['**vais**', '**vas**', '**va**', '**allons**', '**allez**', '**vont**'],
+      },
+    ],
+  },
+  'Pour choisir entre **va** et **vont**, je regarde le **sujet** : un seul → **va**, plusieurs → **vont**.',
+  {
+    kind: 'example',
+    lines: [
+      'Lila **va** en Asie. (Lila → elle)',
+      'Tao et Lila **vont** au Tibet. (Tao et Lila → ils)',
+      'La classe **va** en voyage : *la classe*, c’est un seul groupe.',
+    ],
+  },
+];
+
 // Lire des syllabes et des mots (l'entraînement à la lecture des fiches de dictée).
 const DECODER_LESSON: LessonBlock[] = [
   'Pour lire une syllabe, je regarde **chaque lettre**, de **gauche à droite**, et je les **assemble** :',
@@ -537,6 +589,14 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Conjuguer au présent les verbes du 1er groupe.',
     lesson: PRESENT_ER_LESSON,
+  },
+  {
+    id: ALLER_NOTION,
+    domain: 'francais.conjugaison',
+    title: 'Le verbe aller au présent',
+    grades: ['CE1'],
+    competence: 'Conjuguer le verbe aller au présent.',
+    lesson: ALLER_LESSON,
   },
   {
     id: 'francais.grammaire.phrase',
@@ -679,6 +739,14 @@ export const notions: Notion[] = [
       },
       'J’entends le [p] dans *une loupe*, mais il est muet dans *un loup*.',
     ],
+  },
+  {
+    id: A_NOTION,
+    domain: 'francais.orthographe',
+    title: 'La lettre a',
+    grades: ['CE1'],
+    competence: 'Savoir que la lettre a fait [a], ou un autre son avec d’autres lettres.',
+    lesson: LETTRE_A_LESSON,
   },
   ...CLASS_DICTATIONS.map(classDictationNotion),
   {
