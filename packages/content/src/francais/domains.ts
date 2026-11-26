@@ -5,6 +5,7 @@ import { CLASS_DICTATIONS, classDictationNotion } from './lib/dictee-classe';
 import { PAIRS, type HomophonePair } from './lib/homophones';
 import { capitalize, indicatorsOf } from './lib/indicateurs';
 import { A_COLORS, A_LESSON_GROUPS, A_NOTION } from './lib/lettre-a';
+import { E_COLORS, E_NOTION } from './lib/lettre-e';
 import { P_LESSON_GROUPS, P_NOTION } from './lib/lettre-p';
 import { ALLER_NOTION } from './lib/premier-groupe';
 import { COMMON_PICK, DETERMINANT_NOTION, NOM_NOTION, PROPER_PICK } from './lib/nom-determinant';
@@ -463,6 +464,40 @@ const LETTRE_A_LESSON: LessonBlock[] = [
   'Devant **m**, **b** et **p**, on écrit **am** : une **am**poule, une j**am**be, une l**am**pe.',
 ];
 
+// La lettre E, d'après ORTHO 8.
+const LETTRE_E_LESSON: LessonBlock[] = [
+  'La lettre **e** fait plusieurs sons. Toute seule ou avec un accent :',
+  {
+    kind: 'table',
+    columns: [
+      { title: '[e]', color: E_COLORS.e.color, cells: ['le r**e**nard'] },
+      {
+        title: '[é]',
+        color: E_COLORS.é.color,
+        cells: ['le march**é**', 'ch**ez**', 'chant**er**'],
+      },
+      {
+        title: '[è]',
+        color: E_COLORS.è.color,
+        cells: ['la f**è**ve, la f**ê**te', 'No**ë**l', 'la n**ei**ge, le robin**et**'],
+      },
+      { title: 'muet', color: E_COLORS.muet.color, cells: ['la laitu**e**'] },
+    ],
+  },
+  'Avec d’autres lettres, elle fait **d’autres sons** :',
+  {
+    kind: 'list',
+    items: [
+      '**eau** fait [o] : b**eau**',
+      '**en**, **em** font [an] : l**en**t, **em**baller',
+      '**eu**, **œu** font [eu] : le f**eu**, un **œu**f',
+      '**ein** fait [in] : pl**ein**',
+    ],
+  },
+  'Pour le son [é] à la fin d’un mot : **-er** pour un verbe à l’infinitif (il faut chant**er**), **-ez** avec vous (vous chant**ez**).',
+  'Devant **m**, **b** et **p**, on écrit **em** : **em**baller, le t**em**ps, **em**porter.',
+];
+
 // Le verbe aller au présent (dictée 7 : « la classe va, les enfants vont »).
 const ALLER_LESSON: LessonBlock[] = [
   'Le verbe **aller** finit par -er, mais il ne se conjugue **pas** comme les verbes du 1er groupe :',
@@ -747,6 +782,15 @@ export const notions: Notion[] = [
     grades: ['CE1'],
     competence: 'Savoir que la lettre a fait [a], ou un autre son avec d’autres lettres.',
     lesson: LETTRE_A_LESSON,
+  },
+  {
+    id: E_NOTION,
+    domain: 'francais.orthographe',
+    title: 'La lettre e',
+    grades: ['CE1'],
+    competence:
+      'Savoir que la lettre e fait [e], [é], [è], qu’elle peut être muette, ou faire un autre son avec d’autres lettres.',
+    lesson: LETTRE_E_LESSON,
   },
   ...CLASS_DICTATIONS.map(classDictationNotion),
   {
